@@ -1,0 +1,320 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Killian Haverty</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Killian Haverty, Business Product Owner at SSE Airtricity in Dublin. Product roadmaps, digital change and data-driven customer experiences.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky identity column on the left, a single reading column on the right; stacks on phones. */
+:root {
+  --paper: #f5f6f8;
+  --surface: #ffffff;
+  --ink: #15203a;
+  --muted: #586379;
+  --line: #dde1e8;
+  --accent: #e39a2d;
+  --accent-ink: #9a5a08;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f1522; --surface: #161e2e; --ink: #e7ebf2; --muted: #9aa4b8;
+    --line: #273149; --accent: #f0b04e; --accent-ink: #f0b04e; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0f1522; --surface: #161e2e; --ink: #e7ebf2; --muted: #9aa4b8;
+  --line: #273149; --accent: #f0b04e; --accent-ink: #f0b04e; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 400 1rem/1.65 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+a { color: inherit; text-decoration-color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+.wrap {
+  max-width: 1120px; margin: 0 auto;
+  display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 72px;
+  padding-block: 72px 96px;
+}
+@media (max-width: 860px) { .wrap { grid-template-columns: 1fr; gap: 48px; padding-block: 40px 64px; } }
+
+/* Identity column */
+.id { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 72px); align-self: start; display: flex; flex-direction: column; gap: 24px; }
+@media (max-width: 860px) { .id { position: static; } }
+.mono-mark {
+  width: 56px; height: 56px; border-radius: 50%;
+  display: grid; place-items: center;
+  border: 1.5px solid var(--ink); font: 700 1.1rem/1 var(--display); letter-spacing: .02em;
+}
+.id h1 { font: 700 clamp(2.3rem, 5vw, 2.9rem)/1.02 var(--display); letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+.role { margin: 0; color: var(--muted); }
+.role strong { color: var(--ink); font-weight: 600; }
+nav ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+@media (max-width: 860px) { nav ul { flex-direction: row; flex-wrap: wrap; gap: 8px 18px; } }
+nav a { font: 500 .8rem/1.4 var(--mono); text-transform: uppercase; letter-spacing: .08em; text-decoration: none; color: var(--muted); }
+nav a:hover { color: var(--ink); }
+.contact-line { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font: 400 .9rem/1.4 var(--mono); }
+.btn {
+  font: 500 .78rem/1 var(--mono); letter-spacing: .06em; text-transform: uppercase;
+  padding: 9px 12px; border-radius: 6px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink); cursor: pointer; text-decoration: none;
+}
+.btn:hover { border-color: var(--ink); }
+
+/* Main column */
+main { min-width: 0; display: flex; flex-direction: column; gap: 88px; max-width: 700px; }
+section { display: flex; flex-direction: column; gap: 28px; scroll-margin-top: 32px; }
+.eyebrow { font: 500 .75rem/1 var(--mono); text-transform: uppercase; letter-spacing: .14em; color: var(--accent-ink); margin: 0; }
+h2 { font: 700 1.75rem/1.15 var(--display); letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+h3 { font: 600 1.08rem/1.35 var(--body); margin: 0; }
+p { margin: 0; }
+
+.lede { font: 500 clamp(1.45rem, 3vw, 1.85rem)/1.3 var(--display); letter-spacing: -.01em; text-wrap: balance; }
+.lede em { font-style: normal; background: linear-gradient(transparent 62%, color-mix(in srgb, var(--accent) 38%, transparent) 62%); }
+.about-copy { display: flex; flex-direction: column; gap: 14px; color: var(--muted); max-width: 62ch; }
+
+.figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.figures div { padding: 18px 16px 18px 0; display: flex; flex-direction: column; gap: 4px; }
+.figures div + div { padding-left: 16px; border-left: 1px solid var(--line); }
+.figures b { font: 700 1.9rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.figures span { font-size: .85rem; color: var(--muted); line-height: 1.35; }
+@media (max-width: 520px) {
+  .figures { grid-template-columns: 1fr; }
+  .figures div, .figures div + div { padding: 14px 0; border-left: 0; }
+  .figures div + div { border-top: 1px solid var(--line); }
+}
+
+/* Experience timeline */
+.timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.job { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 24px; padding-block: 24px; border-top: 1px solid var(--line); }
+.job:last-child { border-bottom: 1px solid var(--line); }
+.when { font: 400 .82rem/1.6 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 2px; }
+.job.now .when { color: var(--accent-ink); font-weight: 500; }
+.job-body { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.org { color: var(--muted); font-size: .92rem; }
+.job-body p.desc { color: var(--muted); max-width: 62ch; }
+@media (max-width: 520px) { .job { grid-template-columns: 1fr; gap: 6px; } }
+
+/* Selected work */
+.work { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 620px) { .work { grid-template-columns: 1fr; } }
+.case { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.case.feature { grid-column: 1 / -1; border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.case .meta { font: 400 .75rem/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.case p { color: var(--muted); font-size: .95rem; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 6px; }
+.tags span { font: 400 .72rem/1 var(--mono); padding: 5px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.award { font: 500 .78rem/1.3 var(--mono); color: var(--accent-ink); }
+
+/* Lists */
+.two-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; gap: 32px; } }
+.plain { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.plain li { display: flex; flex-direction: column; gap: 2px; }
+.plain .sub { color: var(--muted); font-size: .9rem; }
+.plain .yr { font: 400 .78rem/1.4 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.skills { display: flex; flex-wrap: wrap; gap: 8px; }
+.skills span { padding: 7px 12px; border-radius: 6px; background: var(--surface); border: 1px solid var(--line); font-size: .9rem; }
+h4 { font: 500 .75rem/1 var(--mono); text-transform: uppercase; letter-spacing: .12em; color: var(--muted); margin: 0 0 16px; }
+
+.cta { display: flex; flex-direction: column; gap: 18px; }
+.cta .email { font: 700 clamp(1.4rem, 4.4vw, 2.1rem)/1.15 var(--display); letter-spacing: -.01em; overflow-wrap: anywhere; user-select: all; }
+.cta .row { display: flex; flex-wrap: wrap; gap: 10px; }
+footer { color: var(--muted); font: 400 .78rem/1.5 var(--mono); }
+</style>
+
+<div class="wrap">
+  <aside class="id">
+    <div class="mono-mark" aria-hidden="true">KH</div>
+    <h1>Killian Haverty</h1>
+    <p class="role"><strong>Business Product Owner</strong> at SSE Airtricity. Digital products, data and change, based in Dublin.</p>
+    <nav aria-label="Sections">
+      <ul>
+        <li><a href="#about">About</a></li>
+        <li><a href="#work">Selected work</a></li>
+        <li><a href="#experience">Experience</a></li>
+        <li><a href="#education">Education</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+    <div class="contact-line">
+      <span>killian@ahaverty.com</span>
+      <button class="btn" type="button" id="copy-side" data-copy="killian@ahaverty.com">Copy</button>
+    </div>
+    <!--CV-->
+  </aside>
+
+  <main>
+    <section id="about" aria-labelledby="about-h">
+      <p class="eyebrow">About</p>
+      <h2 id="about-h" class="lede">I own products that turn energy data into <em>decisions customers can act on.</em></h2>
+      <div class="about-copy">
+        <p>I'm the Business Product Owner for the SSE Airtricity app, used by Home Energy customers across the Republic of Ireland and Northern Ireland. I also lead Enhanced Smart Insights, an award-winning programme that uses smart meter data to give customers analysis and AI-driven energy-saving recommendations.</p>
+        <p>My background is in digital change across telecoms, banking and energy. I define roadmaps, prioritise the features that create the most customer and business value, and work closely with UX, engineering and operations teams to ship them.</p>
+      </div>
+      <div class="figures" role="list">
+        <div role="listitem"><b>~100k</b><span>customers on the SSE Airtricity app</span></div>
+        <div role="listitem"><b>1.5k+</b><span>UK employees using a Power App I built</span></div>
+        <div role="listitem"><b>600+</b><span>business and customer impacts closed on one transformation</span></div>
+      </div>
+    </section>
+
+    <section id="work" aria-labelledby="work-h">
+      <p class="eyebrow">Selected work</p>
+      <h2 id="work-h">Projects I've led</h2>
+      <div class="work">
+        <article class="case feature">
+          <span class="meta">SSE Airtricity · 2025 to now</span>
+          <h3>Enhanced Smart Insights</h3>
+          <p>A programme that uses smart meter readings to show customers how they use energy, then recommends practical ways to save, driven by data analysis and AI.</p>
+          <span class="award">Customer Insights Award 2026, Analytics &amp; AI Awards</span>
+          <div class="tags"><span>Smart meter data</span><span>AI recommendations</span><span>Product leadership</span></div>
+        </article>
+        <article class="case">
+          <span class="meta">SSE Airtricity · 2025 to now</span>
+          <h3>SSE Airtricity app rebuild</h3>
+          <p>Owned the roadmap and backlog through a move from Angular to React, improving performance and scalability. Partnered with UX on a redesign of customer journeys and self-service.</p>
+          <div class="tags"><span>Roadmap</span><span>Backlog</span><span>React migration</span><span>UX</span></div>
+        </article>
+        <article class="case">
+          <span class="meta">SSE plc · 2023 to 2025</span>
+          <h3>Skills Matrix app</h3>
+          <p>One of several Power Apps I developed within SSE's business-wide digital transformation programme. It's used by more than 1,500 employees in the UK.</p>
+          <div class="tags"><span>Power Apps</span><span>Automation</span><span>Central data</span></div>
+        </article>
+        <article class="case">
+          <span class="meta">Three Ireland · Brooklyn</span>
+          <h3>Store and digital transformation</h3>
+          <p>Led business readiness and UAT for the transformation of Three stores nationwide. Ten work packages, with over 600 business and customer impacts closed.</p>
+          <div class="tags"><span>Business readiness</span><span>UAT lead</span></div>
+        </article>
+        <article class="case">
+          <span class="meta">Three Ireland · 3Vision</span>
+          <h3>O2 and Three CRM integration</h3>
+          <p>Change specialist on moving legacy systems into one omnichannel platform: UAT of customer journeys, data cleansing, communications planning and screen-to-screen mapping.</p>
+          <div class="tags"><span>Data migration</span><span>Change management</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="experience" aria-labelledby="exp-h">
+      <p class="eyebrow">Experience</p>
+      <h2 id="exp-h">Where I've worked</h2>
+      <ol class="timeline">
+        <li class="job now">
+          <span class="when">2025 – now</span>
+          <div class="job-body">
+            <h3>Business Product Owner</h3>
+            <span class="org">SSE Airtricity, Leopardstown</span>
+            <p class="desc">Product roadmap and backlog for the SSE Airtricity mobile app, Angular to React replatform, customer-focused prioritisation and a major UX redesign.</p>
+          </div>
+        </li>
+        <li class="job">
+          <span class="when">2023 – 2025</span>
+          <div class="job-body">
+            <h3>Digital Change Manager</h3>
+            <span class="org">SSE plc, Leopardstown</span>
+            <p class="desc">Automation and Central Data Services workstreams within the business-wide digital transformation programme. Built Power Apps for business units.</p>
+          </div>
+        </li>
+        <li class="job">
+          <span class="when">2022 – 2023</span>
+          <div class="job-body">
+            <h3>Senior Change Analyst</h3>
+            <span class="org">Permanent TSB, St. Stephen's Green</span>
+            <p class="desc">Maintained data reports feeding monthly executive reporting, automated weekly processes with VBA, and ran the monthly portfolio status reporting cycle.</p>
+          </div>
+        </li>
+        <li class="job">
+          <span class="when">2018 – 2022</span>
+          <div class="job-body">
+            <h3>Change Management Specialist</h3>
+            <span class="org">Three Ireland, Sir John Rogerson's Quay</span>
+            <p class="desc">Business readiness and UAT lead on the Brooklyn store transformation, and change specialist on the 3Vision O2 and Three CRM integration.</p>
+          </div>
+        </li>
+        <li class="job">
+          <span class="when">2014 – 2018</span>
+          <div class="job-body">
+            <h3>Earlier roles</h3>
+            <span class="org">Enterprise Rent-A-Car, Dublin Airport · Dixons Carphone, Jervis</span>
+            <p class="desc">Management Trainee at Enterprise (top 10 sales associates in Ireland, summer 2017) and Sales Assistant at Dixons Carphone while studying.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section id="education" aria-labelledby="edu-h">
+      <p class="eyebrow">Education &amp; recognition</p>
+      <h2 id="edu-h">Qualifications</h2>
+      <div class="two-col">
+        <div>
+          <h4>Education &amp; certification</h4>
+          <ul class="plain">
+            <li><span class="yr">2026</span><strong>Digital Product Management</strong><span class="sub">UCD Academy</span></li>
+            <li><span class="yr">2023</span><strong>Professional Scrum Master (PSM)</strong><span class="sub">QAPSM</span></li>
+            <li><span class="yr">2021 – 2022</span><strong>PG Cert, Digital Leadership &amp; Transformation</strong><span class="sub">Level 9, TU Dublin</span></li>
+            <li><span class="yr">2021 – 2022</span><strong>CAPM</strong><span class="sub">Project Management Institute</span></li>
+            <li><span class="yr">2020 – 2021</span><strong>Lean Six Sigma Green Belt</strong><span class="sub">Level 7 QQI, SQT</span></li>
+            <li><span class="yr">2014 – 2018</span><strong>BSc Business &amp; Management</strong><span class="sub">Level 8, Dublin Institute of Technology</span></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Awards</h4>
+          <ul class="plain">
+            <li><span class="yr">2026</span><strong>Customer Insights Award</strong><span class="sub">Analytics &amp; AI Awards, Enhanced Smart Insights team</span></li>
+            <li><span class="yr">2022</span><strong>VIP Recognition Award</strong><span class="sub">Permanent TSB, peer nominated</span></li>
+            <li><span class="yr">2019</span><strong>Graduate of the Year</strong><span class="sub">Three Ireland</span></li>
+            <li><span class="yr">2019</span><strong>Shortlisted, Graduate Employee of the Year</strong><span class="sub">GradIreland, judged</span></li>
+            <li><span class="yr">2019</span><strong>Q1 Hero Award</strong><span class="sub">Three Ireland</span></li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <h4>Skills &amp; tools</h4>
+        <div class="skills">
+          <span>Product roadmaps</span><span>Backlog management</span><span>Scrum</span><span>Change management</span><span>UAT management</span><span>Project management</span><span>Power Apps</span><span>Power Automate</span><span>Power BI</span><span>Azure DevOps</span><span>Excel &amp; VBA</span><span>Python</span><span>SQL</span><span>Visio process mapping</span><span>Communication &amp; training</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" aria-labelledby="contact-h">
+      <p class="eyebrow">Contact</p>
+      <div class="cta">
+        <h2 id="contact-h">Let's talk about product, data or digital change.</h2>
+        <span class="email">killian@ahaverty.com</span>
+        <div class="row">
+          <button class="btn" type="button" id="copy-main" data-copy="killian@ahaverty.com">Copy email</button>
+          <a class="btn" href="mailto:killian@ahaverty.com">Send an email</a>
+        </div>
+      </div>
+    </section>
+
+    <footer>© 2026 Killian Haverty · Dublin, Ireland</footer>
+  </main>
+</div>
+
+<script>
+document.querySelectorAll('[data-copy]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var text = btn.getAttribute('data-copy'), label = btn.textContent;
+    function done(msg) { btn.textContent = msg; setTimeout(function () { btn.textContent = label; }, 1600); }
+    try {
+      navigator.clipboard.writeText(text).then(function () { done('Copied'); }, function () { done('Select to copy'); });
+    } catch (e) { done('Select to copy'); }
+  });
+});
+</script>
+
+</body></html>
