@@ -4,3 +4,4 @@ lang: en-IE
 markdown: kramdown
 exclude:
   - README.md
+baseurl: "/Career"
