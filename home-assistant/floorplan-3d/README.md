@@ -19,7 +19,7 @@ Daft.ie ground + first floor plans) using three.js.
 - **Floors**: ground, first floor, an exploded view of both, or the garden & cabin (buttons top-left).
 - **Garden cabin** (Trihold Longford 5030): main room + shed, up/down wall lights with light
   beams, shed light, LED strip around the workbench, camera + floodlight, and the alarm contacts
-  on the French doors (`binary_sensor.back_door`) and shed door (`binary_sensor.side_door`).
+  on the French doors (`binary_sensor.front_door`) and shed door (`binary_sensor.side_door`).
 - **Doorbell** beside the front door (red pulse when someone rings, blue on person/motion) —
   tap it, or the cabin camera, to open the live camera view.
 - HUD: who's home, lights on, heating, alarm, vacuum, open doors/windows, weather + sunset.

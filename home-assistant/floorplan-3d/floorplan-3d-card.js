@@ -185,10 +185,10 @@ const DEFAULT_DEVICES = [
   { entity: 'light.kitchen_driver', room: 'kitchen', at: [3.6, 2.6] },
   { entity: 'climate.kitchen_kitchen_thermostat', room: 'kitchen', at: [1.3, 4.25] },
   { entity: 'binary_sensor.kitchen_md', room: 'kitchen', at: [4.6, 0.6] },
+  { entity: 'binary_sensor.back_door', kind: 'door', name: 'Back door', room: 'kitchen', at: [1.3, 1.6] }, // French doors to the garden
   { entity: 'binary_sensor.back_window', room: 'kitchen', at: [3.8, 0.35] },
   { entity: 'vacuum.l40s_pro_ultra', room: 'kitchen', at: [2.35, 4.45] },
   { entity: 'light.hallway_lamp', room: 'hallway', at: [3.85, 7.3] },
-  { entity: 'binary_sensor.front_door', room: 'hallway', at: [4.05, 9.15] },
   { entity: 'binary_sensor.hallway_motion', room: 'hallway', at: [3.85, 6.0] },
   { entity: 'binary_sensor.laverna_hallway_md', room: 'hallway', at: [3.85, 5.1] },
   // First floor
@@ -217,7 +217,7 @@ const DEFAULT_DEVICES = [
   { entity: 'light.cabin_shed_leds_shed_led_strip', room: 'shed', at: [4.75, -8.35], h: 1.1, light_at: [4.6, 1.05, -8.35], range: 2.5, power: 0.6 },
   { entity: 'media_player.cabin', room: 'cabin', at: [3.1, -8.75], h: 1.6 },
   // cabin doors on the alarm: French doors (main room) and the shed door
-  { entity: 'binary_sensor.back_door', kind: 'door', name: 'Cabin door', room: 'cabin', at: [2.7, -6.0], h: 1.6 },
+  { entity: 'binary_sensor.front_door', kind: 'door', name: 'Cabin door', room: 'cabin', at: [2.7, -6.0], h: 1.6 },
   { entity: 'binary_sensor.side_door', kind: 'door', name: 'Shed door', room: 'shed', at: [4.48, -6.0], h: 1.6 },
 ];
 
