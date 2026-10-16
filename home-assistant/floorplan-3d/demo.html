@@ -21,6 +21,8 @@
     <summary>Simulate</summary>
     <label>Weather <select id="weather"></select></label>
     <label>Time <select id="time"><option value="12">Midday</option><option value="19">Evening</option><option value="23">Night</option></select></label>
+    <button data-toggle="binary_sensor.doorbell_visitor">Ring doorbell</button>
+    <button data-lights="light.left_up_cabin_light,light.left_down_cabin_light,light.right_up_cabin_light,light.right_down_cabin_light,light.cabin_shed_leds_shed_led_strip,light.shed_light_3">Cabin lights</button>
     <button data-toggle="binary_sensor.front_door">Front door</button>
     <button data-toggle="binary_sensor.office_window">Office window</button>
     <button data-toggle="binary_sensor.hallway_motion">Hallway motion</button>
@@ -44,6 +46,10 @@
     ['binary_sensor.front_window_left', 'binary_sensor.front_window_right', 'binary_sensor.back_window', 'binary_sensor.back_window_bedroom',
      'binary_sensor.office_window', 'binary_sensor.spare_room_window'].forEach((b) => add(b, 'off', { device_class: 'window' }));
     ['binary_sensor.front_door', 'binary_sensor.back_door', 'binary_sensor.side_door'].forEach((b) => add(b, 'off', { device_class: 'door' }));
+    ['binary_sensor.doorbell_visitor', 'binary_sensor.doorbell_person', 'binary_sensor.doorbell_motion'].forEach((b) => add(b, 'off'));
+    add('binary_sensor.cabin_cam_motion', 'off', { device_class: 'motion' });
+    add('light.cabin_shed_leds_shed_led_strip', 'off', { friendly_name: 'Shed LEDs' });
+    add('media_player.cabin', 'off');
     ['binary_sensor.hallway_motion', 'binary_sensor.laverna_hallway_md'].forEach((b) => add(b, 'off', { device_class: 'motion' }));
     add('binary_sensor.kitchen_md', 'on', { device_class: 'motion' });
     add('sensor.temp_sensor_temperature', '18.5', { unit_of_measurement: '°C', device_class: 'temperature' });
@@ -100,7 +106,11 @@
       set(id, opts[(opts.indexOf(S[id].state) + 1) % opts.length]);
       push();
     }));
-    for (const id of (params.get('on') || '').split(',').filter(Boolean)) set(id, S[id]?.state === 'docked' ? 'cleaning' : 'on');
+    document.querySelectorAll('[data-lights]').forEach((b) => (b.onclick = () => {
+      const ids = b.dataset.lights.split(','), on = ids.some((i) => S[i].state === 'on');
+      callService('light', on ? 'turn_off' : 'turn_on', { entity_id: ids });
+    }));
+    for (const id of (params.get('on') || '').split(',').filter(Boolean)) set(id, S[id]?.state === 'docked' ? 'cleaning' : 'on', id === 'light.cabin_shed_leds_shed_led_strip' ? { rgb_color: [120, 90, 255] } : {});
 
     const config = { height: '100vh' };
     if (params.get('three')) config.three_url = params.get('three');

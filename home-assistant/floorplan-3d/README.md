@@ -11,7 +11,11 @@ Daft.ie ground + first floor plans) using three.js.
   returns to its dock.
 - **Weather**: rain, snow, fog, drifting clouds and lightning follow `weather.forecast_home`;
   daylight and shadows follow `sun.sun` (night mode makes lit rooms pop).
-- **Floors**: ground, first floor, or an exploded view of both (buttons top-left).
+- **Floors**: ground, first floor, an exploded view of both, or the garden & cabin (buttons top-left).
+- **Garden cabin** (Trihold Longford 5030): main room + shed, up/down wall lights with light
+  beams, shed light, LED strip around the workbench, camera + floodlight.
+- **Doorbell** beside the front door (red pulse when someone rings, blue on person/motion) —
+  tap it, or the cabin camera, to open the live camera view.
 - HUD: who's home, lights on, heating, alarm, vacuum, open doors/windows, weather + sunset.
 
 Drag to orbit, right-drag / shift-drag / two-finger drag to pan, scroll / pinch to zoom,
@@ -34,14 +38,14 @@ three.js is loaded from jsDelivr; set `three_url:` to self-host it.
 | key | default | |
 | --- | --- | --- |
 | `height` | `calc(100vh - header)` | CSS height of the card |
-| `floor` | `0` | initial view: `0`, `1` or `all` |
-| `house_bearing` | `0` | compass bearing the back of the house faces (sun direction) |
+| `floor` | `0` | initial view: `0`, `1`, `all` or `garden` |
+| `house_bearing` | `95` | compass bearing the back of the house faces (sun direction) |
 | `weather`, `sun`, `climate`, `alarm`, `vacuum` | this house's entities | |
 | `persons` | `[person.killian, person.sinead]` | |
-| `devices` | see `DEFAULT_DEVICES` | list of `{ entity, room, at: [x, z], name? }` |
+| `devices` | see `DEFAULT_DEVICES` | list of `{ entity, room, at: [x, z], name?, kind?, camera?, h?, light_at?, range?, power? }` |
 
 Room ids: `kitchen`, `living`, `hallway`, `wc`, `bedroom`, `ensuite`, `bathroom`, `landing`,
-`spare` (bedroom 2, front-left), `office` (bedroom 3, front-right), `cabin`, `garden`, `front`.
+`spare` (bedroom 2, front-left), `office` (bedroom 3, front-right), `cabin`, `shed`, `garden`, `front`.
 Coordinates are metres: `x` left→right on the plan, `z` back→front.
 
 `demo.html` runs the card with simulated states (serve the folder over HTTP and open it).

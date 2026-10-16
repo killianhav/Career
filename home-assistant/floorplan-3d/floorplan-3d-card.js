@@ -10,11 +10,11 @@
  *   # everything below is optional – defaults match this house
  *   height: 100%            # css height; default fills a panel view
  *   floor: 0                # initial floor: 0 | 1 | all
- *   house_bearing: 0        # compass bearing the BACK of the house faces (for the sun)
+ *   house_bearing: 95       # compass bearing the BACK of the house faces (for the sun)
  *   devices: [...]          # replace the default entity → room mapping (see DEFAULT_DEVICES)
  */
 
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 const DEFAULT_THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js';
 
 /* ------------------------------------------------------------------ icons (MDI) */
@@ -38,6 +38,9 @@ const ICON = {
   floor1: 'M12,3L2,12H5V20H19V12H22L12,3M10,8H14V18H12V10H10V8Z',
   layers: 'M12,16L19.36,10.27L21,9L12,2L3,9L4.63,10.27M12,18.54L4.62,12.81L3,14.07L12,21.07L21,14.07L19.37,12.8L12,18.54Z',
   home: 'M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z',
+  doorbell: 'M14 15C14 16.11 13.11 17 12 17S10 16.11 10 15 10.9 13 12 13 14 13.9 14 15M18 4V20C18 21.1 17.11 22 16 22H8C6.9 22 6 21.11 6 20V4C6 2.9 6.9 2 8 2H16C17.11 2 18 2.9 18 4M10.5 7C10.5 7.83 11.17 8.5 12 8.5S13.5 7.830 13.5 7 12.83 5.5 12 5.5 10.5 6.17 10.5 7M16 10H8V20H16V10Z',
+  cctv: 'M6.03 12.03L8.03 15.5L5.5 18.68L2 12.62L6.03 12.03M17 18V15.29C17.88 14.9 18.5 14.03 18.5 13C18.5 12.43 18.3 11.9 17.97 11.5L19.94 10.35C20.95 9.76 21.3 8.47 20.71 7.46L19.33 5.06C18.74 4.05 17.45 3.7 16.44 4.28L8.31 9C7.36 9.53 7.03 10.75 7.58 11.71L9.08 14.31C9.63 15.26 10.86 15.59 11.81 15.04L13.69 13.96C13.94 14.55 14.41 15.03 15 15.29V18C15 19.1 15.9 20 17 20H22V18H17Z',
+  tree: 'M11,21V16.74C10.53,16.91 10.03,17 9.5,17C7,17 5,15 5,12.5C5,11.23 5.5,10.09 6.36,9.27C6.13,8.73 6,8.13 6,7.5C6,5 8,3 10.5,3C12.06,3 13.44,3.8 14.25,5C14.33,5 14.41,5 14.5,5A5.5,5.5 0 0,1 20,10.5A5.5,5.5 0 0,1 14.5,16C14,16 13.5,15.93 13,15.79V21H11Z',
 };
 const svg = (d, cls = '') => `<svg viewBox="0 0 24 24" class="${cls}"><path d="${d}"/></svg>`;
 
@@ -96,7 +99,7 @@ const FLOORS = [
       ['sofa', 2.5, 5.6, 3.42, 8.0, 'w'],
       ['box', 1.35, 6.45, 2.05, 7.6, 0.4, '#7a5636'], // coffee table
       ['armchair', 2.35, 8.65, 3.15, 9.45],
-      ['lamp', 0.35, 9.35],
+      ['lamp', 0.35, 9.35, 'light.lamp'],
       ['plant', 3.2, 5.15],
       // hallway / wc
       ['stairs', 4.2, 4.93, 8.61, 6.11],
@@ -149,19 +152,22 @@ const FLOORS = [
       ['box', 0.0, 4.78, 1.78, 5.68, 2.1, '#ece6dd'], // wardrobes
       ['bed', -0.02, 6.6, 2.0, 8.2, 'e'],
       ['box', 0.0, 8.3, 0.42, 8.7, 0.5, '#8a6b4c'],
-      // bedroom 3
-      ['desk', 4.25, 7.0, 4.95, 8.6],
-      ['box', 2.9, 6.67, 3.25, 7.9, 1.8, '#b8a48c'], // shelves
-      ['plant', 3.2, 8.95],
+      // bedroom 3 / office: desk with monitors on the east wall, day bed on the west wall
+      ['desk', 4.25, 7.0, 4.95, 8.7],
+      ['daybed', 2.88, 7.15, 3.72, 9.1],
+      ['plant', 4.7, 9.0],
       // stair void
       ['stairsDown', 4.15, 4.95, 4.97, 6.55],
     ],
   },
 ];
 
+// Garden cabin: Trihold "Longford two room 5030" log cabin (5.0 x 3.0 m) at the end of the garden.
+// Main room on the left, 1.2 m shed on the right (as seen from the house).
+const CABIN = { x0: 0.2, x1: 5.2, zf: -6.2, zb: -9.2, xp: 3.8, floor: 0.15, wall: 2.21, t: 0.07 };
+
 // Outdoor zones are always visible.
 const OUTSIDE_ROOMS = [
-  { id: 'cabin', name: 'Cabin', center: [1.5, -8.6] },
   { id: 'garden', name: 'Back garden', center: [2.5, -3] },
   { id: 'front', name: 'Front', center: [2.5, 11.5] },
 ];
@@ -197,10 +203,20 @@ const DEFAULT_DEVICES = [
   { entity: 'binary_sensor.spare_room_window', room: 'spare', at: [1.7, 9.5] },
   { entity: 'cover.blind_1', room: 'office', at: [3.6, 8.95] },
   { entity: 'binary_sensor.office_window', room: 'office', at: [4.2, 8.95] },
-  // Outside
-  { entity: ['light.left_up_cabin_light', 'light.right_up_cabin_light', 'light.left_down_cabin_light', 'light.right_down_cabin_light', 'light.shed_light_3', 'light.cabin_shed_leds_shed_led_strip'], name: 'Cabin', room: 'cabin', at: [1.5, -7.2] },
-  { entity: 'light.cabin_cam_light', room: 'garden', at: [3.6, -7.1] },
-  { entity: 'light.front_light', room: 'front', at: [4.6, 9.95] },
+  // Front
+  { entity: ['binary_sensor.doorbell_visitor', 'binary_sensor.doorbell_person', 'binary_sensor.doorbell_motion'], kind: 'doorbell', camera: 'camera.doorbell_fluent', name: 'Doorbell', room: 'front', at: [3.5, 9.75], h: 1.3 },
+  { entity: 'light.front_light', room: 'front', at: [4.6, 10.1] },
+  // Garden cabin – up/down wall lights on the front, camera + floodlight on the front-left corner
+  // (h = marker height, light_at = [x, y, z] of the 3D light, range in metres, power = brightness scale)
+  { entity: 'light.left_up_cabin_light', room: 'garden', at: [0.78, -6.0], h: 2.7, light_at: [0.78, 2.45, -6.05], range: 2.5, power: 0.5 },
+  { entity: 'light.left_down_cabin_light', room: 'garden', at: [0.78, -6.0], h: 1.2, light_at: [0.78, 0.7, -5.7], range: 3.5, power: 0.7 },
+  { entity: 'light.right_up_cabin_light', room: 'garden', at: [3.93, -6.0], h: 2.7, light_at: [3.93, 2.45, -6.05], range: 2.5, power: 0.5 },
+  { entity: 'light.right_down_cabin_light', room: 'garden', at: [3.93, -6.0], h: 1.2, light_at: [3.93, 0.7, -5.7], range: 3.5, power: 0.7 },
+  { entity: 'binary_sensor.cabin_cam_motion', kind: 'camera', camera: 'camera.cabin_cam_live_view', name: 'Cabin camera', room: 'garden', at: [0.3, -6.0], h: 2.7 },
+  { entity: 'light.cabin_cam_light', room: 'garden', at: [0.3, -6.0], h: 1.2, light_at: [0.3, 2.3, -5.85], range: 8 },
+  { entity: 'light.shed_light_3', room: 'shed', at: [4.2, -7.4], light_at: [3.92, 1.95, -7.6], range: 3 },
+  { entity: 'light.cabin_shed_leds_shed_led_strip', room: 'shed', at: [4.75, -8.35], h: 1.1, light_at: [4.6, 1.05, -8.35], range: 2.5, power: 0.6 },
+  { entity: 'media_player.cabin', room: 'cabin', at: [2.0, -8.4] },
 ];
 
 // A loop through the ground floor that passes through real doorways (for the robot vacuum).
@@ -264,7 +280,7 @@ class Floorplan3DCard extends HTMLElement {
   setConfig(config) {
     this._config = {
       floor: 0,
-      house_bearing: 0,
+      house_bearing: 95,
       weather: 'weather.forecast_home',
       sun: 'sun.sun',
       climate: 'climate.kitchen_kitchen_thermostat',
@@ -353,6 +369,7 @@ class Floorplan3DCard extends HTMLElement {
             <button data-f="0" title="Ground floor">${svg(ICON.floorG)}</button>
             <button data-f="1" title="First floor">${svg(ICON.floor1)}</button>
             <button data-f="all" title="Both floors">${svg(ICON.layers)}</button>
+            <button data-f="garden" title="Garden &amp; cabin">${svg(ICON.tree)}</button>
           </div>
           <div class="hud bl"></div>
           <div class="hud br weather"></div>
@@ -416,6 +433,7 @@ class Floorplan3DCard extends HTMLElement {
     this._sun = sun;
     this._flash = 0;
 
+    this._lightFx = {}; // light entity → extra visuals (lamp shades, LED strips, wall-light beams)
     this._roomMeshes = []; // raycast targets
     this._rooms = {}; // id → { glowMats, floor, lights }
     this._floorGroups = [];
@@ -528,7 +546,47 @@ class Floorplan3DCard extends HTMLElement {
         g.fill();
       }
     };
+    const logs = (g, s) => {
+      const rnd = seeded(9);
+      const n = 8, bh = s / n;
+      for (let i = 0; i < n; i++) {
+        g.fillStyle = `hsl(31, 58%, ${44 + (rnd() - 0.5) * 6}%)`;
+        g.fillRect(0, i * bh, s, bh);
+        g.fillStyle = 'rgba(255,230,180,0.18)';
+        g.fillRect(0, i * bh + 2, s, bh * 0.25);
+        g.fillStyle = 'rgba(40,20,5,0.55)';
+        g.fillRect(0, (i + 1) * bh - 3, s, 3);
+      }
+    };
+    const beam = (g, s) => {
+      // light cone from a wall light, bright at the top fading downwards
+      for (let y = 0; y < s; y++) {
+        const f = y / s, half = (0.08 + 0.42 * f) * s, a = Math.pow(1 - f, 1.6);
+        const grd = g.createLinearGradient(s / 2 - half, 0, s / 2 + half, 0);
+        grd.addColorStop(0, 'rgba(255,255,255,0)');
+        grd.addColorStop(0.5, `rgba(255,255,255,${a})`);
+        grd.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = grd;
+        g.fillRect(0, y, s, 1);
+      }
+    };
+    const lattice = (g, s) => {
+      g.clearRect(0, 0, s, s);
+      g.strokeStyle = '#b89567';
+      g.lineWidth = 7;
+      for (let i = -s; i < 2 * s; i += s / 4) {
+        g.beginPath(); g.moveTo(i, 0); g.lineTo(i + s, s); g.stroke();
+        g.beginPath(); g.moveTo(i, s); g.lineTo(i + s, 0); g.stroke();
+      }
+    };
+    const beamTex = this._canvasTex(128, beam, 1);
+    beamTex.wrapS = beamTex.wrapT = this.THREE.ClampToEdgeWrapping;
     return {
+      logs: this._canvasTex(256, logs, 1.2),
+      beam: beamTex,
+      lattice: this._canvasTex(256, lattice, 0.7),
+      lawn: this._canvasTex(512, noise([98, 42, 36], 10, 12, 30000), 3),
+      soil: this._canvasTex(256, noise([22, 30, 22], 12, 13, 9000), 1.5),
       wood: this._canvasTex(512, wood([32, 45, 52], 1), 2.2),
       woodDark: this._canvasTex(512, wood([25, 40, 36], 2), 2.2),
       tile: this._canvasTex(512, tile([40, 10, 86], '#b9b4ad', 4), 1.6),
@@ -565,6 +623,13 @@ class Floorplan3DCard extends HTMLElement {
       roof: std({ color: '#3a3d42', roughness: 0.7 }),
       cabinWall: std({ color: '#8a6a4a' }),
       car: std({ color: '#9aa0a6', roughness: 0.25, metalness: 0.6 }),
+      deck: std({ color: '#7d5934', roughness: 0.7 }),
+      render: std({ color: '#ece2c2' }),
+      block: std({ color: '#9b978f' }),
+      conifer: std({ color: '#2d4a2b' }),
+      bush: std({ color: '#4d7a3a' }),
+      cabinGlass: new THREE.MeshStandardMaterial({ color: '#3a4550', transparent: true, opacity: 0.55, roughness: 0.1, metalness: 0.3, depthWrite: false }),
+      frosted: new THREE.MeshStandardMaterial({ color: '#e4eaee', transparent: true, opacity: 0.85, roughness: 0.6 }),
     };
   }
 
@@ -608,49 +673,97 @@ class Floorplan3DCard extends HTMLElement {
     const env = new THREE.Group();
     this._scene.add(env);
     const T = this._tex, M = this._mats;
-
-    env.add(this._tiledPlane(-28, -30, 34, 36, T.grass, -0.02));
-    env.add(this._tiledPlane(-0.6, -1.6, 2.82, 1.2, T.paving, -0.005)); // patio
-    env.add(this._tiledPlane(1.0, -7.4, 2.0, -1.6, T.paving, -0.006)); // path to cabin
-    env.add(this._tiledPlane(-2.2, 9.95, 7.6, 16.5, T.paving, -0.004)); // driveway
-    env.add(this._tiledPlane(5.1, -0.4, 7.6, 9.95, T.gravel, -0.005)); // side passage
-    env.add(this._tiledPlane(-9, 16.5, 16, 19.5, T.gravel, -0.006)); // footpath
-
-    // boundary fences
-    const fence = (x1, z1, x2, z2) => this._box(env, x1, z1, x2, z2, 1.6, M.fence);
-    fence(-2.3, -12, -2.2, 9.95);
-    fence(7.6, -12, 7.7, 9.95);
-    fence(-2.3, -12.1, 7.7, -12);
-    // hedge along the front
-    const hedge = this._box(env, -2.2, 16.2, 1.0, 16.6, 0.9, M.leaf);
-    hedge.material = M.leaf;
-
-    // cabin at the end of the garden
-    const cabin = new THREE.Group();
-    env.add(cabin);
-    this._box(cabin, -0.5, -10.4, 3.5, -7.4, 2.3, M.cabinWall);
-    const roof = this._box(cabin, -0.7, -10.6, 3.7, -7.2, 0.15, M.roof, 2.3);
-    roof.userData.room = 'cabin';
-    this._roomMeshes.push(roof);
-    // cabin glazing that glows when the cabin lights are on
-    this._cabinGlow = new THREE.MeshStandardMaterial({ color: '#2a3440', emissive: '#ffcf86', emissiveIntensity: 0, roughness: 0.2 });
-    this._box(cabin, 0.2, -7.42, 2.8, -7.36, 1.7, this._cabinGlow, 0.3, false);
-    this._box(cabin, 0.0, -7.4, 3.0, -6.6, 0.12, M.fence); // deck
-
-    // trees
-    const tree = (x, z, s = 1) => {
-      this._cyl(env, x, z, 0.15 * s, 1.6 * s, M.trunk);
-      const rnd = seeded(Math.round(x * 100 + z * 7));
-      for (let i = 0; i < 4; i++) {
-        const m = new THREE.Mesh(new THREE.IcosahedronGeometry((0.9 + rnd() * 0.6) * s, 1), M.leaf);
-        m.position.set(x + (rnd() - 0.5) * 1.2 * s, (1.9 + rnd() * 1.1) * s, z + (rnd() - 0.5) * 1.2 * s);
+    const box = (...a) => this._box(env, ...a);
+    const bush = (x, z, r, y = 0, mat = M.bush) => {
+      const rnd = seeded(Math.round(x * 131 + z * 17));
+      for (let i = 0; i < 3; i++) {
+        const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r * (0.7 + rnd() * 0.4), 1), mat);
+        m.position.set(x + (rnd() - 0.5) * r, y + r * (0.7 + rnd() * 0.4), z + (rnd() - 0.5) * r);
         m.castShadow = true;
         env.add(m);
       }
     };
-    tree(-1.2, -4.5, 1.1);
-    tree(6.6, -9.5, 1.3);
-    tree(6.7, -3.0, 0.9);
+
+    // ground
+    env.add(this._tiledPlane(-28, -30, 34, 36, T.grass, -0.02));
+
+    // ---- back garden (runs east from the house; north is to the left when looking from the house)
+    env.add(this._tiledPlane(-0.9, -9.65, 5.75, 1.32, T.soil, -0.014)); // planting beds
+    env.add(this._tiledPlane(-0.9, -1.6, 2.82, 1.32, T.paving, -0.006)); // patio by the dining doors
+    env.add(this._tiledPlane(2.82, -1.6, 5.75, 0.07, T.paving, -0.006)); // patio behind the kitchen
+    env.add(this._tiledPlane(4.55, -6.2, 5.15, -1.6, T.paving, -0.006)); // path to the shed door
+    env.add(this._tiledPlane(-0.9, -6.2, 5.75, -5.1, T.gravel, -0.008)); // gravel in front of the cabin
+    env.add(this._lawn());
+
+    // boundaries: timber fence (left), rendered block wall with trellis (right), block wall (back)
+    box(-0.97, -9.65, -0.9, 1.32, 1.8, M.fence);
+    box(5.75, -9.65, 5.95, 9.95, 1.9, M.render);
+    box(-0.97, -9.85, 5.95, -9.65, 2.0, M.block);
+    const trellis = new THREE.MeshStandardMaterial({ map: T.lattice, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.8 });
+    for (const [z1, z2] of [[-5.0, -3.3], [-3.1, -1.4]]) {
+      const pl = this._tiledPlane(z1, 0, z2, 0.75, T.lattice, 0);
+      pl.material = trellis;
+      pl.rotation.set(0, Math.PI / 2, 0);
+      pl.position.set(5.85, 1.9 + 0.375, (z1 + z2) / 2);
+      pl.castShadow = true;
+      env.add(pl);
+    }
+    // conifers behind the back wall
+    for (let i = 0; i < 7; i++) {
+      const h = 5 + (i % 3) * 0.8;
+      const c = new THREE.Mesh(new THREE.ConeGeometry(1.3, h, 10), M.conifer);
+      c.position.set(-1.5 + i * 1.3, h / 2, -10.9 - (i % 2) * 0.6);
+      c.castShadow = true;
+      env.add(c);
+    }
+    // neighbour's shed over the left fence
+    box(-3.2, -9.3, -1.2, -6.9, 2.0, new THREE.MeshStandardMaterial({ color: '#7a3e2c', roughness: 0.8 }));
+    box(-3.3, -9.4, -1.1, -6.8, 0.1, M.roof, 2.0);
+
+    // patio: corner bench, table and pots
+    box(-0.85, -1.55, 0.9, -1.1, 0.45, M.deck);
+    box(-0.85, -1.58, 0.9, -1.5, 0.9, M.deck);
+    box(-0.85, -1.1, -0.4, 0.4, 0.45, M.deck);
+    box(-0.9, -1.1, -0.82, 0.4, 0.9, M.deck);
+    this._buildFurniture(env, ['table', -0.15, -0.8, 0.6, -0.1, '#8a5a32']);
+    this._buildFurniture(env, ['plant', 1.15, -1.3]);
+    this._buildFurniture(env, ['plant', 1.5, -0.95]);
+    // planting
+    bush(-0.35, -2.5, 0.7);
+    bush(-0.45, -3.8, 0.55);
+    bush(-0.4, -4.7, 0.45);
+    bush(5.4, -3.9, 0.55);
+    // in front of the cabin: water butt, planters, steps
+    this._cyl(env, 0.5, -5.85, 0.27, 1.0, M.dark);
+    box(1.05, -6.05, 1.9, -5.65, 0.45, M.deck);
+    bush(1.47, -5.85, 0.3, 0.45, M.leaf);
+    box(3.62, -6.05, 3.95, -5.72, 0.4, M.deck);
+    this._cyl(env, 3.78, -5.88, 0.025, 1.1, M.trunk, 0.4);
+    const ball = new THREE.Mesh(new THREE.IcosahedronGeometry(0.28, 1), M.leaf);
+    ball.position.set(3.78, 1.6, -5.88);
+    ball.castShadow = true;
+    env.add(ball);
+    box(1.99, -6.2, 3.41, -5.82, CABIN.floor, M.deck);
+    box(4.05, -6.2, 4.9, -5.85, CABIN.floor, M.deck);
+
+    this._buildCabin(env);
+
+    // ---- front & side
+    env.add(this._tiledPlane(5.08, 0.07, 5.75, 9.95, T.gravel, -0.005)); // side passage
+    env.add(this._tiledPlane(-2.2, 9.95, 7.6, 16.5, T.paving, -0.004)); // driveway
+    env.add(this._tiledPlane(-9, 16.5, 16, 19.5, T.gravel, -0.006)); // footpath
+    box(-2.2, 16.2, 1.0, 16.6, 0.9, M.leaf); // hedge
+    box(3.47, 9.53, 3.55, 9.56, 0.14, M.dark, 1.2); // video doorbell
+    const tree = (x, z, sc = 1) => {
+      this._cyl(env, x, z, 0.15 * sc, 1.6 * sc, M.trunk);
+      const rnd = seeded(Math.round(x * 100 + z * 7));
+      for (let i = 0; i < 4; i++) {
+        const m = new THREE.Mesh(new THREE.IcosahedronGeometry((0.9 + rnd() * 0.6) * sc, 1), M.leaf);
+        m.position.set(x + (rnd() - 0.5) * 1.2 * sc, (1.9 + rnd() * 1.1) * sc, z + (rnd() - 0.5) * 1.2 * sc);
+        m.castShadow = true;
+        env.add(m);
+      }
+    };
     tree(-1.3, 14.8, 1.0);
     tree(9.5, 13, 1.2);
 
@@ -668,6 +781,101 @@ class Floorplan3DCard extends HTMLElement {
     env.add(car);
   }
 
+  _lawn() {
+    const THREE = this.THREE;
+    // wavy-edged lawn; shape coords are (x, -z)
+    const shape = new THREE.Shape();
+    shape.moveTo(0.55, 1.6);
+    shape.lineTo(4.55, 1.6);
+    shape.lineTo(4.55, 5.0);
+    for (let i = 0; i <= 24; i++) {
+      const x = 4.55 - (4.0 * i) / 24;
+      shape.lineTo(x, 5.05 + 0.25 * Math.sin((i / 24) * Math.PI * 2.2));
+    }
+    for (let i = 0; i <= 16; i++) {
+      const z = 5.0 - (3.4 * i) / 16;
+      shape.lineTo(0.55 + 0.3 * Math.sin((i / 16) * Math.PI), z);
+    }
+    const geo = new THREE.ShapeGeometry(shape, 4);
+    const m = this._tex.lawn.userData.metres;
+    const pos = geo.attributes.position, uv = geo.attributes.uv;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, pos.getX(i) / m, pos.getY(i) / m);
+    const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: this._tex.lawn, roughness: 0.95 }));
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.y = -0.003;
+    mesh.receiveShadow = true;
+    return mesh;
+  }
+
+  _buildCabin(env) {
+    const THREE = this.THREE;
+    const M = this._mats, T = this._tex;
+    const { x0, x1, zf, zb, xp, t } = CABIN;
+    this._box(env, x0 - 0.05, zb - 0.05, x1 + 0.05, zf + 0.05, CABIN.floor, M.deck); // foundation
+    const g = new THREE.Group();
+    g.position.y = CABIN.floor;
+    env.add(g);
+
+    const logs = new THREE.MeshStandardMaterial({ map: T.logs, roughness: 0.75 });
+    const style = { mats: [logs, logs, M.wallTop, logs, logs, logs], h: CABIN.wall, glass: M.cabinGlass, frosted: M.frosted, uvMetres: T.logs.userData.metres };
+    [
+      // front: window, French doors (main room), frosted door (shed)
+      { a: [x0, zf], b: [x1, zf], t, o: [[0.525, 1.275, 'w', 0.455, 2.035], [1.79, 3.21, 'g', 0, 2.065], [3.85, 4.7, 'f', 0, 2.065]] },
+      { a: [x0, zf], b: [x0, zb], t },
+      { a: [x1, zf], b: [x1, zb], t },
+      { a: [x0, zb], b: [x1, zb], t },
+      { a: [xp, zf], b: [xp, zb], t }, // partition between cabin and shed
+    ].forEach((w) => this._buildWall(g, w, style));
+
+    this._addRoom(g, { id: 'cabin', name: 'Cabin', finish: 'tile', rects: [[x0 + t / 2, zb + t / 2, xp - t / 2, zf - t / 2]] }, -1);
+    this._addRoom(g, { id: 'shed', name: 'Shed', finish: 'carpetGrey', rects: [[xp + t / 2, zb + t / 2, x1 - t / 2, zf - t / 2]] }, -1);
+
+    // cabin interior
+    this._buildFurniture(g, ['rug', 1.0, -8.5, 3.0, -6.9, '#8f9296']);
+    this._buildFurniture(g, ['plant', 0.6, -6.6]);
+    this._buildFurniture(g, ['tv', 1.5, zb + 0.04, 2.7, zb + 0.1, 1.0, 'media_player.cabin']);
+
+    // shed: L-shaped workbench in the back-left corner with an LED strip around its edge
+    const bench = new THREE.MeshStandardMaterial({ color: '#9c7a52', roughness: 0.7 });
+    this._box(g, xp + 0.04, zb + 0.04, x1 - 0.04, zb + 0.6, 0.9, bench);
+    this._box(g, xp + 0.04, zb + 0.6, xp + 0.6, zb + 1.8, 0.9, bench);
+    const led = new THREE.MeshStandardMaterial({ color: '#222', emissive: '#ffffff', emissiveIntensity: 0 });
+    this._box(g, xp + 0.6, zb + 0.6, x1 - 0.04, zb + 0.63, 0.025, led, 0.86, false);
+    this._box(g, xp + 0.6, zb + 0.6, xp + 0.63, zb + 1.8, 0.025, led, 0.86, false);
+    this._box(g, xp + 0.6, zb + 1.77, xp + 0.04, zb + 1.8, 0.025, led, 0.86, false);
+    this._addLightFx('light.cabin_shed_leds_shed_led_strip', { mat: led, gain: 3 });
+    // shed wall light on the left wall (the partition)
+    const lamp = new THREE.MeshStandardMaterial({ color: '#eee', emissive: '#ffffff', emissiveIntensity: 0 });
+    this._box(g, xp + 0.035, -7.7, xp + 0.09, -7.5, 0.16, lamp, 1.72, false);
+    this._addLightFx('light.shed_light_3', { mat: lamp, gain: 2 });
+
+    // front: two up/down wall lights and the camera with its floodlight
+    const fz = zf + t / 2;
+    for (const [x, side] of [[0.78, 'left'], [3.93, 'right']]) {
+      const fx = new THREE.MeshStandardMaterial({ color: '#1d1f22', emissive: '#ffffff', emissiveIntensity: 0, roughness: 0.4 });
+      this._box(g, x - 0.04, fz, x + 0.04, fz + 0.08, 0.2, fx, 1.6);
+      this._addLightFx(`light.${side}_up_cabin_light`, { mat: fx, gain: 0.8 });
+      this._addLightFx(`light.${side}_down_cabin_light`, { mat: fx, gain: 0.8 });
+      for (const dir of ['up', 'down']) {
+        const h = dir === 'up' ? CABIN.wall - 1.8 + 0.05 : 1.6;
+        const mat = new THREE.MeshBasicMaterial({ map: T.beam, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+        const p = new THREE.Mesh(new THREE.PlaneGeometry(dir === 'up' ? 0.5 : 1.1, h), mat);
+        p.position.set(x, dir === 'up' ? 1.8 + h / 2 : 1.6 - h / 2, fz + 0.005);
+        if (dir === 'up') p.rotation.z = Math.PI;
+        p.renderOrder = 4;
+        g.add(p);
+        this._addLightFx(`light.${side}_${dir}_cabin_light`, { mat, beam: true });
+      }
+    }
+    const cam = new THREE.MeshStandardMaterial({ color: '#f2f2f2', emissive: '#ffffff', emissiveIntensity: 0 });
+    this._box(g, 0.24, fz, 0.38, fz + 0.12, 0.1, cam, 1.95);
+    this._addLightFx('light.cabin_cam_light', { mat: cam, gain: 2 });
+  }
+
+  _addLightFx(entity, fx) {
+    (this._lightFx[entity] = this._lightFx[entity] || []).push(fx);
+  }
+
   /* ---------------- floors */
   _buildFloor(f) {
     const THREE = this.THREE;
@@ -683,26 +891,7 @@ class Floorplan3DCard extends HTMLElement {
       : [[-0.14, 1.24, 5.08, 4.93], [-0.14, 4.93, 4.11, 6.57], [-0.14, 6.57, 5.08, 9.9]];
     for (const [x1, z1, x2, z2] of slabs) this._box(group, x1, z1, x2, z2, SLAB, M.slab, -SLAB, false);
 
-    // rooms
-    for (const r of f.rooms) {
-      const room = { id: r.id, name: r.name, floor: f.id, rects: r.rects, glow: [], lights: [] };
-      const glowMat = new THREE.MeshBasicMaterial({ color: '#ffc46b', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
-      room.glowMat = glowMat;
-      for (const [x1, z1, x2, z2] of r.rects) {
-        const fl = this._tiledPlane(x1, z1, x2, z2, this._tex[r.finish], 0.002);
-        fl.userData.room = r.id;
-        group.add(fl);
-        this._roomMeshes.push(fl);
-        const g = new THREE.Mesh(new THREE.PlaneGeometry(x2 - x1, z2 - z1), glowMat);
-        g.rotation.x = -Math.PI / 2;
-        g.position.set((x1 + x2) / 2, 0.02, (z1 + z2) / 2);
-        g.renderOrder = 2;
-        group.add(g);
-      }
-      const xs = r.rects.flatMap((q) => [q[0], q[2]]), zs = r.rects.flatMap((q) => [q[1], q[3]]);
-      room.center = [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...zs) + Math.max(...zs)) / 2];
-      this._rooms[r.id] = room;
-    }
+    for (const r of f.rooms) this._addRoom(group, r, f.id);
 
     for (const w of f.walls) this._buildWall(group, w);
     for (const item of f.furniture) this._buildFurniture(group, item);
@@ -714,7 +903,27 @@ class Floorplan3DCard extends HTMLElement {
     }
   }
 
-  _buildWall(group, w) {
+  _addRoom(group, r, floor) {
+    const THREE = this.THREE;
+    const room = { id: r.id, name: r.name, floor, rects: r.rects, lights: [] };
+    room.glowMat = new THREE.MeshBasicMaterial({ color: '#ffc46b', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+    for (const [x1, z1, x2, z2] of r.rects) {
+      const fl = this._tiledPlane(x1, z1, x2, z2, this._tex[r.finish], 0.002);
+      fl.userData.room = r.id;
+      group.add(fl);
+      this._roomMeshes.push(fl);
+      const g = new THREE.Mesh(new THREE.PlaneGeometry(x2 - x1, z2 - z1), room.glowMat);
+      g.rotation.x = -Math.PI / 2;
+      g.position.set((x1 + x2) / 2, 0.02, (z1 + z2) / 2);
+      g.renderOrder = 2;
+      group.add(g);
+    }
+    const xs = r.rects.flatMap((q) => [q[0], q[2]]), zs = r.rects.flatMap((q) => [q[1], q[3]]);
+    room.center = [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...zs) + Math.max(...zs)) / 2];
+    this._rooms[r.id] = room;
+  }
+
+  _buildWall(group, w, style = {}) {
     const THREE = this.THREE;
     const M = this._mats;
     const [ax, az] = w.a, [bx, bz] = w.b;
@@ -722,13 +931,23 @@ class Floorplan3DCard extends HTMLElement {
     const len = Math.hypot(dx, dz);
     const ux = dx / len, uz = dz / len;
     const t = w.t || INT;
-    const H = w.h || WALL_H;
-    const mats = [M.wall, M.wall, M.wallTop, M.wall, M.wall, M.wall];
+    const H = w.h || style.h || WALL_H;
+    const mats = style.mats || [M.wall, M.wall, M.wallTop, M.wall, M.wall, M.wall];
+    const glass = style.glass || M.glass;
     const piece = (s, e, y0, y1, mat = mats, cast = true) => {
       if (s === 0) s -= t / 2;
       if (e === len) e += t / 2;
       if (e - s < 0.005 || y1 - y0 < 0.005) return;
-      const m = new THREE.Mesh(new THREE.BoxGeometry(e - s, y1 - y0, t), mat);
+      const geo = new THREE.BoxGeometry(e - s, y1 - y0, t);
+      if (style.uvMetres) {
+        // world-scaled UVs on the wall faces so boards line up across pieces
+        const p = geo.attributes.position, n = geo.attributes.normal, uv = geo.attributes.uv;
+        const yc = (y0 + y1) / 2, xc = (s + e) / 2;
+        for (let i = 0; i < p.count; i++) {
+          if (Math.abs(n.getY(i)) < 0.5) uv.setXY(i, (p.getX(i) + p.getZ(i) + xc) / style.uvMetres, (p.getY(i) + yc) / style.uvMetres);
+        }
+      }
+      const m = new THREE.Mesh(geo, mat);
       const mid = (s + e) / 2;
       m.position.set(ax + ux * mid, y0 + (y1 - y0) / 2, az + uz * mid);
       m.rotation.y = -Math.atan2(dz, dx);
@@ -738,17 +957,17 @@ class Floorplan3DCard extends HTMLElement {
     };
     const ops = (w.o || []).slice().sort((p, q) => p[0] - q[0]);
     let cur = 0;
-    for (const [s, e, type] of ops) {
+    for (const [s, e, type, sill = 0.9, head = 2.1] of ops) {
       piece(cur, s, 0, H);
       if (type === 'w') {
-        piece(s, e, 0, 0.9);
-        piece(s, e, 2.1, H);
-        piece(s, e, 0.9, 2.1, M.glass, false);
-      } else if (type === 'g') {
-        piece(s, e, 2.1, H);
-        piece(s, e, 0, 2.1, M.glass, false);
+        piece(s, e, 0, sill);
+        piece(s, e, head, H);
+        piece(s, e, sill, head, glass, false);
+      } else if (type === 'g' || type === 'f') {
+        piece(s, e, head, H);
+        piece(s, e, 0, head, type === 'f' ? style.frosted || M.glass : glass, false);
       } else if (type === 'd') {
-        piece(s, e, 2.1, H);
+        piece(s, e, head, H);
       }
       cur = e;
     }
@@ -821,13 +1040,13 @@ class Floorplan3DCard extends HTMLElement {
         break;
       }
       case 'lamp': {
-        const [x, z] = a;
+        const [x, z, entity] = a;
         this._cyl(g, x, z, 0.16, 0.03, M.dark);
         this._cyl(g, x, z, 0.02, 1.45, M.dark);
         const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.2, 0.25, 20, 1, true), new THREE.MeshStandardMaterial({ color: '#f1e3c8', side: THREE.DoubleSide, emissive: '#ffcf86', emissiveIntensity: 0 }));
         shade.position.set(x, 1.5, z);
         g.add(shade);
-        this._lampShade = shade.material;
+        if (entity) this._addLightFx(entity, { mat: shade.material, gain: 1.5 });
         break;
       }
       case 'plant': {
@@ -850,6 +1069,19 @@ class Floorplan3DCard extends HTMLElement {
         this._box(g, x1 + 0.12, z1 + pw + 0.05, x1 + 0.5, z2 - 0.1, 0.12, M.white, 0.5);
         this._box(g, x1 - 0.02, z1, x1 + 0.06, z2, 1.0, M.fence);
         void foot;
+        break;
+      }
+      case 'daybed': {
+        // single day bed, long side against the x1 wall
+        const [x1, z1, x2, z2] = a;
+        this._box(g, x1, z1, x2, z2, 0.3, M.fence);
+        this._box(g, x1 + 0.06, z1 + 0.06, x2 - 0.03, z2 - 0.06, 0.16, M.linen, 0.3);
+        this._box(g, x1, z1, x1 + 0.08, z2, 0.85, M.fence);
+        this._box(g, x1, z1, x2, z1 + 0.06, 0.65, M.fence);
+        this._box(g, x1, z2 - 0.06, x2, z2, 0.65, M.fence);
+        this._box(g, x1 + 0.08, z1 + 0.15, x1 + 0.28, z1 + 0.85, 0.3, M.fabric2, 0.46);
+        this._box(g, x1 + 0.08, z2 - 0.85, x1 + 0.28, z2 - 0.15, 0.3, M.fabric, 0.46);
+        this._box(g, x1 + 0.35, (z1 + z2) / 2 - 0.4, x2 - 0.05, (z1 + z2) / 2 + 0.5, 0.04, M.duvet, 0.46);
         break;
       }
       case 'toilet': {
@@ -877,7 +1109,9 @@ class Floorplan3DCard extends HTMLElement {
         this._box(g, x1, z1, x2, z1 + 0.05, 0.72, M.fence);
         this._box(g, x1, z2 - 0.05, x2, z2, 0.72, M.fence);
         const mon = new THREE.MeshStandardMaterial({ color: '#111', emissive: '#7fb2ff', emissiveIntensity: 0.15 });
-        this._box(g, x2 - 0.12, z1 + 0.35, x2 - 0.08, z2 - 0.35, 0.4, mon, 0.85);
+        const zm = (z1 + z2) / 2;
+        this._box(g, x2 - 0.14, zm - 0.62, x2 - 0.1, zm - 0.04, 0.36, mon, 0.86);
+        this._box(g, x2 - 0.14, zm + 0.04, x2 - 0.1, zm + 0.62, 0.36, mon, 0.86);
         this._box(g, x1 - 0.5, (z1 + z2) / 2 - 0.25, x1 - 0.05, (z1 + z2) / 2 + 0.25, 0.5, M.dark);
         break;
       }
@@ -916,8 +1150,9 @@ class Floorplan3DCard extends HTMLElement {
       const dev = { ...d, ids, kind, floor, at, room: d.room };
 
       if (kind === 'light') {
-        const light = new THREE.PointLight('#ffc98a', 0, floor === -1 ? 9 : 5, 1.5);
-        light.position.set(at[0], floor === -1 ? 2.2 : 2.1, at[1]);
+        const la = d.light_at || [at[0], floor === -1 ? 2.2 : 2.1, at[1]];
+        const light = new THREE.PointLight('#ffc98a', 0, d.range || (floor === -1 ? 9 : 5), 1.5);
+        light.position.set(la[0], la[1], la[2]);
         (floor >= 0 ? this._floorGroups[floor] : this._scene).add(light);
         dev.light = light;
         dev.level = 0;
@@ -958,7 +1193,7 @@ class Floorplan3DCard extends HTMLElement {
         long = false;
         pressTimer = setTimeout(() => {
           long = true;
-          this._moreInfo(ids[0]);
+          this._moreInfo(dev.camera || ids[0]);
         }, 550);
       });
       el.addEventListener('pointerup', () => clearTimeout(pressTimer));
@@ -1001,7 +1236,7 @@ class Floorplan3DCard extends HTMLElement {
     } else if (dev.kind === 'cover') {
       h.callService('cover', 'toggle', { entity_id: dev.ids[0] });
     } else {
-      this._moreInfo(dev.ids[0]);
+      this._moreInfo(dev.camera || dev.ids[0]);
     }
   }
 
@@ -1085,6 +1320,13 @@ class Floorplan3DCard extends HTMLElement {
       o.goalTarget.set(2.5, 3.2, 4.5);
       o.goalPhi = 0.95;
       o.goalRadius = 30;
+    } else if (mode === 'garden') {
+      a[0].goalVis = 1;
+      a[1].goalVis = 0;
+      a[1].goalY = STOREY + 6;
+      o.goalTarget.set(2.6, 0.4, -5.6);
+      o.goalPhi = 0.5;
+      o.goalRadius = 16;
     } else if (mode === '1') {
       a[0].goalVis = 1;
       a[1].goalVis = 1;
@@ -1114,7 +1356,7 @@ class Floorplan3DCard extends HTMLElement {
 
   _visibleFloor(floor) {
     if (floor === -1) return true;
-    const mode = this._floorMode;
+    const mode = this._floorMode === 'garden' ? '0' : this._floorMode;
     if (mode === 'all') return true;
     return String(floor) === mode;
   }
@@ -1290,6 +1532,18 @@ class Floorplan3DCard extends HTMLElement {
           icon = ICON.tv;
           cls = on ? 'on-blue' : isUnavail(st) ? 'na' : '';
           if (this._screens[d.ids[0]]) this._screens[d.ids[0]].emissiveIntensity = on ? 1.2 : 0;
+          break;
+        }
+        case 'doorbell': {
+          const ringing = st?.state === 'on';
+          const seen = states.slice(1).some((x) => x?.state === 'on');
+          icon = ICON.doorbell;
+          cls = ringing ? 'alert ring' : seen ? 'active' : '';
+          break;
+        }
+        case 'camera': {
+          icon = ICON.cctv;
+          cls = states.some((x) => x?.state === 'on') ? 'active' : '';
           break;
         }
         case 'vacuum': {
@@ -1499,7 +1753,18 @@ class Floorplan3DCard extends HTMLElement {
       d.level = lerp(d.level, d.target || 0, 1 - Math.exp(-dt * 8));
       const c = d.color || [1, 0.78, 0.52];
       d.light.color.setRGB(c[0], c[1], c[2]);
-      d.light.intensity = d.level * (d.floor === -1 ? 14 : 9) * lerp(0.7, 1.6, night);
+      d.light.intensity = d.level * (d.floor === -1 ? 14 : 9) * (d.power ?? 1) * lerp(0.7, 1.6, night);
+      for (const id of d.ids) {
+        for (const fx of this._lightFx[id] || []) {
+          if (fx.beam) {
+            fx.mat.color.setRGB(c[0], c[1], c[2]);
+            fx.mat.opacity = d.level * lerp(0.35, 0.8, night);
+          } else {
+            fx.mat.emissive.setRGB(c[0], c[1], c[2]);
+            fx.mat.emissiveIntensity = d.level * fx.gain;
+          }
+        }
+      }
     }
     for (const r of Object.values(this._rooms)) {
       const lvl = r.lights.reduce((m, d) => Math.max(m, d.level), 0);
@@ -1507,10 +1772,6 @@ class Floorplan3DCard extends HTMLElement {
       r.glowMat.color.setRGB(c[0], c[1], c[2]);
       r.glowMat.opacity = lvl * lerp(0.05, 0.16, night);
     }
-    const cabin = this._devices.find((d) => d.room === 'cabin' && d.kind === 'light');
-    if (cabin) this._cabinGlow.emissiveIntensity = cabin.level * 2;
-    const lamp = this._devices.find((d) => d.ids.includes('light.lamp'));
-    if (lamp && this._lampShade) this._lampShade.emissiveIntensity = lamp.level * 1.5;
 
     // motion rings
     for (const d of this._devices) {
@@ -1606,7 +1867,7 @@ class Floorplan3DCard extends HTMLElement {
         continue;
       }
       const fy = d.floor >= 0 ? this._floorAnim[d.floor].y : 0;
-      const hgt = d.kind === 'vacuum' ? 0.35 : d.kind === 'temp' || d.kind === 'climate' ? 0.9 : 1.2;
+      const hgt = d.h ?? (d.kind === 'vacuum' ? 0.35 : d.kind === 'temp' || d.kind === 'climate' ? 0.9 : 1.2);
       d.world.set(d.at[0], fy + hgt, d.at[1]).project(cam);
       if (d.world.z > 1) {
         d.el.style.display = 'none';
@@ -1649,6 +1910,8 @@ svg { width:18px; height:18px; fill:currentColor; flex:none; }
 .mk.k-cover span { font-size:10px; padding-right:7px; }
 .mk.k-cover { padding-left:6px; }
 .mk.k-cover:not(:has(span)) { padding:0; }
+.mk.ring { animation:pulseRed 1s infinite; }
+@keyframes pulseRed { 0%{ box-shadow:0 0 0 0 rgba(239,83,80,.8);} 100%{ box-shadow:0 0 0 14px rgba(239,83,80,0);} }
 @keyframes pulse { 0%{ box-shadow:0 0 0 0 rgba(41,182,246,.7);} 100%{ box-shadow:0 0 0 12px rgba(41,182,246,0);} }
 
 .hud { position:absolute; display:flex; gap:8px; align-items:center; pointer-events:none; }
