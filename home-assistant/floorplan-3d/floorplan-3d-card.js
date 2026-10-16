@@ -216,7 +216,7 @@ const DEFAULT_DEVICES = [
   { entity: 'light.cabin_cam_light', room: 'garden', at: [0.3, -6.0], h: 1.2, light_at: [0.3, 2.3, -5.85], range: 8 },
   { entity: 'light.shed_light_3', room: 'shed', at: [4.2, -7.4], light_at: [3.92, 1.95, -7.6], range: 3 },
   { entity: 'light.cabin_shed_leds_shed_led_strip', room: 'shed', at: [4.75, -8.35], h: 1.1, light_at: [4.6, 1.05, -8.35], range: 2.5, power: 0.6 },
-  { entity: 'media_player.cabin', room: 'cabin', at: [2.0, -8.4] },
+  { entity: 'media_player.cabin', room: 'cabin', at: [3.1, -8.75], h: 1.6 },
 ];
 
 // A loop through the ground floor that passes through real doorways (for the robot vacuum).
@@ -830,10 +830,10 @@ class Floorplan3DCard extends HTMLElement {
     this._addRoom(g, { id: 'cabin', name: 'Cabin', finish: 'tile', rects: [[x0 + t / 2, zb + t / 2, xp - t / 2, zf - t / 2]] }, -1);
     this._addRoom(g, { id: 'shed', name: 'Shed', finish: 'carpetGrey', rects: [[xp + t / 2, zb + t / 2, x1 - t / 2, zf - t / 2]] }, -1);
 
-    // cabin interior
-    this._buildFurniture(g, ['rug', 1.0, -8.5, 3.0, -6.9, '#8f9296']);
-    this._buildFurniture(g, ['plant', 0.6, -6.6]);
-    this._buildFurniture(g, ['tv', 1.5, zb + 0.04, 2.7, zb + 0.1, 1.0, 'media_player.cabin']);
+    // cabin = home gym: squat rack on the left, treadmill on the right facing the TV in the back-right corner
+    this._buildFurniture(g, ['squatrack', 0.6, -8.95, 1.8, -7.75]);
+    this._buildFurniture(g, ['treadmill', 2.65, -8.85, 3.45, -6.95]);
+    this._buildFurniture(g, ['tv', 2.5, zb + 0.04, 3.7, zb + 0.1, 1.25, 'media_player.cabin']);
 
     // shed: L-shaped workbench in the back-left corner with an LED strip around its edge
     const bench = new THREE.MeshStandardMaterial({ color: '#9c7a52', roughness: 0.7 });
@@ -1082,6 +1082,45 @@ class Floorplan3DCard extends HTMLElement {
         this._box(g, x1 + 0.08, z1 + 0.15, x1 + 0.28, z1 + 0.85, 0.3, M.fabric2, 0.46);
         this._box(g, x1 + 0.08, z2 - 0.85, x1 + 0.28, z2 - 0.15, 0.3, M.fabric, 0.46);
         this._box(g, x1 + 0.35, (z1 + z2) / 2 - 0.4, x2 - 0.05, (z1 + z2) / 2 + 0.5, 0.04, M.duvet, 0.46);
+        break;
+      }
+      case 'squatrack': {
+        const [x1, z1, x2, z2] = a;
+        const steel = new THREE.MeshStandardMaterial({ color: '#2b2e33', roughness: 0.4, metalness: 0.6 });
+        this._box(g, x1 - 0.3, z1 - 0.1, x2 + 0.3, z2 + 0.6, 0.015, new THREE.MeshStandardMaterial({ color: '#1c1d1f', roughness: 0.95 }), 0.002, false); // rubber mat
+        const u = 0.06;
+        for (const [x, z] of [[x1, z1], [x2 - u, z1], [x1, z2 - u], [x2 - u, z2 - u]]) this._box(g, x, z, x + u, z + u, 2.05, steel);
+        this._box(g, x1, z1, x2, z1 + u, u, steel, 2.0);
+        this._box(g, x1, z2 - u, x2, z2, u, steel, 2.0);
+        this._box(g, x1, z1, x1 + u, z2, u, steel, 2.0);
+        this._box(g, x2 - u, z1, x2, z2, u, steel, 2.0);
+        // barbell racked on the front uprights with plates
+        const bz = z2 - 0.1, xm = (x1 + x2) / 2;
+        const bar = this._cyl(g, 0, 0, 0.016, 1.9, new THREE.MeshStandardMaterial({ color: '#b9bec4', metalness: 0.9, roughness: 0.3 }));
+        bar.rotation.z = Math.PI / 2;
+        bar.position.set(xm, 1.35, bz);
+        const plate = new THREE.MeshStandardMaterial({ color: '#111214', roughness: 0.6 });
+        for (const side of [-1, 1]) {
+          for (let i = 0; i < 2; i++) {
+            const p = this._cyl(g, 0, 0, i ? 0.17 : 0.225, 0.05, plate);
+            p.rotation.z = Math.PI / 2;
+            p.position.set(xm + side * (0.72 + i * 0.06), 1.35, bz);
+          }
+        }
+        // weight plate storage on the floor
+        for (let i = 0; i < 3; i++) this._cyl(g, x1 + 0.25, z1 + 0.25, 0.225 - i * 0.03, 0.05, plate, i * 0.05);
+        break;
+      }
+      case 'treadmill': {
+        // runs along z, user faces -z (towards the console at z1)
+        const [x1, z1, x2, z2] = a;
+        const body = new THREE.MeshStandardMaterial({ color: '#3a3d42', roughness: 0.5, metalness: 0.3 });
+        this._box(g, x1, z1 + 0.1, x2, z2, 0.18, body);
+        this._box(g, x1 + 0.1, z1 + 0.25, x2 - 0.1, z2 - 0.1, 0.01, new THREE.MeshStandardMaterial({ color: '#121314', roughness: 0.9 }), 0.18, false);
+        this._box(g, x1 + 0.02, z1 + 0.12, x1 + 0.08, z1 + 0.25, 1.3, body);
+        this._box(g, x2 - 0.08, z1 + 0.12, x2 - 0.02, z1 + 0.25, 1.3, body);
+        this._box(g, x1, z1, x2, z1 + 0.3, 0.08, body, 1.25); // console
+        this._box(g, x1 + 0.15, z1 + 0.18, x2 - 0.15, z1 + 0.2, 0.18, new THREE.MeshStandardMaterial({ color: '#0d0f12', emissive: '#4fa3ff', emissiveIntensity: 0.25 }), 1.3, false);
         break;
       }
       case 'toilet': {
