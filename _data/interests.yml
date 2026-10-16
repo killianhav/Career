@@ -1,0 +1,110 @@
+intro: >-
+  Outside work I still like building things that save time. Mostly that means automating my home and my fantasy
+  football league.
+ticker:
+  - Home Assistant
+  - Zigbee
+  - Python
+  - GitHub Actions
+  - Fantasy Premier League
+  - Telegram bots
+  - World Cup 2026
+home_heading: A house that runs itself
+home_intro: >-
+  My home runs on Home Assistant, on a Home Assistant Green with Zigbee. Here are a few of the automations I've built.
+automations:
+  - title: Live floor plan
+    status: Dashboard
+    icon: house
+    size: wide
+    description: >-
+      A wall-mounted tablet shows an isometric render of the house. Each room glows to match its real lights'
+      brightness and colour. Sunlight glows through the actual windows, following the sun's position through the day.
+    when: a light changes, or the sun moves
+    then: that part of the floor plan lights up to match
+  - title: Hallway glow
+    status: Running
+    icon: bulb
+    size: normal
+    description: The hallway lamp comes on low at sunset, then brightens when someone walks through.
+    when: motion in the hall, lamp on
+    then: brighten to 75%, ease back 2 min after it clears
+  - title: Robot vacuum rota
+    status: Running
+    icon: vacuum
+    size: normal
+    description: Room-by-room cleaning that knows which floors are tile and which are hardwood.
+    when: midweek, and again on Saturday
+    then: quick vacuum of the busy rooms; full vacuum and mop at the weekend
+  - title: World Cup alerts
+    status: Running
+    icon: football
+    size: normal
+    description: A match report on Telegram after every World Cup 2026 game.
+    when: a match finishes
+    then: send the result, first scorer, any goal in the first 10 minutes, and whether it went to penalties
+  - title: Blind battery check
+    status: Running
+    icon: blinds
+    size: normal
+    description: The smart blinds report their own battery level, so they never die mid-way down.
+    when: a blind's battery runs low
+    then: send a Telegram alert
+  - title: Smart immersion
+    status: Next up
+    icon: water
+    size: full
+    description: A power-metered relay on the immersion, so hot water runs on a schedule and I can see what it costs.
+    when: hot water is needed
+    then: heat on a schedule and track the energy used
+fpl:
+  heading: A report that writes itself
+  eyebrow: Fantasy Premier League · Draft
+  title: The Milk Cup™
+  intro: >-
+    I run a 10-manager head-to-head draft league with friends. After every gameweek, a branded PDF report lands in our
+    Telegram group without anyone lifting a finger.
+  built_with: >-
+    I built it in Python with Claude as an AI pair-programmer. We tested every page against real gameweek results and
+    fixed what didn't add up.
+  pipeline:
+    - name: FPL Draft API
+      detail: League, squads, fixtures and live player stats
+    - name: Python
+      detail: Crunches the numbers and scores every manager
+    - name: PDF
+      detail: A multi-page, branded gameweek report
+    - name: GitHub Actions
+      detail: Runs it on a schedule and keeps a season history
+    - name: Telegram
+      detail: Posts it straight to the league group chat
+  report_pages:
+    - Manager of the Gameweek
+    - Draft Board
+    - Surprise of the Gameweek
+    - H2H results matrix
+    - Fixture difficulty
+    - Bench points
+    - Waiver tracker
+    - Draft Graveyard
+  stats:
+    - value: "10"
+      label: managers in the league
+    - value: 4,000+
+      label: lines of Python
+    - value: "0"
+      label: clicks to publish each week
+sport_heading: What I follow
+sport:
+  - eyebrow: Every weekend
+    title: Premier League
+    text: >-
+      Football is the constant, and the fantasy draft league makes every match matter, even the ones I'd normally skip.
+      My team is called Itch Isak.
+  - eyebrow: Summer 2026
+    title: World Cup
+    text: >-
+      I followed the 2026 World Cup closely enough to build Home Assistant alerts for it. Every result, first scorer and
+      penalty shootout went straight to my phone.
+contact_heading: Talk products, or
+contact_highlight: automations.

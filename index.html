@@ -1,259 +1,25 @@
+---
+# Home page. Edit the words in Pages CMS (or the files in _data); this file only holds the layout.
+---
+{%- assign p = site.data.profile -%}
 <!doctype html>
-<html lang="en-IE">
+<html lang="{{ site.lang }}">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Killian Haverty</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Killian Haverty, Business Product Owner at SSE Airtricity in Dublin. Energy data, digital products and change.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<style>
-/* Layout: a full-width meter-trace hero, then editorial rows on a 1200px grid; the energy curve is the recurring motif. */
-:root {
-  --bg: #0b1020;
-  --surface: #121a2e;
-  --ink: #eef1f6;
-  --muted: #93a0b8;
-  --line: #222c44;
-  --accent: #f4a93b;
-  --accent-ink: #f4a93b;
-  --on-accent: #0b1020;
-  --display: "Big Shoulders Display", "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
-  --body: "Public Sans", "Segoe UI", system-ui, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-  --ease: cubic-bezier(.16, 1, .3, 1);
-  color-scheme: dark;
-}
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --bg: #f3f4f7; --surface: #ffffff; --ink: #121a2e; --muted: #566079;
-    --line: #d9dde6; --accent: #e08a12; --accent-ink: #9c5800; --on-accent: #121a2e; color-scheme: light;
-  }
-}
-:root[data-theme="light"] {
-  --bg: #f3f4f7; --surface: #ffffff; --ink: #121a2e; --muted: #566079;
-  --line: #d9dde6; --accent: #e08a12; --accent-ink: #9c5800; --on-accent: #121a2e; color-scheme: light;
-}
-
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { background: var(--bg); color: var(--ink); font: 400 1rem/1.65 var(--body); overflow-x: hidden; }
-a { color: inherit; }
-::selection { background: var(--accent); color: var(--on-accent); }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
-.gutter {
-  max-width: 1240px; margin: 0 auto;
-  padding-left: max(20px, env(safe-area-inset-left, 0px));
-  padding-right: max(20px, env(safe-area-inset-right, 0px));
-}
-@media (max-width: 480px) { .gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); } }
-.label { font: 500 .74rem/1.2 var(--mono); text-transform: uppercase; letter-spacing: .14em; color: var(--muted); }
-.label b { color: var(--accent-ink); font-weight: 500; }
-
-/* Header */
-.top {
-  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
-}
-.top .gutter { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; }
-.mark { font: 800 1.35rem/1 var(--display); letter-spacing: .02em; text-decoration: none; display: flex; align-items: center; gap: 10px; }
-.mark i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); }
-.top nav { display: flex; gap: 26px; }
-.top nav a { font: 500 .74rem/1 var(--mono); text-transform: uppercase; letter-spacing: .12em; text-decoration: none; color: var(--muted); transition: color .2s; }
-.top nav a:hover { color: var(--ink); }
-.top nav a.pill { color: var(--on-accent); background: var(--accent); padding: 9px 14px; border-radius: 999px; margin-block: -9px; }
-@media (max-width: 720px) { .top nav a:not(.pill) { display: none; } }
-
-/* Hero */
-.hero { padding-block: clamp(40px, 7vw, 88px) 0; display: flex; flex-direction: column; gap: 28px; }
-.readout { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; }
-.readout .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); display: inline-block; margin-right: 8px; vertical-align: 1px; animation: blink 2s infinite; }
-@keyframes blink { 50% { opacity: .25; } }
-.name {
-  font: 900 clamp(3.6rem, 14.5vw, 12.5rem)/.84 var(--display);
-  text-transform: uppercase; letter-spacing: -.01em; margin: 0;
-}
-.name .ln { display: block; overflow: hidden; padding-bottom: .04em; }
-.name .ln span { display: block; animation: rise 1.1s var(--ease) both; }
-.name .ln:nth-child(2) span { animation-delay: .12s; }
-.name .ln:nth-child(2) { color: transparent; -webkit-text-stroke: 1.5px var(--ink); }
-@supports not (-webkit-text-stroke: 1px black) { .name .ln:nth-child(2) { color: var(--ink); } }
-@keyframes rise { from { transform: translateY(105%); } to { transform: none; } }
-.hero-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 32px; align-items: end; }
-@media (max-width: 820px) { .hero-row { grid-template-columns: 1fr; gap: 16px; } }
-.intro { font: 500 clamp(1.15rem, 2.2vw, 1.5rem)/1.4 var(--body); margin: 0; max-width: 34ch; animation: fade .9s .45s var(--ease) both; }
-.intro em { font-style: normal; color: var(--accent-ink); }
-@keyframes fade { from { opacity: 0; transform: translateY(14px); } }
-.hero-meta { justify-self: end; text-align: right; display: flex; flex-direction: column; gap: 6px; animation: fade .9s .6s var(--ease) both; }
-@media (max-width: 820px) { .hero-meta { justify-self: start; text-align: left; } }
-
-.meter { position: relative; margin-top: 8px; }
-.meter canvas { display: block; width: 100%; height: clamp(220px, 34vw, 400px); touch-action: pan-y; cursor: crosshair; }
-.tip {
-  position: absolute; top: 0; left: 0; pointer-events: none; white-space: nowrap;
-  font: 500 .76rem/1.3 var(--mono); background: var(--ink); color: var(--bg);
-  padding: 6px 9px; border-radius: 6px; transform: translate(-50%, -130%); opacity: 0; transition: opacity .15s;
-}
-.tip.on { opacity: 1; }
-.meter-cap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 16px; padding-top: 10px; border-top: 1px solid var(--line); }
-
-/* Ticker */
-.ticker { border-block: 1px solid var(--line); overflow: hidden; margin-top: clamp(48px, 7vw, 88px); }
-.ticker-track { display: flex; width: max-content; animation: tick 48s linear infinite; }
-.ticker:hover .ticker-track { animation-play-state: paused; }
-.ticker ul { display: flex; list-style: none; margin: 0; padding: 18px 0; }
-.ticker li { font: 800 clamp(1.4rem, 3vw, 2.2rem)/1 var(--display); text-transform: uppercase; padding-inline: 22px; display: flex; align-items: center; gap: 44px; white-space: nowrap; }
-.ticker li::after { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-right: -22px; }
-@keyframes tick { to { transform: translateX(-50%); } }
-
-/* Sections */
-section.block { padding-block: clamp(72px, 11vw, 140px) 0; scroll-margin-top: 60px; }
-.sec-head { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; align-items: baseline; margin-bottom: clamp(32px, 5vw, 56px); }
-@media (max-width: 820px) { .sec-head { grid-template-columns: 1fr; gap: 12px; } }
-h2 { font: 800 clamp(2.4rem, 6.4vw, 5.2rem)/.92 var(--display); text-transform: uppercase; margin: 0; text-wrap: balance; letter-spacing: -.005em; }
-h3 { margin: 0; }
-p { margin: 0; }
-
-.about-grid { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; }
-@media (max-width: 820px) { .about-grid { grid-template-columns: 1fr; } }
-.about-text { display: flex; flex-direction: column; gap: 18px; max-width: 64ch; }
-.about-text .big { font: 500 clamp(1.3rem, 2.6vw, 1.85rem)/1.35 var(--body); color: var(--ink); }
-.about-text p:not(.big) { color: var(--muted); }
-.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: clamp(40px, 6vw, 72px); border-top: 1px solid var(--line); }
-.stat { padding: 22px 20px 0 0; display: flex; flex-direction: column; gap: 10px; }
-.stat + .stat { padding-left: 20px; border-left: 1px solid var(--line); }
-.stat b { font: 900 clamp(3rem, 8vw, 6.4rem)/.9 var(--display); color: var(--accent-ink); font-variant-numeric: tabular-nums; }
-.stat span { color: var(--muted); max-width: 26ch; font-size: .95rem; line-height: 1.45; }
-@media (max-width: 600px) {
-  .stats { grid-template-columns: 1fr; }
-  .stat, .stat + .stat { padding: 20px 0; border-left: 0; }
-  .stat + .stat { border-top: 1px solid var(--line); }
-}
-
-/* Work rows */
-.rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
-.row { border-bottom: 1px solid var(--line); }
-.row button {
-  all: unset; box-sizing: border-box; cursor: pointer; width: 100%;
-  display: grid; grid-template-columns: 220px minmax(0, 1fr) auto; gap: 24px; align-items: center;
-  padding-block: clamp(22px, 3vw, 34px); position: relative;
-}
-.row button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.row button::before {
-  content: ""; position: absolute; left: 0; bottom: -1px; height: 2px; width: 100%;
-  background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform .6s var(--ease);
-}
-.row button:hover::before, .row button:focus-visible::before { transform: scaleX(1); }
-.row .t { font: 800 clamp(1.9rem, 4.6vw, 3.6rem)/.95 var(--display); text-transform: uppercase; transition: transform .5s var(--ease), color .3s; }
-.row button:hover .t { transform: translateX(10px); color: var(--accent-ink); }
-.row .sub { display: block; color: var(--muted); font-size: .95rem; margin-top: 8px; max-width: 60ch; }
-.row .go {
-  width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--line);
-  display: grid; place-items: center; transition: background .3s, border-color .3s, transform .5s var(--ease);
-}
-.row .go svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; }
-.row button:hover .go { background: var(--accent); border-color: var(--accent); color: var(--on-accent); transform: rotate(-45deg); }
-.row .award { display: inline-block; margin-top: 10px; font: 500 .72rem/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--on-accent); background: var(--accent); padding: 5px 9px; border-radius: 4px; }
-@media (max-width: 820px) {
-  .row button { grid-template-columns: minmax(0, 1fr) auto; gap: 10px 16px; }
-  .row .label { grid-column: 1 / -1; }
-}
-.case-detail[hidden] { display: none; }
-
-/* Case dialog */
-dialog.case {
-  margin: 0 0 0 auto; height: 100%; max-height: 100%; width: min(720px, 100%); max-width: 100%;
-  border: 0; padding: 0; background: var(--surface); color: var(--ink);
-  border-left: 1px solid var(--line);
-}
-dialog.case[open] { animation: slide .55s var(--ease); }
-@keyframes slide { from { transform: translateX(100%); } }
-dialog.case::backdrop { background: rgba(5, 8, 18, .6); backdrop-filter: blur(4px); }
-.case-in {
-  padding-block: calc(env(safe-area-inset-top, 0px) + 28px) calc(env(safe-area-inset-bottom, 0px) + 48px);
-  padding-left: clamp(20px, 5vw, 56px);
-  padding-right: max(clamp(20px, 5vw, 56px), env(safe-area-inset-right, 0px));
-  display: flex; flex-direction: column; gap: 28px;
-}
-.case-close { all: unset; cursor: pointer; align-self: flex-end; font: 500 .74rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; padding: 10px 14px; border: 1px solid var(--line); border-radius: 999px; }
-.case-close:hover { border-color: var(--ink); }
-.case-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-.case-in h3 { font: 800 clamp(2.4rem, 7vw, 4.2rem)/.92 var(--display); text-transform: uppercase; }
-.case-in dl { margin: 0; display: flex; flex-direction: column; gap: 24px; }
-.case-in dt { font: 500 .74rem/1 var(--mono); text-transform: uppercase; letter-spacing: .14em; color: var(--accent-ink); margin-bottom: 8px; }
-.case-in dd { margin: 0; color: var(--muted); max-width: 60ch; }
-.case-in .tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.case-in .tags span { font: 400 .74rem/1 var(--mono); padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
-body.locked { overflow: hidden; }
-
-/* Experience trace */
-.trace { position: relative; padding-left: 44px; }
-.trace-list { list-style: none; margin: 0; padding: 0; }
-.trace::before, .trace-fill { content: ""; position: absolute; left: 11px; top: 10px; bottom: 10px; width: 2px; background: var(--line); }
-.trace-fill { background: var(--accent); transform-origin: top; transform: scaleY(0); box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 60%, transparent); }
-.reading { position: relative; display: grid; grid-template-columns: 176px minmax(0, 1fr); gap: 24px; padding-block: 26px; border-bottom: 1px solid var(--line); }
-.reading:first-of-type { padding-top: 0; }
-.reading::before {
-  content: ""; position: absolute; left: -39px; top: 32px; width: 12px; height: 12px; border-radius: 50%;
-  background: var(--bg); border: 2px solid var(--muted); transition: background .4s, border-color .4s, box-shadow .4s;
-}
-.reading:first-of-type::before { top: 6px; }
-.reading.lit::before { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 22%, transparent); }
-.reading .when { font: 500 .82rem/1.6 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
-.reading.lit .when { color: var(--accent-ink); }
-.reading h3 { font: 800 clamp(1.6rem, 3vw, 2.3rem)/1 var(--display); text-transform: uppercase; }
-.reading .org { display: block; margin-top: 6px; font-weight: 600; font-size: .95rem; }
-.reading p { margin-top: 10px; color: var(--muted); max-width: 62ch; }
-@media (max-width: 680px) { .reading { grid-template-columns: 1fr; gap: 6px; } .trace { padding-left: 34px; } .reading::before { left: -29px; } .trace::before, .trace-fill { left: 6px; } }
-
-/* Qualifications */
-.quals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 56px; }
-@media (max-width: 820px) { .quals { grid-template-columns: 1fr; gap: 48px; } }
-.qlist { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); }
-.qlist li { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 16px; padding-block: 14px; border-bottom: 1px solid var(--line); }
-.qlist .yr { font: 400 .8rem/1.6 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
-.qlist strong { font-weight: 600; display: block; }
-.qlist span.s { color: var(--muted); font-size: .9rem; }
-
-/* Contact */
-.contact { padding-block: clamp(96px, 14vw, 180px) clamp(40px, 6vw, 64px); }
-.contact h2 { font-size: clamp(3rem, 10vw, 8.6rem); max-width: 12ch; }
-.contact h2 em { font-style: normal; color: var(--accent-ink); }
-.mail { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; margin-top: clamp(28px, 4vw, 44px); }
-.mail .addr { font: 500 clamp(1.15rem, 3.2vw, 2rem)/1.2 var(--mono); overflow-wrap: anywhere; user-select: all; }
-.btn { all: unset; cursor: pointer; font: 500 .76rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; padding: 13px 18px; border-radius: 999px; border: 1px solid var(--line); text-decoration: none; transition: background .25s, color .25s, border-color .25s; }
-.btn:hover { border-color: var(--ink); }
-.btn.solid { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
-.btn.solid:hover { background: var(--ink); border-color: var(--ink); color: var(--bg); }
-.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; margin-top: clamp(72px, 10vw, 120px); padding-top: 20px; border-top: 1px solid var(--line); }
-
-/* Scroll reveal: elements rest visible; the animation plays as they arrive. */
-.rv.in { animation: fade 1s var(--ease) both; }
-
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after { animation: none !important; transition: none !important; }
-  .ticker ul { flex-wrap: wrap; }
-  .ticker-track { width: auto; flex-wrap: wrap; }
-  .ticker ul[aria-hidden] { display: none; }
-}
-</style>
-
+{% include head.html %}
+<title>{{ p.first_name }} {{ p.last_name }}</title>
+<meta name="description" content="{{ p.first_name }} {{ p.last_name }}, {{ p.tagline | escape }}.">
+<link rel="stylesheet" href="{{ '/home.css' | relative_url }}">
 </head>
 <body>
+
 <header class="top">
   <div class="gutter">
-    <a class="mark" href="#top"><i aria-hidden="true"></i>KH</a>
-    <nav aria-label="Sections">
-      <a href="#about">About</a>
-      <a href="#work">Work</a>
-      <a href="#experience">Experience</a>
-      <a href="#qualifications">Qualifications</a>
+    <a class="mark" href="#top"><i aria-hidden="true"></i>{{ p.first_name | slice: 0 }}{{ p.last_name | slice: 0 }}</a>
+    <nav aria-label="Main">
+      <a class="wide" href="#work">Work</a>
+      <a class="wide" href="#experience">Experience</a>
+      <a class="wide" href="#qualifications">Qualifications</a>
+      <a href="{{ '/interests.html' | relative_url }}">Interests</a>
       <a class="pill" href="#contact">Contact</a>
     </nav>
   </div>
@@ -261,36 +27,31 @@ footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8p
 
 <main id="top">
   <section class="hero gutter" aria-labelledby="name">
-    <div class="readout label">
-      <span><span class="dot" aria-hidden="true"></span>Dublin <b id="clock">--:--</b></span>
-      <span>Typical household now <b id="now-kwh">-- kWh</b></span>
+    <p class="label">{{ p.tagline | escape }}</p>
+    <h1 class="nameplate" id="name">
+      <span class="word first"><span>{{ p.first_name | escape }}</span></span>
+      <span class="portrait">
+        <svg class="ring" viewBox="0 0 300 300" aria-hidden="true">
+          <defs><path id="ringpath" d="M150,150 m-134,0 a134,134 0 1,1 268,0 a134,134 0 1,1 -268,0"/></defs>
+          <text><textPath href="#ringpath" textLength="836" lengthAdjust="spacing">{{ p.ring_text | escape }}</textPath></text>
+        </svg>
+        <span class="ph"><img src="{{ p.photo | relative_url }}" alt="Portrait of {{ p.first_name }} {{ p.last_name }}" width="640" height="640"></span>
+        {%- if p.badge and p.badge != "" %}<span class="badge" aria-hidden="true">{{ p.badge | escape }}</span>{% endif %}
+      </span>
+      <span class="word last"><span>{{ p.last_name | escape }}</span></span>
+    </h1>
+    <p class="intro">{{ p.intro_before | escape }} <em>{{ p.intro_highlight | escape }}</em> {{ p.intro_after | escape }}</p>
+    <div class="hero-actions">
+      <a class="btn solid" href="#work">See my work</a>
+      <a class="btn" href="{{ '/interests.html' | relative_url }}">Off the clock</a>
     </div>
-    <h1 class="name" id="name"><span class="ln"><span>Killian</span></span><span class="ln"><span>Haverty</span></span></h1>
-    <div class="hero-row">
-      <p class="intro">Business Product Owner at SSE Airtricity. I turn <em>energy data</em> into products that customers actually use.</p>
-      <div class="hero-meta label">
-        <span>Product · Data · Digital change</span>
-        <span>Based in <b>Dublin</b></span>
-      </div>
-    </div>
-    <figure class="meter" style="margin-inline:0;margin-bottom:0">
-      <canvas id="meter" aria-label="Animated chart of a typical household's half-hourly electricity use across one day, peaking in the morning and early evening." role="img"></canvas>
-      <div class="tip" id="tip" aria-hidden="true"></div>
-      <figcaption class="meter-cap label">
-        <span>Half-hourly smart meter readings · illustrative</span>
-        <span>Hover the curve</span>
-      </figcaption>
-    </figure>
+    <p class="now label"><i aria-hidden="true"></i>Now: <b>{{ p.now | escape }}</b></p>
   </section>
 
   <div class="ticker" aria-label="Skills">
     <div class="ticker-track">
-      <ul>
-        <li>Product roadmaps</li><li>Backlog ownership</li><li>Smart meter data</li><li>Scrum</li><li>Change management</li><li>UAT</li><li>Power Platform</li><li>Azure DevOps</li><li>Python &amp; SQL</li>
-      </ul>
-      <ul aria-hidden="true">
-        <li>Product roadmaps</li><li>Backlog ownership</li><li>Smart meter data</li><li>Scrum</li><li>Change management</li><li>UAT</li><li>Power Platform</li><li>Azure DevOps</li><li>Python &amp; SQL</li>
-      </ul>
+      <ul>{% for t in p.ticker %}<li>{{ t | escape }}</li>{% endfor %}</ul>
+      <ul aria-hidden="true">{% for t in p.ticker %}<li>{{ t | escape }}</li>{% endfor %}</ul>
     </div>
   </div>
 
@@ -298,144 +59,61 @@ footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8p
     <div class="about-grid">
       <p class="label" id="about-h">About</p>
       <div class="about-text rv">
-        <p class="big">I own the SSE Airtricity app, used by Home Energy customers across the Republic of Ireland and Northern Ireland. I also lead Enhanced Smart Insights, an award-winning programme that turns smart meter data into analysis and AI-driven energy-saving advice.</p>
-        <p>Before product, I spent years in digital change across telecoms, banking and energy. That's where I learned to define roadmaps, prioritise what creates the most customer and business value, and bring UX, engineering and operations teams with me.</p>
+        <p class="big">{{ p.about_lead | escape }}</p>
+        {{ p.about_more | markdownify }}
       </div>
     </div>
-    <div class="stats" role="list">
-      <div class="stat rv" role="listitem"><b class="count" data-to="100" data-pre="~" data-suf="k">~100k</b><span>customers on the SSE Airtricity app</span></div>
-      <div class="stat rv" role="listitem"><b class="count" data-to="1.5" data-suf="k+" data-dec="1">1.5k+</b><span>UK employees using a Power App I built</span></div>
-      <div class="stat rv" role="listitem"><b class="count" data-to="600" data-suf="+">600+</b><span>business and customer impacts closed on one transformation</span></div>
+    <div class="stats rv" role="list">
+      {%- for s in p.stats %}
+      <div class="stat" role="listitem"><b class="count" data-to="{{ s.value }}" data-pre="{{ s.prefix | escape }}" data-suf="{{ s.suffix | escape }}" data-dec="{{ s.decimals | default: 0 }}">{{ s.prefix | escape }}{{ s.value }}{{ s.suffix | escape }}</b><span>{{ s.label | escape }}</span></div>
+      {%- endfor %}
     </div>
   </section>
 
   <section class="block gutter" id="work" aria-labelledby="work-h">
     <div class="sec-head">
       <p class="label">Selected work</p>
-      <h2 id="work-h" class="rv">Projects I've led</h2>
+      <h2 id="work-h" class="rv">Products I've led</h2>
     </div>
     <ul class="rows">
+      {%- for pr in site.data.projects %}
       <li class="row rv">
         <button type="button" data-case aria-haspopup="dialog">
-          <span class="label">SSE Airtricity · 2025 →</span>
-          <span><span class="t">Enhanced Smart Insights</span><span class="sub">Smart meter data turned into energy-saving recommendations.</span><span class="award">Customer Insights Award 2026</span></span>
-          <span class="go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          <span class="label">{{ pr.label | escape }}</span>
+          <span><span class="t">{{ pr.title | escape }}</span><span class="sub">{{ pr.summary | escape }}</span>
+            <span class="chips">{% if pr.award and pr.award != "" %}<span class="hot">{{ pr.award | escape }}</span>{% endif %}{% for c in pr.chips %}<span>{{ c | escape }}</span>{% endfor %}</span></span>
+          {% include arrow.html %}
         </button>
         <div class="case-detail" hidden>
-          <p class="label">SSE Airtricity · 2025 to now</p>
-          <h3>Enhanced Smart Insights</h3>
+          <p class="label">{{ pr.period | escape }}</p>
+          <h3>{{ pr.title | escape }}</h3>
           <dl>
-            <div><dt>The brief</dt><dd>Use the data from customers' smart meters to give them a clear picture of their energy use, and practical ways to cut it.</dd></div>
-            <div><dt>What I did</dt><dd>I lead the programme, which uses smart meter readings to provide customers with data analysis and AI-driven energy-saving recommendations.</dd></div>
-            <div><dt>Outcome</dt><dd>The project team won the Customer Insights Award at the 2026 Analytics &amp; AI Awards.</dd></div>
+            {% if pr.brief %}<div><dt>The brief</dt><dd>{{ pr.brief | escape }}</dd></div>{% endif %}
+            {% if pr.what_i_did %}<div><dt>What I did</dt><dd>{{ pr.what_i_did | escape }}</dd></div>{% endif %}
+            {% if pr.outcome %}<div><dt>Outcome</dt><dd>{{ pr.outcome | escape }}</dd></div>{% endif %}
           </dl>
-          <div class="tags"><span>Smart meter data</span><span>AI recommendations</span><span>Programme leadership</span></div>
+          <div class="tags">{% for t in pr.tags %}<span>{{ t | escape }}</span>{% endfor %}</div>
         </div>
       </li>
-      <li class="row rv">
-        <button type="button" data-case aria-haspopup="dialog">
-          <span class="label">SSE Airtricity · 2025 →</span>
-          <span><span class="t">SSE Airtricity app</span><span class="sub">Roadmap ownership through an Angular to React replatform and redesign.</span></span>
-          <span class="go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-        </button>
-        <div class="case-detail" hidden>
-          <p class="label">SSE Airtricity · 2025 to now</p>
-          <h3>SSE Airtricity app</h3>
-          <dl>
-            <div><dt>The brief</dt><dd>The new SSE Airtricity mobile app supports around 100,000 Home Energy customers across ROI and NI, and needed a platform that could scale with future product ideas.</dd></div>
-            <div><dt>What I did</dt><dd>Owned the product roadmap and backlog. Led the delivery of a major platform move from Angular to React. Directed the prioritisation of customer-focused features in line with business strategy, and worked closely with the UX team on a significant redesign of customer journeys and self-service.</dd></div>
-            <div><dt>Outcome</dt><dd>Improved performance and scalability, and a foundation for future product innovation.</dd></div>
-          </dl>
-          <div class="tags"><span>Roadmap</span><span>Backlog</span><span>React migration</span><span>UX redesign</span></div>
-        </div>
-      </li>
-      <li class="row rv">
-        <button type="button" data-case aria-haspopup="dialog">
-          <span class="label">SSE plc · 2023 – 2025</span>
-          <span><span class="t">Skills Matrix app</span><span class="sub">A Power App used by more than 1,500 employees in the UK.</span></span>
-          <span class="go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-        </button>
-        <div class="case-detail" hidden>
-          <p class="label">SSE plc · 2023 to 2025</p>
-          <h3>Skills Matrix app</h3>
-          <dl>
-            <div><dt>The brief</dt><dd>Part of the Automation and Central Data Services workstreams within SSE's business-wide digital transformation programme.</dd></div>
-            <div><dt>What I did</dt><dd>Developed multiple Power Apps for business units, including the Skills Matrix app.</dd></div>
-            <div><dt>Outcome</dt><dd>The Skills Matrix app is used by more than 1,500 employees in the UK.</dd></div>
-          </dl>
-          <div class="tags"><span>Power Apps</span><span>Automation</span><span>Digital transformation</span></div>
-        </div>
-      </li>
-      <li class="row rv">
-        <button type="button" data-case aria-haspopup="dialog">
-          <span class="label">Three Ireland · Brooklyn</span>
-          <span><span class="t">Store &amp; digital transformation</span><span class="sub">Business readiness and UAT lead across Three's stores in Ireland.</span></span>
-          <span class="go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-        </button>
-        <div class="case-detail" hidden>
-          <p class="label">Three Ireland · 2018 to 2022</p>
-          <h3>Store &amp; digital transformation</h3>
-          <dl>
-            <div><dt>The brief</dt><dd>Brooklyn was the store and digital transformation of Three's stores across Ireland, made up of ten separate work packages.</dd></div>
-            <div><dt>What I did</dt><dd>Led the Business Readiness and UAT workstream, and led UAT for both internal operations and off-site operations teams.</dd></div>
-            <div><dt>Outcome</dt><dd>Facilitated the closure of over 600 business and customer impacts.</dd></div>
-          </dl>
-          <div class="tags"><span>Business readiness</span><span>UAT lead</span><span>Retail</span></div>
-        </div>
-      </li>
-      <li class="row rv">
-        <button type="button" data-case aria-haspopup="dialog">
-          <span class="label">Three Ireland · 3Vision</span>
-          <span><span class="t">O2 &amp; Three CRM integration</span><span class="sub">Moving legacy systems into one omnichannel platform.</span></span>
-          <span class="go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-        </button>
-        <div class="case-detail" hidden>
-          <p class="label">Three Ireland · 2018 to 2022</p>
-          <h3>O2 &amp; Three CRM integration</h3>
-          <dl>
-            <div><dt>The brief</dt><dd>A large data and digital transformation to integrate the legacy O2 and Three systems into a single third-party omnichannel system.</dd></div>
-            <div><dt>What I did</dt><dd>As change specialist, I was responsible for UAT of operational customer journeys, cleansing legacy data, planning customer and operational communications, and screen-to-screen mapping of the systems.</dd></div>
-            <div><dt>Outcome</dt><dd>Customer journeys tested and legacy data prepared for the move to one platform.</dd></div>
-          </dl>
-          <div class="tags"><span>Data migration</span><span>Change management</span><span>UAT</span></div>
-        </div>
-      </li>
+      {%- endfor %}
     </ul>
   </section>
 
   <section class="block gutter" id="experience" aria-labelledby="exp-h">
     <div class="sec-head">
       <p class="label">Experience</p>
-      <h2 id="exp-h" class="rv">The readings so far</h2>
+      <h2 id="exp-h" class="rv">Career so far</h2>
     </div>
     <div class="trace" id="trace">
       <span class="trace-fill" id="trace-fill" aria-hidden="true"></span>
       <ol class="trace-list">
-      <li class="reading">
-        <span class="when">2025 → now</span>
-        <div><h3>Business Product Owner</h3><span class="org">SSE Airtricity, Leopardstown</span>
-        <p>Product roadmap and backlog for the SSE Airtricity mobile app, the Angular to React replatform, customer-focused prioritisation and a major UX redesign. Lead on Enhanced Smart Insights.</p></div>
-      </li>
-      <li class="reading">
-        <span class="when">2023 – 2025</span>
-        <div><h3>Digital Change Manager</h3><span class="org">SSE plc, Leopardstown</span>
-        <p>Automation and Central Data Services workstreams within the business-wide digital transformation programme. Built Power Apps for business units.</p></div>
-      </li>
-      <li class="reading">
-        <span class="when">2022 – 2023</span>
-        <div><h3>Senior Change Analyst</h3><span class="org">Permanent TSB, St. Stephen's Green</span>
-        <p>Maintained data reports feeding monthly executive reporting, automated weekly processes with VBA, and ran monthly portfolio status reporting.</p></div>
-      </li>
-      <li class="reading">
-        <span class="when">2018 – 2022</span>
-        <div><h3>Change Management Specialist</h3><span class="org">Three Ireland, Sir John Rogerson's Quay</span>
-        <p>Business readiness and UAT lead on the Brooklyn store transformation, and change specialist on the 3Vision O2 and Three CRM integration.</p></div>
-      </li>
-      <li class="reading">
-        <span class="when">2014 – 2018</span>
-        <div><h3>Earlier roles</h3><span class="org">Enterprise Rent-A-Car · Dixons Carphone</span>
-        <p>Management Trainee at Enterprise, Dublin Airport (top 10 sales associates in Ireland, summer 2017), and Sales Assistant at Dixons Carphone, Jervis, while studying.</p></div>
-      </li>
+        {%- for job in site.data.experience %}
+        <li class="reading">
+          <span class="when">{{ job.dates | escape }}</span>
+          <div><h3>{{ job.title | escape }}</h3><span class="org">{{ job.company | escape }}</span>
+          <p>{{ job.summary | escape }}</p></div>
+        </li>
+        {%- endfor %}
       </ol>
     </div>
   </section>
@@ -449,39 +127,49 @@ footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8p
       <div class="rv">
         <p class="label">Education &amp; certification</p>
         <ul class="qlist">
-          <li><span class="yr">2026</span><div><strong>Digital Product Management</strong><span class="s">UCD Academy</span></div></li>
-          <li><span class="yr">2023</span><div><strong>Professional Scrum Master (PSM)</strong><span class="s">QAPSM</span></div></li>
-          <li><span class="yr">2021–22</span><div><strong>PG Cert, Digital Leadership &amp; Transformation</strong><span class="s">Level 9, TU Dublin</span></div></li>
-          <li><span class="yr">2021–22</span><div><strong>CAPM</strong><span class="s">Project Management Institute</span></div></li>
-          <li><span class="yr">2020–21</span><div><strong>Lean Six Sigma Green Belt</strong><span class="s">Level 7 QQI, SQT</span></div></li>
-          <li><span class="yr">2014–18</span><div><strong>BSc Business &amp; Management</strong><span class="s">Level 8, Dublin Institute of Technology</span></div></li>
+          {%- for e in site.data.education %}
+          <li><span class="yr">{{ e.year | escape }}</span><div><strong>{{ e.title | escape }}</strong><span class="s">{{ e.detail | escape }}</span></div></li>
+          {%- endfor %}
         </ul>
       </div>
       <div class="rv">
         <p class="label">Awards</p>
         <ul class="qlist">
-          <li><span class="yr">2026</span><div><strong>Customer Insights Award</strong><span class="s">Analytics &amp; AI Awards, Enhanced Smart Insights team</span></div></li>
-          <li><span class="yr">2022</span><div><strong>VIP Recognition Award</strong><span class="s">Permanent TSB, peer nominated</span></div></li>
-          <li><span class="yr">2019</span><div><strong>Graduate of the Year</strong><span class="s">Three Ireland</span></div></li>
-          <li><span class="yr">2019</span><div><strong>Shortlisted, Graduate Employee of the Year</strong><span class="s">GradIreland, judged</span></div></li>
-          <li><span class="yr">2019</span><div><strong>Q1 Hero Award</strong><span class="s">Three Ireland</span></div></li>
+          {%- for a in site.data.awards %}
+          <li><span class="yr">{{ a.year | escape }}</span><div><strong>{{ a.title | escape }}</strong><span class="s">{{ a.detail | escape }}</span></div></li>
+          {%- endfor %}
         </ul>
       </div>
     </div>
   </section>
 
+  <section class="block gutter" aria-label="Interests">
+    <a class="teaser rv" href="{{ '/interests.html' | relative_url }}">
+      <div>
+        <p class="label" style="margin-bottom:14px">Off the clock</p>
+        <h2>Automating my home &amp; my fantasy league</h2>
+      </div>
+      <div class="go-row">
+        <p>Home Assistant automations, a weekly fantasy football report that builds and sends itself, and the sport I follow.</p>
+        <span class="btn solid">See my interests →</span>
+      </div>
+    </a>
+  </section>
+
   <section class="contact gutter" id="contact" aria-labelledby="c-h">
     <p class="label">Contact</p>
-    <h2 id="c-h" class="rv">Let's build something <em>useful.</em></h2>
+    <h2 id="c-h" class="rv">{{ p.contact_heading | escape }} <em>{{ p.contact_highlight | escape }}</em></h2>
     <div class="mail">
-      <span class="addr">killian@ahaverty.com</span>
-      <button class="btn solid" type="button" id="copy-email" data-copy="killian@ahaverty.com">Copy email</button>
-      <a class="btn" href="mailto:killian@ahaverty.com">Send an email</a>
-      <a class="btn" href="cv.pdf">Download CV</a>
+      <span class="addr">{{ p.email | escape }}</span>
+      <button class="btn solid" type="button" id="copy-email" data-copy="{{ p.email | escape }}">Copy email</button>
+      <a class="btn" href="mailto:{{ p.email | escape }}">Send an email</a>
+      {%- if p.cv and p.cv != "" %}
+      <a class="btn" href="{{ p.cv | relative_url }}">Download CV</a>
+      {%- endif %}
     </div>
     <footer class="label">
-      <span>© 2026 Killian Haverty</span>
-      <span>Dublin, Ireland</span>
+      <span>© {{ site.time | date: "%Y" }} {{ p.first_name }} {{ p.last_name }}</span>
+      <a href="{{ '/interests.html' | relative_url }}">Interests →</a>
     </footer>
   </section>
 </main>
@@ -489,228 +177,10 @@ footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8p
 <dialog class="case" id="case" aria-label="Project details">
   <div class="case-in">
     <button class="case-close" type="button" id="case-close">Close ✕</button>
-    <div id="case-body" style="display:flex;flex-direction:column;gap:24px"></div>
+    <div id="case-body"></div>
   </div>
 </dialog>
 
-<script>
-(function () {
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  /* ---------- Energy curve ---------- */
-  var N = 48, VMAX = 2;
-  var seed = 7;
-  function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
-  function g(h, mu, s, a) { return a * Math.exp(-Math.pow(h - mu, 2) / (2 * s * s)); }
-  var data = [];
-  for (var i = 0; i < N; i++) {
-    var h = i / 2;
-    var v = 0.22 + g(h, 7.75, 0.8, 0.85) + g(h, 13, 1.2, 0.25) + g(h, 18.4, 1.25, 1.45) + g(h, 21.6, 0.9, 0.35) + (rnd() - 0.5) * 0.12;
-    data.push(Math.max(0.12, Math.min(1.95, v)));
-  }
-  function hhmm(i) { var m = i * 30; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
-
-  function dublinNow() {
-    try {
-      var p = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Dublin', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date());
-      var hh = +p.find(function (x) { return x.type === 'hour'; }).value, mm = +p.find(function (x) { return x.type === 'minute'; }).value;
-      return { h: hh, m: mm };
-    } catch (e) { var d = new Date(); return { h: d.getHours(), m: d.getMinutes() }; }
-  }
-  var clockEl = document.getElementById('clock'), kwhEl = document.getElementById('now-kwh');
-  function nowIndex() { var t = dublinNow(); return Math.min(N - 1, Math.floor((t.h * 60 + t.m) / 30)); }
-  function updateClock() {
-    var t = dublinNow();
-    clockEl.textContent = String(t.h).padStart(2, '0') + ':' + String(t.m).padStart(2, '0');
-    kwhEl.textContent = data[nowIndex()].toFixed(2) + ' kWh';
-  }
-  updateClock(); setInterval(updateClock, 20000);
-
-  var cv = document.getElementById('meter'), ctx = cv.getContext('2d'), tip = document.getElementById('tip');
-  var W = 0, H = 0, dpr = 1, progress = reduce ? 1 : 0, hover = -1, t0 = null, colors = {};
-  var PL = 44, PR = 8, PT = 18, PB = 26;
-
-  function readColors() {
-    var cs = getComputedStyle(document.documentElement);
-    ['--ink', '--muted', '--line', '--accent', '--bg'].forEach(function (k) { colors[k] = cs.getPropertyValue(k).trim(); });
-  }
-  function size() {
-    var r = cv.getBoundingClientRect(); dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = r.width; H = r.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
-    PL = W < 480 ? 34 : 44;
-  }
-  function X(i) { return PL + (i / (N - 1)) * (W - PL - PR); }
-  function Y(v) { return PT + (1 - v / VMAX) * (H - PT - PB); }
-
-  function path() {
-    ctx.beginPath(); ctx.moveTo(X(0), Y(data[0]));
-    for (var i = 0; i < N - 1; i++) {
-      var xc = (X(i) + X(i + 1)) / 2, yc = (Y(data[i]) + Y(data[i + 1])) / 2;
-      ctx.quadraticCurveTo(X(i), Y(data[i]), xc, yc);
-    }
-    ctx.lineTo(X(N - 1), Y(data[N - 1]));
-  }
-
-  function draw(time) {
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, W, H);
-    var mono = '500 10.5px "IBM Plex Mono", ui-monospace, monospace';
-    ctx.font = mono; ctx.textBaseline = 'middle';
-    // grid + y labels
-    for (var v = 0; v <= VMAX; v += 0.5) {
-      var y = Y(v);
-      ctx.strokeStyle = colors['--line']; ctx.lineWidth = 1; ctx.setLineDash(v === 0 ? [] : [2, 4]);
-      ctx.beginPath(); ctx.moveTo(PL, y); ctx.lineTo(W - PR, y); ctx.stroke();
-      ctx.fillStyle = colors['--muted']; ctx.textAlign = 'right';
-      ctx.fillText(v.toFixed(1), PL - 8, y);
-    }
-    ctx.setLineDash([]);
-    ctx.textAlign = 'left'; ctx.fillStyle = colors['--muted'];
-    ctx.fillText('kWh', PL + 4, PT - 8);
-    // x labels
-    ctx.textBaseline = 'top';
-    var marks = W < 480 ? [0, 24, 47] : [0, 12, 24, 36, 47];
-    marks.forEach(function (i, k) {
-      ctx.textAlign = k === 0 ? 'left' : (k === marks.length - 1 ? 'right' : 'center');
-      ctx.fillText(hhmm(i), X(i), H - PB + 9);
-    });
-
-    // clip to progress
-    var cx = PL + (W - PL - PR) * progress;
-    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, cx + 1, H); ctx.clip();
-    // area
-    path(); ctx.lineTo(X(N - 1), Y(0)); ctx.lineTo(X(0), Y(0)); ctx.closePath();
-    var grad = ctx.createLinearGradient(0, PT, 0, Y(0));
-    grad.addColorStop(0, hexA(colors['--accent'], 0.32)); grad.addColorStop(1, hexA(colors['--accent'], 0));
-    ctx.fillStyle = grad; ctx.fill();
-    // line
-    path(); ctx.strokeStyle = colors['--accent']; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
-    ctx.shadowColor = hexA(colors['--accent'], 0.5); ctx.shadowBlur = 14; ctx.stroke(); ctx.shadowBlur = 0;
-    ctx.restore();
-
-    // now marker
-    var ni = nowIndex();
-    if (X(ni) <= cx) {
-      var nx = X(ni), ny = Y(data[ni]);
-      ctx.strokeStyle = colors['--muted']; ctx.setLineDash([3, 4]); ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(nx, ny); ctx.lineTo(nx, Y(0)); ctx.stroke(); ctx.setLineDash([]);
-      var pulse = reduce ? 0 : ((time || 0) / 1600) % 1;
-      if (!reduce) { ctx.beginPath(); ctx.arc(nx, ny, 5 + pulse * 14, 0, Math.PI * 2); ctx.fillStyle = hexA(colors['--accent'], 0.35 * (1 - pulse)); ctx.fill(); }
-      ctx.beginPath(); ctx.arc(nx, ny, 5, 0, Math.PI * 2); ctx.fillStyle = colors['--accent']; ctx.fill();
-      ctx.lineWidth = 2; ctx.strokeStyle = colors['--bg']; ctx.stroke();
-      ctx.font = mono; ctx.fillStyle = colors['--ink']; ctx.textBaseline = 'bottom';
-      ctx.textAlign = nx > W - 70 ? 'right' : 'left';
-      ctx.fillText('NOW', nx + (nx > W - 70 ? -10 : 10), ny - 8);
-    }
-    // hover
-    if (hover >= 0 && X(hover) <= cx) {
-      var hx = X(hover), hy = Y(data[hover]);
-      ctx.strokeStyle = colors['--ink']; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(hx, PT); ctx.lineTo(hx, Y(0)); ctx.stroke();
-      ctx.beginPath(); ctx.arc(hx, hy, 4.5, 0, Math.PI * 2); ctx.fillStyle = colors['--ink']; ctx.fill();
-    }
-  }
-  function hexA(c, a) {
-    c = c.replace('#', '');
-    if (c.length === 3) c = c.split('').map(function (x) { return x + x; }).join('');
-    var n = parseInt(c, 16); return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + a + ')';
-  }
-  function loop(time) {
-    if (t0 === null) t0 = time;
-    if (progress < 1) { var p = Math.min(1, (time - t0 - 350) / 2200); progress = p <= 0 ? 0 : 1 - Math.pow(1 - p, 3); }
-    draw(time);
-    requestAnimationFrame(loop);
-  }
-  readColors(); size();
-  if (reduce) { draw(0); } else { requestAnimationFrame(loop); }
-  window.addEventListener('resize', function () { size(); if (reduce) draw(0); });
-  var mq = window.matchMedia('(prefers-color-scheme: dark)');
-  function recolor() { readColors(); if (reduce) draw(0); }
-  if (mq.addEventListener) mq.addEventListener('change', recolor);
-  new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (reduce) draw(0); });
-
-  function pointer(e) {
-    var r = cv.getBoundingClientRect(), x = e.clientX - r.left;
-    var i = Math.round((x - PL) / (W - PL - PR) * (N - 1));
-    if (i < 0 || i >= N) { leave(); return; }
-    hover = i;
-    tip.textContent = hhmm(i) + ' · ' + data[i].toFixed(2) + ' kWh';
-    tip.style.left = Math.max(60, Math.min(W - 60, X(i))) + 'px';
-    tip.style.top = Y(data[i]) + 'px';
-    tip.classList.add('on');
-    if (reduce) draw(0);
-  }
-  function leave() { hover = -1; tip.classList.remove('on'); if (reduce) draw(0); }
-  cv.addEventListener('pointermove', pointer);
-  cv.addEventListener('pointerdown', pointer);
-  cv.addEventListener('pointerleave', leave);
-
-  /* ---------- Count-up ---------- */
-  function countUp(el) {
-    var to = parseFloat(el.dataset.to), dec = +(el.dataset.dec || 0), pre = el.dataset.pre || '', suf = el.dataset.suf || '';
-    var start = null;
-    function step(t) {
-      if (!start) start = t;
-      var p = Math.min(1, (t - start) / 1600), e = 1 - Math.pow(1 - p, 4);
-      el.textContent = pre + (to * e).toFixed(dec) + suf;
-      if (p < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-  }
-
-  /* ---------- Reveal + count observers ---------- */
-  if (!reduce && 'IntersectionObserver' in window) {
-    var vh = window.innerHeight;
-    var io = new IntersectionObserver(function (ents) {
-      ents.forEach(function (en) {
-        if (!en.isIntersecting) return;
-        var el = en.target; io.unobserve(el);
-        el.classList.add('in');
-        var c = el.querySelector('.count'); if (c) countUp(c);
-      });
-    }, { rootMargin: '0px 0px 12% 0px' });
-    document.querySelectorAll('.rv').forEach(function (el) {
-      if (el.getBoundingClientRect().top > vh) io.observe(el);
-    });
-  }
-
-  /* ---------- Experience trace ---------- */
-  var trace = document.getElementById('trace'), fill = document.getElementById('trace-fill'), reads = trace.querySelectorAll('.reading');
-  function onScroll() {
-    var r = trace.getBoundingClientRect(), mid = window.innerHeight * 0.6;
-    var p = Math.max(0, Math.min(1, (mid - r.top) / r.height));
-    fill.style.transform = 'scaleY(' + p.toFixed(4) + ')';
-    reads.forEach(function (el) { el.classList.toggle('lit', el.getBoundingClientRect().top + 14 < mid); });
-  }
-  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
-
-  /* ---------- Case dialog ---------- */
-  var dlg = document.getElementById('case'), body = document.getElementById('case-body');
-  document.querySelectorAll('[data-case]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      body.innerHTML = btn.parentElement.querySelector('.case-detail').innerHTML;
-      dlg.setAttribute('aria-label', body.querySelector('h3').textContent);
-      document.body.classList.add('locked');
-      dlg.showModal(); dlg.scrollTop = 0;
-    });
-  });
-  function closeDlg() { dlg.close(); }
-  document.getElementById('case-close').addEventListener('click', closeDlg);
-  dlg.addEventListener('click', function (e) { if (e.target === dlg) closeDlg(); });
-  dlg.addEventListener('close', function () { document.body.classList.remove('locked'); });
-
-  /* ---------- Copy ---------- */
-  document.querySelectorAll('[data-copy]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var label = b.textContent;
-      function done(m) { b.textContent = m; setTimeout(function () { b.textContent = label; }, 1600); }
-      try { navigator.clipboard.writeText(b.dataset.copy).then(function () { done('Copied'); }, function () { done('Select to copy'); }); }
-      catch (e) { done('Select to copy'); }
-    });
-  });
-})();
-</script>
-
+<script src="{{ '/site.js' | relative_url }}"></script>
 </body>
 </html>

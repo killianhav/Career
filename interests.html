@@ -1,0 +1,147 @@
+---
+# Interests page. Edit the words in Pages CMS (or _data/interests.yml); this file only holds the layout.
+---
+{%- assign p = site.data.profile -%}
+{%- assign i = site.data.interests -%}
+<!doctype html>
+<html lang="{{ site.lang }}">
+<head>
+{% include head.html %}
+<title>{{ p.first_name }} {{ p.last_name }} · Interests</title>
+<meta name="description" content="What {{ p.first_name }} {{ p.last_name }} builds off the clock.">
+<link rel="stylesheet" href="{{ '/interests.css' | relative_url }}">
+</head>
+<body>
+
+<header class="top">
+  <div class="gutter">
+    <a class="mark" href="{{ '/' | relative_url }}"><i aria-hidden="true"></i>{{ p.first_name | slice: 0 }}{{ p.last_name | slice: 0 }}</a>
+    <nav aria-label="Main">
+      <a class="wide" href="{{ '/#work' | relative_url }}">Work</a>
+      <a class="wide" href="{{ '/#experience' | relative_url }}">Experience</a>
+      <a href="{{ '/interests.html' | relative_url }}" aria-current="page">Interests</a>
+      <a class="pill" href="{{ '/#contact' | relative_url }}">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="ihero gutter" aria-labelledby="ih">
+    <div>
+      <p class="label"><a href="{{ '/' | relative_url }}" style="text-decoration:none">← Back to work</a></p>
+      <h1 id="ih"><span>Off the</span><span class="o">clock</span></h1>
+    </div>
+    <div class="side">
+      <div class="mini"><img src="{{ p.photo | relative_url }}" alt="" width="52" height="52"><span class="label">{{ p.first_name }} {{ p.last_name }}<br><b>Interests</b></span></div>
+      <p>{{ i.intro | escape }}</p>
+      <div class="jump">
+        <a class="btn" href="#home">Home automation</a>
+        <a class="btn" href="#fpl">{{ i.fpl.title | remove: "™" | strip | escape }} report</a>
+        <a class="btn" href="#sport">Sport</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="ticker" aria-label="Interests">
+    <div class="ticker-track">
+      <ul>{% for t in i.ticker %}<li>{{ t | escape }}</li>{% endfor %}</ul>
+      <ul aria-hidden="true">{% for t in i.ticker %}<li>{{ t | escape }}</li>{% endfor %}</ul>
+    </div>
+  </div>
+
+  <section class="block gutter" id="home" aria-labelledby="home-h">
+    <div class="sec-head">
+      <p class="label">Home automation</p>
+      <h2 id="home-h" class="rv">{{ i.home_heading | escape }}</h2>
+      <p class="lead">{{ i.home_intro | escape }}</p>
+    </div>
+    <div class="autos">
+      {%- for a in i.automations %}
+      {%- assign size = a.size | default: "normal" %}
+      <article class="auto rv{% if size == 'wide' %} wide{% elsif size == 'full' %} full{% endif %}">
+        <div class="auto-top">
+          <span class="icon">{% include icon.html name=a.icon %}</span>
+          <span class="status{% if a.status == 'Next up' or a.status == 'In progress' %} wip{% endif %}">{{ a.status | escape }}</span>
+        </div>
+        {%- if size == 'full' %}
+        <div class="txt"><h3>{{ a.title | escape }}</h3><p style="color:var(--muted);font-size:.95rem">{{ a.description | escape }}</p></div>
+        {%- else %}
+        <h3>{{ a.title | escape }}</h3>
+        <p>{{ a.description | escape }}</p>
+        {%- endif %}
+        {%- if a.when or a.then %}
+        <dl class="rule">{% if a.when %}<dt>WHEN</dt><dd>{{ a.when | escape }}</dd>{% endif %}{% if a.then %}<dt>THEN</dt><dd>{{ a.then | escape }}</dd>{% endif %}</dl>
+        {%- endif %}
+      </article>
+      {%- endfor %}
+    </div>
+  </section>
+
+  {%- assign f = i.fpl %}
+  <section class="block gutter" id="fpl" aria-labelledby="fpl-h">
+    <div class="sec-head">
+      <p class="label">Side project</p>
+      <h2 id="fpl-h" class="rv">{{ f.heading | escape }}</h2>
+    </div>
+    <article class="fpl rv">
+      <div class="fpl-head">
+        <div>
+          <p class="label">{{ f.eyebrow | escape }}</p>
+          <h3>{{ f.title | escape | replace: "™", "<sup>™</sup>" }}</h3>
+        </div>
+        <div>
+          <p>{{ f.intro | escape }}</p>
+          {% if f.built_with and f.built_with != "" %}<p>{{ f.built_with | escape }}</p>{% endif %}
+        </div>
+      </div>
+      <ol class="pipe" aria-label="How it works">
+        {%- for step in f.pipeline %}
+        <li{% unless forloop.last %} class="flow"{% endunless %}><b>{{ step.name | escape }}</b><span>{{ step.detail | escape }}</span></li>
+        {%- endfor %}
+      </ol>
+      <div>
+        <p class="label" style="margin-bottom:12px">Inside the report</p>
+        <div class="pages">{% for pg in f.report_pages %}<span>{{ pg | escape }}</span>{% endfor %}</div>
+      </div>
+      <div class="fpl-stats">
+        {%- for s in f.stats %}
+        <div><b>{{ s.value | escape }}</b><span>{{ s.label | escape }}</span></div>
+        {%- endfor %}
+      </div>
+    </article>
+  </section>
+
+  <section class="block gutter" id="sport" aria-labelledby="sport-h">
+    <div class="sec-head">
+      <p class="label">Sport</p>
+      <h2 id="sport-h" class="rv">{{ i.sport_heading | escape }}</h2>
+    </div>
+    <div class="sport">
+      {%- for s in i.sport %}
+      <article class="rv">
+        <p class="label">{{ s.eyebrow | escape }}</p>
+        <h3>{{ s.title | escape }}</h3>
+        <p>{{ s.text | escape }}</p>
+      </article>
+      {%- endfor %}
+    </div>
+  </section>
+
+  <section class="contact gutter" aria-labelledby="c-h">
+    <p class="label">Say hello</p>
+    <h2 id="c-h" class="rv">{{ i.contact_heading | escape }} <em>{{ i.contact_highlight | escape }}</em></h2>
+    <div class="mail">
+      <span class="addr">{{ p.email | escape }}</span>
+      <button class="btn solid" type="button" data-copy="{{ p.email | escape }}">Copy email</button>
+      <a class="btn" href="{{ '/' | relative_url }}">← Back to work</a>
+    </div>
+    <footer class="label">
+      <span>© {{ site.time | date: "%Y" }} {{ p.first_name }} {{ p.last_name }}</span>
+      <a href="{{ '/' | relative_url }}">Home →</a>
+    </footer>
+  </section>
+</main>
+
+<script src="{{ '/site.js' | relative_url }}"></script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+first_name: Killian
+last_name: Haverty
+tagline: Business Product Owner · Mobile & web · Dublin
+photo: /assets/profile.jpg
+ring_text: PRODUCT OWNER • MOBILE APPS • WEB PLATFORMS • ROADMAP TO RELEASE •
+badge: Hi!
+intro_before: I lead
+intro_highlight: mobile and web products
+intro_after: from roadmap to release, and make sure what we ship is worth using.
+now: Business Product Owner, SSE Airtricity app
+email: killian@ahaverty.com
+cv: /cv.pdf
+ticker:
+  - Product roadmaps
+  - Mobile apps
+  - Web platforms
+  - Backlog ownership
+  - UX partnership
+  - Scrum
+  - Azure DevOps
+  - Power Platform
+  - Python & SQL
+about_lead: >-
+  I'm the Business Product Owner for the SSE Airtricity app, used by Home Energy customers across the Republic of
+  Ireland and Northern Ireland. I own the roadmap and backlog, and I led its move to a new React platform alongside a
+  full UX redesign.
+about_more: >-
+  My background is in digital change across telecoms, banking and energy. That taught me how to turn business strategy
+  into a prioritised backlog, work hand in hand with UX and engineering, and bring operations teams along when things
+  change. I also lead Enhanced Smart Insights, an award-winning programme that puts personalised, data-driven advice in
+  front of customers.
+stats:
+  - value: 100
+    prefix: "~"
+    suffix: k
+    decimals: 0
+    label: customers on the app I own
+  - value: 1.5
+    prefix: ""
+    suffix: k+
+    decimals: 1
+    label: UK employees using a Power App I built
+  - value: 600
+    prefix: ""
+    suffix: "+"
+    decimals: 0
+    label: business and customer impacts closed on one transformation
+contact_heading: Let's build something
+contact_highlight: useful.

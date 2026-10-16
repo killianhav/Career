@@ -1,0 +1,6 @@
+# Site settings. Your content lives in the _data folder and is edited through Pages CMS.
+title: Killian Haverty
+lang: en-IE
+markdown: kramdown
+exclude:
+  - README.md

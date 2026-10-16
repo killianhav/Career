@@ -1,0 +1,69 @@
+- title: SSE Airtricity app
+  label: SSE Airtricity · 2025 →
+  summary: Roadmap and backlog for the customer app, through an Angular to React replatform and UX redesign.
+  award: ""
+  chips: [Mobile, Web, ~100k customers]
+  period: SSE Airtricity · 2025 to now
+  brief: >-
+    The new SSE Airtricity mobile app supports around 100,000 Home Energy customers across ROI and NI. It needed a
+    platform that could scale with future product ideas, and journeys that let customers do more for themselves.
+  what_i_did: >-
+    Owned the product roadmap and backlog. Led the delivery of a major platform move from Angular to React. Directed
+    the prioritisation of customer-focused features in line with business strategy, and worked closely with the UX team
+    on a significant redesign of customer journeys and self-service.
+  outcome: >-
+    Improved performance and scalability, a better self-service experience, and a foundation for future product
+    innovation.
+  tags: [Product roadmap, Backlog, React replatform, UX redesign]
+- title: Enhanced Smart Insights
+  label: SSE Airtricity · 2025 →
+  summary: Personalised, AI-driven energy-saving recommendations for customers.
+  award: Award winner 2026
+  chips: [Data & AI]
+  period: SSE Airtricity · 2025 to now
+  brief: Give customers a clear picture of their energy use, and practical, personalised ways to cut it.
+  what_i_did: >-
+    I lead the programme, which uses smart meter data to provide customers with data analysis and AI-driven
+    energy-saving recommendations.
+  outcome: The project team won the Customer Insights Award at the 2026 Analytics & AI Awards.
+  tags: [Data products, AI recommendations, Programme leadership]
+- title: Skills Matrix app
+  label: SSE plc · 2023 – 2025
+  summary: An internal Power App used by more than 1,500 employees in the UK.
+  award: ""
+  chips: [Internal tools, Power Apps]
+  period: SSE plc · 2023 to 2025
+  brief: >-
+    Part of the Automation and Central Data Services workstreams within SSE's business-wide digital transformation
+    programme.
+  what_i_did: Developed multiple Power Apps for business units, including the Skills Matrix app.
+  outcome: The Skills Matrix app is used by more than 1,500 employees in the UK.
+  tags: [Power Apps, Automation, Digital transformation]
+- title: Store & digital transformation
+  label: Three Ireland · Brooklyn
+  summary: Business readiness and UAT lead across Three's stores in Ireland.
+  award: ""
+  chips: [UAT, 600+ impacts]
+  period: Three Ireland · 2018 to 2022
+  brief: >-
+    Brooklyn was the store and digital transformation of Three's stores across Ireland, made up of ten separate work
+    packages.
+  what_i_did: >-
+    Led the Business Readiness and UAT workstream, and led UAT for both internal operations and off-site operations
+    teams.
+  outcome: Facilitated the closure of over 600 business and customer impacts.
+  tags: [Business readiness, UAT lead, Retail]
+- title: O2 & Three CRM integration
+  label: Three Ireland · 3Vision
+  summary: Moving legacy systems into one omnichannel platform.
+  award: ""
+  chips: [Data migration, Customer journeys]
+  period: Three Ireland · 2018 to 2022
+  brief: >-
+    A large data and digital transformation to integrate the legacy O2 and Three systems into a single third-party
+    omnichannel system.
+  what_i_did: >-
+    As change specialist, I was responsible for UAT of operational customer journeys, cleansing legacy data, planning
+    customer and operational communications, and screen-to-screen mapping of the systems.
+  outcome: Customer journeys tested and legacy data prepared for the move to one platform.
+  tags: [Data migration, Change management, UAT]
