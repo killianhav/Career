@@ -92,6 +92,8 @@ const FLOORS = [
       ['table', 0.75, 2.35, 1.95, 3.55, '#9a6a3f'],
       ['chair', 0.55, 2.65, 0], ['chair', 0.55, 3.25, 0], ['chair', 2.15, 2.65, 180], ['chair', 2.15, 3.25, 180],
       ['plant', 0.25, 1.6],
+      ['pir', 0.02, 4.76, 45], // dining-room motion detector (Kitchen MD)
+      ['pir', 3.58, 9.37, 45], // hallway motion detector (Laverna Hallway MD)
       // living
       ['box', -0.06, 6.49, 0.34, 7.74, WALL_H, 'wall'], // chimney breast
       ['box', 0.33, 6.8, 0.37, 7.43, 0.75, '#2a2420'], // fireplace
@@ -184,13 +186,13 @@ const DEFAULT_DEVICES = [
   { entity: 'media_player.living_room_tv', room: 'living', at: [0.75, 5.45] },
   { entity: 'light.kitchen_driver', room: 'kitchen', at: [3.6, 2.6] },
   { entity: 'climate.kitchen_kitchen_thermostat', room: 'kitchen', at: [1.3, 4.25] },
-  { entity: 'binary_sensor.kitchen_md', room: 'kitchen', at: [4.6, 0.6] },
+  { entity: 'binary_sensor.kitchen_md', room: 'kitchen', at: [0.12, 4.68], h: 2.5, ring_at: [0.9, 3.9] }, // alarm PIR, high in the dining corner above the robot dock
   { entity: 'binary_sensor.back_door', kind: 'door', name: 'Back door', room: 'kitchen', at: [1.3, 1.6] }, // French doors to the garden
   { entity: 'binary_sensor.back_window', room: 'kitchen', at: [3.8, 0.35] },
   { entity: 'vacuum.l40s_pro_ultra', room: 'kitchen', at: [2.35, 4.45] },
   { entity: 'light.hallway_lamp', room: 'hallway', at: [3.85, 7.3] },
   { entity: 'binary_sensor.hallway_motion', room: 'hallway', at: [3.85, 6.0] },
-  { entity: 'binary_sensor.laverna_hallway_md', room: 'hallway', at: [3.85, 5.1] },
+  { entity: 'binary_sensor.laverna_hallway_md', room: 'hallway', at: [3.66, 9.3], h: 2.5, ring_at: [3.9, 8.7] }, // alarm PIR, high in the corner left of the front door
   // First floor
   { entity: 'light.ikea_of_sweden_tradfri_bulb_e27_ws_clear_806lm', room: 'bedroom', at: [1.4, 2.9] },
   { entity: 'cover.blind_4', room: 'bedroom', at: [1.55, 1.6] },
@@ -1091,6 +1093,17 @@ class Floorplan3DCard extends HTMLElement {
         if (entity) this._screens[entity] = screen;
         break;
       }
+      case 'pir': {
+        // corner-mounted alarm motion detector near the ceiling; rot = degrees it faces into the room
+        const [x, z, deg] = a;
+        const c = new THREE.Group();
+        this._box(c, -0.04, -0.05, 0.04, 0.05, 0.11, M.white, 0, false);
+        this._box(c, 0.04, -0.025, 0.05, 0.025, 0.04, M.dark, 0.05, false); // lens
+        c.position.set(x, 2.2, z);
+        c.rotation.y = (-deg * Math.PI) / 180 + Math.PI / 2;
+        g.add(c);
+        break;
+      }
       case 'tvcorner': {
         // TV on a corner unit, angled across the corner (rotation in degrees)
         const [x, z, deg, entity] = a;
@@ -1292,7 +1305,8 @@ class Floorplan3DCard extends HTMLElement {
           new THREE.MeshBasicMaterial({ color: '#4fc3f7', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }),
         );
         ring.rotation.x = -Math.PI / 2;
-        ring.position.set(at[0], 0.04, at[1]);
+        const ra = d.ring_at || at; // where the motion ripple is drawn (defaults to the marker)
+        ring.position.set(ra[0], 0.04, ra[1]);
         ring.renderOrder = 3;
         this._floorGroups[Math.max(0, floor)].add(ring);
         dev.ring = ring;
