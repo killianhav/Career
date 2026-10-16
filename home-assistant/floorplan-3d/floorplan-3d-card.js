@@ -95,13 +95,13 @@ const FLOORS = [
       // living
       ['box', -0.06, 6.49, 0.34, 7.74, WALL_H, 'wall'], // chimney breast
       ['box', 0.33, 6.8, 0.37, 7.43, 0.75, '#2a2420'], // fireplace
-      ['tv', 0.36, 6.5, 0.42, 7.72, 1.15, 'media_player.living_room_tv'],
-      ['rug', 0.9, 5.7, 2.45, 8.4, '#c8b48a'],
-      ['sofa', 2.5, 5.6, 3.42, 8.0, 'w'],
-      ['box', 1.35, 6.45, 2.05, 7.6, 0.4, '#7a5636'], // coffee table
-      ['armchair', 2.35, 8.65, 3.15, 9.45],
-      ['lamp', 0.35, 9.35, 'light.lamp'],
-      ['plant', 3.2, 5.15],
+      ['tvcorner', 0.42, 5.23, 45, 'media_player.living_room_tv'], // TV in the back-left corner
+      ['rug', 0.9, 5.9, 2.45, 8.5, '#c8b48a'],
+      ['sofa', 2.5, 5.9, 3.42, 8.1, 'w'],
+      ['box', 1.35, 6.55, 2.05, 7.7, 0.4, '#7a5636'], // coffee table
+      ['couch', 0.3, 8.85, 2.75, 9.72, '#4e7d4c', 's'], // green couch under the front window
+      ['lamp', 3.25, 5.1, 'light.lamp'], // floor lamp in the back-right corner
+      ['plant', 3.25, 9.15],
       // hallway / wc
       ['stairs', 4.2, 4.93, 8.61, 6.11],
       ['toilet', 4.6, 5.55, 4.95, 6.02, 'n'],
@@ -177,17 +177,15 @@ const OUTSIDE_ROOMS = [
 // room: one of the room ids above. at: [x, z] marker position (metres).
 const DEFAULT_DEVICES = [
   // Ground floor
-  { entity: 'light.lamp', room: 'living', at: [0.45, 9.25] },
+  { entity: 'light.lamp', room: 'living', at: [3.2, 5.2] },
   { entity: 'cover.blind_2', room: 'living', at: [1.55, 9.45] },
   { entity: 'binary_sensor.front_window_left', room: 'living', at: [0.75, 9.55] },
   { entity: 'binary_sensor.front_window_right', room: 'living', at: [2.4, 9.55] },
-  { entity: 'media_player.living_room_tv', room: 'living', at: [0.75, 7.1] },
+  { entity: 'media_player.living_room_tv', room: 'living', at: [0.75, 5.45] },
   { entity: 'light.kitchen_driver', room: 'kitchen', at: [3.6, 2.6] },
   { entity: 'climate.kitchen_kitchen_thermostat', room: 'kitchen', at: [1.3, 4.25] },
   { entity: 'binary_sensor.kitchen_md', room: 'kitchen', at: [4.6, 0.6] },
-  { entity: 'binary_sensor.back_door', room: 'kitchen', at: [1.3, 1.6] },
   { entity: 'binary_sensor.back_window', room: 'kitchen', at: [3.8, 0.35] },
-  { entity: 'binary_sensor.side_door', room: 'kitchen', at: [4.6, 3.2] },
   { entity: 'vacuum.l40s_pro_ultra', room: 'kitchen', at: [2.35, 4.45] },
   { entity: 'light.hallway_lamp', room: 'hallway', at: [3.85, 7.3] },
   { entity: 'binary_sensor.front_door', room: 'hallway', at: [4.05, 9.15] },
@@ -218,6 +216,9 @@ const DEFAULT_DEVICES = [
   { entity: 'light.shed_light_3', room: 'shed', at: [4.2, -7.4], light_at: [3.92, 1.95, -7.6], range: 3 },
   { entity: 'light.cabin_shed_leds_shed_led_strip', room: 'shed', at: [4.75, -8.35], h: 1.1, light_at: [4.6, 1.05, -8.35], range: 2.5, power: 0.6 },
   { entity: 'media_player.cabin', room: 'cabin', at: [3.1, -8.75], h: 1.6 },
+  // cabin doors on the alarm: French doors (main room) and the shed door
+  { entity: 'binary_sensor.back_door', kind: 'door', name: 'Cabin door', room: 'cabin', at: [2.7, -6.0], h: 1.6 },
+  { entity: 'binary_sensor.side_door', kind: 'door', name: 'Shed door', room: 'shed', at: [4.48, -6.0], h: 1.6 },
 ];
 
 // Robot-vacuum map (Dreame integration) → model metres. Fitted from the robot's room outlines against
@@ -449,6 +450,7 @@ class Floorplan3DCard extends HTMLElement {
     this._flash = 0;
 
     this._lightFx = {}; // light entity → extra visuals (lamp shades, LED strips, wall-light beams)
+    this._cutWalls = []; // exterior wall pieces that drop to a cutaway height when facing the camera
     this._roomMeshes = []; // raycast targets
     this._rooms = {}; // id → { glowMats, floor, lights }
     this._floorGroups = [];
@@ -908,7 +910,7 @@ class Floorplan3DCard extends HTMLElement {
 
     for (const r of f.rooms) this._addRoom(group, r, f.id);
 
-    for (const w of f.walls) this._buildWall(group, w);
+    for (const w of f.walls) this._buildWall(group, w, { cutCenter: [2.5, 5.5], floor: f.id });
     for (const item of f.furniture) this._buildFurniture(group, item);
 
     // flat roof over the single-storey kitchen extension (shown when looking at the first floor)
@@ -949,6 +951,14 @@ class Floorplan3DCard extends HTMLElement {
     const H = w.h || style.h || WALL_H;
     const mats = style.mats || [M.wall, M.wall, M.wallTop, M.wall, M.wall, M.wall];
     const glass = style.glass || M.glass;
+    // outward normal for exterior walls (used by the cutaway)
+    let cut = null;
+    if (style.cutCenter && t >= EXT) {
+      let nx = -uz, nz = ux;
+      const mx = (ax + bx) / 2 - style.cutCenter[0], mz = (az + bz) / 2 - style.cutCenter[1];
+      if (nx * mx + nz * mz < 0) [nx, nz] = [-nx, -nz];
+      cut = { nx, nz, floor: style.floor };
+    }
     const piece = (s, e, y0, y1, mat = mats, cast = true) => {
       if (s === 0) s -= t / 2;
       if (e === len) e += t / 2;
@@ -969,6 +979,7 @@ class Floorplan3DCard extends HTMLElement {
       m.castShadow = cast;
       m.receiveShadow = true;
       group.add(m);
+      if (cut) this._cutWalls.push({ m, y0, y1, top: y1, ...cut });
     };
     const ops = (w.o || []).slice().sort((p, q) => p[0] - q[0]);
     let cur = 0;
@@ -1052,6 +1063,43 @@ class Floorplan3DCard extends HTMLElement {
         const screen = new THREE.MeshStandardMaterial({ color: '#0d0f12', emissive: '#7fb2ff', emissiveIntensity: 0, roughness: 0.25 });
         this._box(g, x1, z1, x2, z2, 0.68, screen, y0);
         if (entity) this._screens[entity] = screen;
+        break;
+      }
+      case 'tvcorner': {
+        // TV on a corner unit, angled across the corner (rotation in degrees)
+        const [x, z, deg, entity] = a;
+        const c = new THREE.Group();
+        this._box(c, -0.45, -0.2, 0.45, 0.2, 0.45, M.cabinet);
+        const screen = new THREE.MeshStandardMaterial({ color: '#0d0f12', emissive: '#7fb2ff', emissiveIntensity: 0, roughness: 0.25 });
+        this._box(c, -0.62, -0.03, 0.62, 0.03, 0.72, screen, 0.55);
+        this._box(c, -0.12, -0.06, 0.12, 0.06, 0.1, M.dark, 0.45);
+        c.position.set(x, 0, z);
+        c.rotation.y = (deg * Math.PI) / 180;
+        g.add(c);
+        if (entity) this._screens[entity] = screen;
+        break;
+      }
+      case 'couch': {
+        // [x1, z1, x2, z2, colour, back side n|s|e|w]
+        const [x1, z1, x2, z2, color, back] = a;
+        const m = new THREE.MeshStandardMaterial({ color, roughness: 0.9 });
+        const m2 = new THREE.MeshStandardMaterial({ color: new THREE.Color(color).multiplyScalar(0.8), roughness: 0.9 });
+        const bd = 0.22, arm = 0.18;
+        this._box(g, x1, z1, x2, z2, 0.42, m);
+        if (back === 's') this._box(g, x1, z2 - bd, x2, z2, 0.85, m);
+        if (back === 'n') this._box(g, x1, z1, x2, z1 + bd, 0.85, m);
+        if (back === 'e') this._box(g, x2 - bd, z1, x2, z2, 0.85, m);
+        if (back === 'w') this._box(g, x1, z1, x1 + bd, z2, 0.85, m);
+        const alongX = back === 's' || back === 'n';
+        if (alongX) {
+          this._box(g, x1, z1, x1 + arm, z2, 0.62, m);
+          this._box(g, x2 - arm, z1, x2, z2, 0.62, m);
+          const n = 3, w = (x2 - x1 - 2 * arm) / n, zc0 = back === 's' ? z1 + 0.05 : z1 + bd, zc1 = back === 's' ? z2 - bd : z2 - 0.05;
+          for (let i = 0; i < n; i++) this._box(g, x1 + arm + i * w + 0.02, zc0, x1 + arm + (i + 1) * w - 0.02, zc1, 0.1, m2, 0.42);
+        } else {
+          this._box(g, x1, z1, x2, z1 + arm, 0.62, m);
+          this._box(g, x1, z2 - arm, x2, z2, 0.62, m);
+        }
         break;
       }
       case 'lamp': {
@@ -1968,6 +2016,23 @@ class Floorplan3DCard extends HTMLElement {
       o.target.z + o.radius * sp * Math.cos(o.theta),
     );
     this._camera.lookAt(o.target);
+
+    // cutaway: exterior walls facing the camera drop to 1 m so rooms stay visible
+    const vx = Math.sin(o.theta), vz = Math.cos(o.theta), kc = 1 - Math.exp(-dt * 5);
+    const focus = this._floorMode === 'all' ? null : this._floorMode === '1' ? 1 : 0;
+    for (const c of this._cutWalls) {
+      const facing = c.nx * vx + c.nz * vz > 0.3 && o.phi > 0.2;
+      const goal = facing && (focus === null || c.floor === focus) ? 1.0 : c.y1;
+      c.top = lerp(c.top, goal, kc);
+      const top = Math.min(c.y1, c.top);
+      if (top <= c.y0 + 0.01) {
+        c.m.visible = false;
+        continue;
+      }
+      c.m.visible = true;
+      c.m.scale.y = (top - c.y0) / (c.y1 - c.y0);
+      c.m.position.y = c.y0 + (top - c.y0) / 2;
+    }
 
     // floors
     for (const id of [0, 1]) {
