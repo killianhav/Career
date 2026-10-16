@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home Panel Demo</title>
+  <style>html, body { margin: 0; height: 100%; background: #111; } home-panel-card { display: block; height: 100vh; --hp-height: 100vh; }</style>
+</head>
+<body>
+  <home-panel-card></home-panel-card>
+  <script type="module">
+    const params = new URLSearchParams(location.search);
+    const S = {};
+    const add = (id, state, attributes = {}, extra = {}) =>
+      (S[id] = { entity_id: id, state, attributes: { friendly_name: id.split('.')[1].replace(/_/g, ' '), ...attributes }, last_changed: new Date(Date.now() - 3600e3).toISOString(), ...extra });
+
+    const night = params.get('night') === '1';
+    add('sun.sun', night ? 'below_horizon' : 'above_horizon', { next_setting: new Date(Date.now() + 4 * 3600e3).toISOString(), next_rising: new Date(Date.now() + 9 * 3600e3).toISOString() });
+    add('person.killian', 'home', { friendly_name: 'Killian' });
+    add('person.sinead', 'not_home', { friendly_name: 'Sinéad' });
+    add('alarm_control_panel.laverna_alarm', 'disarmed', { friendly_name: 'Laverna Alarm' });
+    add('binary_sensor.m4r_wan_status', 'on');
+    add('sensor.backup_last_successful_automatic_backup', 'unknown');
+    add('sensor.estimated_daily_gas_cost', '0.38');
+    ['alexa_media_player_update', 'bubble_card_update', 'home_assistant_core_update'].forEach((u) => add(`update.${u}`, 'on'));
+    add('weather.forecast_home', params.get('weather') || 'partlycloudy', { temperature: 12, humidity: 59, wind_speed: 22.3, wind_speed_unit: 'km/h', uv_index: 0.6 });
+    add('climate.kitchen_kitchen_thermostat', 'heat', { current_temperature: 19.6, temperature: 20.5, hvac_action: 'heating' });
+    add('sensor.temp_sensor_temperature', '18.5');
+    add('sensor.temp_sensor_humidity', '65');
+    add('light.lamp', 'on', { brightness: 200, friendly_name: 'Lamp' });
+    add('light.kitchen_driver', 'on', { brightness: 255 });
+    add('light.hallway_lamp', 'off');
+    add('light.ikea_of_sweden_tradfri_bulb_e27_ws_clear_806lm', 'off');
+    add('light.landing_2', 'unavailable');
+    ['left_up', 'left_down', 'right_up', 'right_down'].forEach((l) => add(`light.${l}_cabin_light`, 'off'));
+    add('light.shed_light_3', 'off');
+    add('light.cabin_shed_leds_shed_led_strip', 'on');
+    add('light.cabin_cam_light', 'off');
+    ['blind_1', 'blind_2', 'blind_3'].forEach((b) => add(`cover.${b}`, 'open', { current_position: 100 }));
+    add('cover.blind_4', 'closed', { current_position: 0 });
+    ['back_door', 'front_door', 'side_door', 'front_window_left', 'front_window_right', 'back_window', 'back_window_bedroom', 'office_window', 'spare_room_window']
+      .forEach((b) => add(`binary_sensor.${b}`, 'off'));
+    S['binary_sensor.front_door'].attributes.friendly_name = 'Cabin Door';
+    S['binary_sensor.side_door'].attributes.friendly_name = 'Shed Door';
+    ['doorbell_person', 'doorbell_motion', 'cabin_cam_motion', 'doorbell_visitor'].forEach((b) => add(`binary_sensor.${b}`, 'off'));
+    S['binary_sensor.cabin_cam_motion'].last_changed = new Date(Date.now() - 22 * 60e3).toISOString();
+    add('vacuum.l40s_pro_ultra', params.get('vac') || 'docked', { battery: 82, completed_segments: [3, 2] });
+    add('camera.l40s_pro_ultra_map', 'idle', { access_token: 'demo', rooms: { 2: {}, 3: {}, 4: {}, 5: {}, 6: {} } });
+    add('camera.doorbell_fluent', 'idle', { access_token: 'demo' });
+    add('camera.cabin_cam_live_view', 'idle', { access_token: 'demo' });
+    for (const id of (params.get('on') || '').split(',').filter(Boolean)) S[id].state = 'on';
+
+    const hourly = Array.from({ length: 10 }, (_, i) => ({
+      datetime: new Date(Date.now() + i * 3600e3).toISOString(),
+      temperature: 12 - i * 0.6,
+      condition: ['partlycloudy', 'partlycloudy', 'cloudy', 'cloudy', 'rainy', 'rainy', 'cloudy', 'clear-night', 'clear-night', 'clear-night'][i],
+    }));
+    const tue = new Date(); tue.setDate(tue.getDate() + ((9 - tue.getDay()) % 7 || 7));
+    const iso = (d) => d.toISOString().slice(0, 10);
+    const tue2 = new Date(tue.getTime() + 7 * 86400e3);
+    async function callService(domain, service, data, target) {
+      if (service === 'get_forecasts') {
+        return { response: { 'weather.forecast_home': { forecast: data.type === 'hourly' ? hourly : [{ temperature: 14, templow: 8 }] } } };
+      }
+      if (service === 'get_events') {
+        return { response: { 'calendar.bins': { events: [{ start: iso(tue), end: iso(tue), summary: 'Green bin' }, { start: iso(tue2), end: iso(tue2), summary: 'Black + Brown bins' }] } } };
+      }
+      const ids = [].concat(data?.entity_id || target?.entity_id || []);
+      for (const id of ids) {
+        if (!S[id]) continue;
+        if (service === 'turn_on') S[id] = { ...S[id], state: 'on', attributes: { ...S[id].attributes, brightness: 255 } };
+        if (service === 'turn_off') S[id] = { ...S[id], state: 'off' };
+        if (service === 'toggle' && domain === 'cover') S[id] = { ...S[id], state: S[id].state === 'open' ? 'closed' : 'open' };
+      }
+      push();
+    }
+    const card = document.querySelector('home-panel-card');
+    const push = () => (card.hass = { states: { ...S }, callService });
+    await import('./home-panel-card.js');
+    card.setConfig({});
+    push();
+  </script>
+</body>
+</html>
