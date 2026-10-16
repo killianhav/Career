@@ -204,7 +204,6 @@ const DEFAULT_DEVICES = [
   { entity: 'binary_sensor.office_window', room: 'office', at: [4.2, 8.95] },
   // Front
   { entity: ['binary_sensor.doorbell_visitor', 'binary_sensor.doorbell_person', 'binary_sensor.doorbell_motion'], kind: 'doorbell', camera: 'camera.doorbell_fluent', name: 'Doorbell', room: 'front', at: [3.5, 9.75], h: 1.3 },
-  { entity: 'light.front_light', room: 'front', at: [4.6, 10.1] },
   // Garden cabin – up/down wall lights on the front, camera + floodlight on the front-left corner
   // (h = marker height, light_at = [x, y, z] of the 3D light, range in metres, power = brightness scale)
   { entity: 'light.left_up_cabin_light', room: 'garden', at: [0.78, -6.0], h: 2.7, light_at: [0.78, 2.45, -6.05], range: 2.5, power: 0.5 },
