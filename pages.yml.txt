@@ -1,0 +1,169 @@
+# Pages CMS configuration: https://pagescms.org/docs/
+# Each entry below becomes a section in the Pages CMS editor.
+
+media:
+  input: assets
+  output: /assets
+  categories: [image, document]
+
+content:
+  - name: profile
+    label: Profile & home page
+    type: file
+    path: _data/profile.yml
+    format: yaml
+    fields:
+      - { name: first_name, label: First name, type: string, required: true }
+      - { name: last_name, label: Last name, type: string, required: true }
+      - { name: tagline, label: Tagline, type: string, description: "Small line above your name, e.g. Business Product Owner · Mobile & web · Dublin" }
+      - { name: photo, label: Profile photo, type: image, description: "Square photo works best" }
+      - { name: ring_text, label: Rotating text around photo, type: string, description: "Keep it to about 60–70 characters, ending with •" }
+      - { name: badge, label: Badge on photo, type: string, description: "Short word on the orange circle, e.g. Hi! Leave empty to hide it." }
+      - { name: intro_before, label: Intro (start), type: string }
+      - { name: intro_highlight, label: Intro (highlighted words), type: string }
+      - { name: intro_after, label: Intro (end), type: text }
+      - { name: now, label: "\"Now\" line", type: string, description: "Shown under the buttons, e.g. Business Product Owner, SSE Airtricity app" }
+      - { name: email, label: Email, type: string, required: true }
+      - { name: cv, label: CV (PDF), type: file, description: "Upload your CV. Leave empty to hide the Download CV button." }
+      - { name: ticker, label: Scrolling skills ticker, type: string, list: true }
+      - { name: about_lead, label: About (large intro paragraph), type: text }
+      - { name: about_more, label: About (more detail), type: text, description: "Leave a blank line between paragraphs" }
+      - name: stats
+        label: Headline figures
+        type: object
+        list:
+          max: 3
+          collapsible: { collapsed: true, summary: "{prefix}{value}{suffix} {label}" }
+        fields:
+          - { name: value, label: Number, type: number, description: "The number that counts up, e.g. 100 or 1.5" }
+          - { name: prefix, label: Before the number, type: string, description: "e.g. ~" }
+          - { name: suffix, label: After the number, type: string, description: "e.g. k or +" }
+          - { name: decimals, label: Decimal places, type: number, description: "0 for whole numbers, 1 for 1.5" }
+          - { name: label, label: Label, type: string }
+      - { name: contact_heading, label: Contact heading, type: string }
+      - { name: contact_highlight, label: Contact heading (highlighted word), type: string }
+
+  - name: projects
+    label: Selected work
+    type: file
+    path: _data/projects.yml
+    format: yaml
+    list:
+      collapsible: { collapsed: true, summary: "{title}" }
+    fields:
+      - { name: title, label: Project name, type: string, required: true }
+      - { name: label, label: Small label, type: string, description: "e.g. SSE Airtricity · 2025 →" }
+      - { name: summary, label: One-line summary, type: text }
+      - { name: award, label: Award highlight, type: string, description: "Optional orange chip, e.g. Award winner 2026" }
+      - { name: chips, label: Chips, type: string, list: true }
+      - { name: period, label: Case study label, type: string, description: "Shown at the top of the case study panel" }
+      - { name: brief, label: The brief, type: text }
+      - { name: what_i_did, label: What I did, type: text }
+      - { name: outcome, label: Outcome, type: text }
+      - { name: tags, label: Case study tags, type: string, list: true }
+
+  - name: experience
+    label: Experience
+    type: file
+    path: _data/experience.yml
+    format: yaml
+    list:
+      collapsible: { collapsed: true, summary: "{dates} · {title}" }
+    fields:
+      - { name: dates, label: Dates, type: string, description: "e.g. 2025 → now" }
+      - { name: title, label: Job title, type: string, required: true }
+      - { name: company, label: Company & location, type: string }
+      - { name: summary, label: Summary, type: text }
+
+  - name: education
+    label: Education & certification
+    type: file
+    path: _data/education.yml
+    format: yaml
+    list:
+      collapsible: { collapsed: true, summary: "{year} · {title}" }
+    fields:
+      - { name: year, label: Year, type: string }
+      - { name: title, label: Qualification, type: string, required: true }
+      - { name: detail, label: Institution / level, type: string }
+
+  - name: awards
+    label: Awards
+    type: file
+    path: _data/awards.yml
+    format: yaml
+    list:
+      collapsible: { collapsed: true, summary: "{year} · {title}" }
+    fields:
+      - { name: year, label: Year, type: string }
+      - { name: title, label: Award, type: string, required: true }
+      - { name: detail, label: Detail, type: string }
+
+  - name: interests
+    label: Interests page
+    type: file
+    path: _data/interests.yml
+    format: yaml
+    fields:
+      - { name: intro, label: Intro, type: text }
+      - { name: ticker, label: Scrolling ticker, type: string, list: true }
+      - { name: home_heading, label: Home automation heading, type: string }
+      - { name: home_intro, label: Home automation intro, type: text }
+      - name: automations
+        label: Automations
+        type: object
+        list:
+          collapsible: { collapsed: true, summary: "{title} ({status})" }
+        fields:
+          - { name: title, label: Name, type: string, required: true }
+          - name: status
+            label: Status
+            type: select
+            options: { values: [Running, Dashboard, In progress, Next up] }
+          - name: icon
+            label: Icon
+            type: select
+            options: { values: [house, bulb, vacuum, football, blinds, water, thermostat, phone, tv, other] }
+          - name: size
+            label: Card size
+            type: select
+            description: "Wide spans two columns; full spans the whole row"
+            options: { values: [normal, wide, full] }
+          - { name: description, label: Description, type: text }
+          - { name: when, label: WHEN, type: string }
+          - { name: then, label: THEN, type: string }
+      - name: fpl
+        label: Fantasy football report
+        type: object
+        fields:
+          - { name: heading, label: Section heading, type: string }
+          - { name: eyebrow, label: Small label, type: string }
+          - { name: title, label: Title, type: string }
+          - { name: intro, label: Intro, type: text }
+          - { name: built_with, label: How it was built, type: text, description: "Leave empty to hide" }
+          - name: pipeline
+            label: How it works (steps)
+            type: object
+            list: { collapsible: { collapsed: true, summary: "{name}" } }
+            fields:
+              - { name: name, label: Step, type: string }
+              - { name: detail, label: Detail, type: string }
+          - { name: report_pages, label: Inside the report, type: string, list: true }
+          - name: stats
+            label: Figures
+            type: object
+            list: { max: 3, collapsible: { collapsed: true, summary: "{value} {label}" } }
+            fields:
+              - { name: value, label: Figure, type: string }
+              - { name: label, label: Label, type: string }
+      - { name: sport_heading, label: Sport heading, type: string }
+      - name: sport
+        label: Sport
+        type: object
+        list: { collapsible: { collapsed: true, summary: "{title}" } }
+        fields:
+          - { name: eyebrow, label: Small label, type: string }
+          - { name: title, label: Title, type: string }
+          - { name: text, label: Text, type: text }
+      - { name: contact_heading, label: Contact heading, type: string }
+      - { name: contact_highlight, label: Contact heading (highlighted word), type: string }
