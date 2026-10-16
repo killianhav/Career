@@ -1,0 +1,47 @@
+# Floorplan 3D card
+
+A Home Assistant Lovelace card that renders a live 3D model of the house (traced from the
+Daft.ie ground + first floor plans) using three.js.
+
+- **Lights** glow in their rooms (colour + brightness follow the bulb). Tap a bulb marker, or tap
+  a room's floor, to toggle that room's lights. Long-press any marker for the more-info dialog.
+- **Blinds**, **windows/doors** (red when open), **motion** (pulsing ring), **TVs** (screen lights
+  up), **temperatures** and the **thermostat** are shown in place.
+- The **robot vacuum** drives around the ground floor through real doorways while cleaning and
+  returns to its dock.
+- **Weather**: rain, snow, fog, drifting clouds and lightning follow `weather.forecast_home`;
+  daylight and shadows follow `sun.sun` (night mode makes lit rooms pop).
+- **Floors**: ground, first floor, or an exploded view of both (buttons top-left).
+- HUD: who's home, lights on, heating, alarm, vacuum, open doors/windows, weather + sunset.
+
+Drag to orbit, right-drag / shift-drag / two-finger drag to pan, scroll / pinch to zoom,
+double-click to reset.
+
+## Install
+
+1. Copy `floorplan-3d-card.js` to `/config/www/floorplan-3d-card.js`.
+2. Settings → Dashboards → ⋮ → Resources → add `/local/floorplan-3d-card.js` (JavaScript module).
+3. Create a dashboard with a **Panel** view containing:
+
+```yaml
+type: custom:floorplan-3d-card
+```
+
+three.js is loaded from jsDelivr; set `three_url:` to self-host it.
+
+## Options
+
+| key | default | |
+| --- | --- | --- |
+| `height` | `calc(100vh - header)` | CSS height of the card |
+| `floor` | `0` | initial view: `0`, `1` or `all` |
+| `house_bearing` | `0` | compass bearing the back of the house faces (sun direction) |
+| `weather`, `sun`, `climate`, `alarm`, `vacuum` | this house's entities | |
+| `persons` | `[person.killian, person.sinead]` | |
+| `devices` | see `DEFAULT_DEVICES` | list of `{ entity, room, at: [x, z], name? }` |
+
+Room ids: `kitchen`, `living`, `hallway`, `wc`, `bedroom`, `ensuite`, `bathroom`, `landing`,
+`spare` (bedroom 2, front-left), `office` (bedroom 3, front-right), `cabin`, `garden`, `front`.
+Coordinates are metres: `x` left→right on the plan, `z` back→front.
+
+`demo.html` runs the card with simulated states (serve the folder over HTTP and open it).

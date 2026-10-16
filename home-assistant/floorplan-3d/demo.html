@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Floorplan 3D Demo</title>
+  <style>
+    :root { color-scheme: dark; }
+    html, body { margin: 0; height: 100%; background: #111; font-family: system-ui, sans-serif; }
+    floorplan-3d-card { display: block; height: 100vh; }
+    .sim { position: fixed; top: 14px; right: 14px; z-index: 10; display: flex; flex-direction: column; gap: 6px; padding: 10px;
+      background: rgba(20, 22, 26, .85); border-radius: 12px; color: #ddd; font-size: 12px; box-shadow: 0 4px 18px rgba(0,0,0,.4); }
+    .sim label { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+    .sim select, .sim button { background: #2a2e34; color: #fff; border: 0; border-radius: 6px; padding: 4px 6px; font: inherit; cursor: pointer; }
+    .sim summary { cursor: pointer; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <floorplan-3d-card></floorplan-3d-card>
+  <details class="sim">
+    <summary>Simulate</summary>
+    <label>Weather <select id="weather"></select></label>
+    <label>Time <select id="time"><option value="12">Midday</option><option value="19">Evening</option><option value="23">Night</option></select></label>
+    <button data-toggle="binary_sensor.front_door">Front door</button>
+    <button data-toggle="binary_sensor.office_window">Office window</button>
+    <button data-toggle="binary_sensor.hallway_motion">Hallway motion</button>
+    <button data-toggle="vacuum.l40s_pro_ultra">Vacuum</button>
+    <button data-toggle="media_player.living_room_tv">Living room TV</button>
+    <button data-toggle="alarm_control_panel.laverna_alarm">Alarm</button>
+  </details>
+  <script type="module">
+    const params = new URLSearchParams(location.search);
+    const S = {};
+    const add = (id, state, attributes = {}) => (S[id] = { entity_id: id, state, attributes: { friendly_name: id.split('.')[1].replace(/_/g, ' '), ...attributes } });
+
+    ['light.kitchen_driver', 'light.hallway_lamp', 'light.landing_2', 'light.cabin_cam_light', 'light.front_light',
+     'light.left_up_cabin_light', 'light.right_up_cabin_light', 'light.left_down_cabin_light', 'light.right_down_cabin_light',
+     'light.shed_light_3', 'light.cabin_shed_leds_shed_led_strip'].forEach((l) => add(l, 'off'));
+    add('light.lamp', 'on', { brightness: 200, friendly_name: 'Lamp' });
+    add('light.ikea_of_sweden_tradfri_bulb_e27_ws_clear_806lm', 'on', { brightness: 120, color_temp_kelvin: 2400, friendly_name: 'Bed' });
+    add('light.kitchen_driver', 'on', { brightness: 255, color_temp_kelvin: 3500, friendly_name: 'Kitchen' });
+    ['cover.blind_1', 'cover.blind_2', 'cover.blind_3'].forEach((c) => add(c, 'open', { current_position: 100 }));
+    add('cover.blind_4', 'closed', { current_position: 0 });
+    ['binary_sensor.front_window_left', 'binary_sensor.front_window_right', 'binary_sensor.back_window', 'binary_sensor.back_window_bedroom',
+     'binary_sensor.office_window', 'binary_sensor.spare_room_window'].forEach((b) => add(b, 'off', { device_class: 'window' }));
+    ['binary_sensor.front_door', 'binary_sensor.back_door', 'binary_sensor.side_door'].forEach((b) => add(b, 'off', { device_class: 'door' }));
+    ['binary_sensor.hallway_motion', 'binary_sensor.laverna_hallway_md'].forEach((b) => add(b, 'off', { device_class: 'motion' }));
+    add('binary_sensor.kitchen_md', 'on', { device_class: 'motion' });
+    add('sensor.temp_sensor_temperature', '18.5', { unit_of_measurement: '°C', device_class: 'temperature' });
+    add('climate.kitchen_kitchen_thermostat', 'heat', { current_temperature: 19.6, temperature: 20.5, hvac_action: 'heating', friendly_name: 'Kitchen Thermostat' });
+    add('media_player.living_room_tv', 'off');
+    add('media_player.bedroom_tv', 'off');
+    add('vacuum.l40s_pro_ultra', 'docked');
+    add('alarm_control_panel.laverna_alarm', 'disarmed');
+    add('person.killian', 'home', { friendly_name: 'Killian' });
+    add('person.sinead', 'not_home', { friendly_name: 'Sinéad' });
+    add('weather.forecast_home', params.get('weather') || 'partlycloudy', { temperature: 14, temperature_unit: '°C', humidity: 81, wind_speed: 18 });
+    add('sun.sun', 'above_horizon', { elevation: 30, azimuth: 200, next_setting: new Date(Date.now() + 5 * 3600e3).toISOString() });
+
+    const card = document.querySelector('floorplan-3d-card');
+    const push = () => (card.hass = { states: { ...S }, callService, callWS: async () => ({}) });
+    const set = (id, state, attrs = {}) => {
+      S[id] = { ...S[id], state, attributes: { ...S[id].attributes, ...attrs } };
+    };
+    async function callService(domain, service, data = {}, target = {}, _notify, returnResponse) {
+      if (service === 'get_forecasts') {
+        return { response: { 'weather.forecast_home': { forecast: [{ temperature: 16, templow: 9, precipitation_probability: 20 }] } } };
+      }
+      const ids = [].concat(data.entity_id || target.entity_id || []);
+      for (const id of ids) {
+        if (!S[id]) continue;
+        if (domain === 'cover') set(id, S[id].state === 'open' ? 'closed' : 'open', { current_position: S[id].state === 'open' ? 0 : 100 });
+        else if (service === 'turn_on') set(id, 'on', { brightness: 255 });
+        else if (service === 'turn_off') set(id, 'off');
+        else if (service === 'toggle') set(id, S[id].state === 'on' ? 'off' : 'on');
+      }
+      push();
+    }
+    document.addEventListener('hass-more-info', (e) => console.log('more-info', e.detail.entityId));
+
+    const wsel = document.getElementById('weather');
+    ['sunny', 'partlycloudy', 'cloudy', 'rainy', 'pouring', 'lightning-rainy', 'snowy', 'fog', 'clear-night', 'windy']
+      .forEach((w) => wsel.add(new Option(w, w, false, w === S['weather.forecast_home'].state)));
+    wsel.onchange = () => { set('weather.forecast_home', wsel.value); push(); };
+
+    const tsel = document.getElementById('time');
+    const setTime = (h) => {
+      const elev = { 12: 30, 19: 2, 23: -25 }[h];
+      set('sun.sun', elev > 0 ? 'above_horizon' : 'below_horizon', { elevation: elev, azimuth: { 12: 180, 19: 285, 23: 340 }[h] });
+    };
+    tsel.onchange = () => { setTime(tsel.value); push(); };
+    if (params.get('time')) { tsel.value = params.get('time'); setTime(tsel.value); }
+
+    const cycle = {
+      vacuum: ['cleaning', 'returning', 'docked'], media_player: ['playing', 'off'],
+      alarm_control_panel: ['armed_away', 'triggered', 'disarmed'], binary_sensor: ['on', 'off'],
+    };
+    document.querySelectorAll('[data-toggle]').forEach((b) => (b.onclick = () => {
+      const id = b.dataset.toggle, opts = cycle[id.split('.')[0]];
+      set(id, opts[(opts.indexOf(S[id].state) + 1) % opts.length]);
+      push();
+    }));
+    for (const id of (params.get('on') || '').split(',').filter(Boolean)) set(id, S[id]?.state === 'docked' ? 'cleaning' : 'on');
+
+    const config = { height: '100vh' };
+    if (params.get('three')) config.three_url = params.get('three');
+    if (params.get('floor')) config.floor = params.get('floor');
+    await import('./floorplan-3d-card.js');
+    card.setConfig(config);
+    push();
+  </script>
+</body>
+</html>
