@@ -26,7 +26,7 @@
     <button data-toggle="binary_sensor.front_door">Front door</button>
     <button data-toggle="binary_sensor.office_window">Office window</button>
     <button data-toggle="binary_sensor.hallway_motion">Hallway motion</button>
-    <button data-toggle="vacuum.l40s_pro_ultra">Vacuum</button>
+    <button id="vacall">Vacuum: clean all</button>
     <button data-toggle="media_player.living_room_tv">Living room TV</button>
     <button data-toggle="alarm_control_panel.laverna_alarm">Alarm</button>
   </details>
@@ -56,7 +56,62 @@
     add('climate.kitchen_kitchen_thermostat', 'heat', { current_temperature: 19.6, temperature: 20.5, hvac_action: 'heating', friendly_name: 'Kitchen Thermostat' });
     add('media_player.living_room_tv', 'off');
     add('media_player.bedroom_tv', 'off');
-    add('vacuum.l40s_pro_ultra', 'docked');
+    // Dreame map camera, room outlines as reported by the real robot (mm)
+    const ROOMS = {
+      2: { room_id: 2, name: 'Living Room', x0: -3250, y0: 1050, x1: 200, y1: 6100, x: -1725, y: 3625 },
+      3: { room_id: 3, name: 'Hallway', x0: -5100, y0: 800, x1: -3250, y1: 5800, x: -3925, y: 3375 },
+      4: { room_id: 4, name: 'Dining Room', x0: -2450, y0: -3100, x1: 150, y1: 1050, x: -1075, y: -1025 },
+      5: { room_id: 5, name: 'Kitchen', x0: -4550, y0: -4200, x1: -2350, y1: 850, x: -3475, y: -1725 },
+      6: { room_id: 6, name: 'Downstairs Bathroom', x0: -5100, y0: 850, x1: -4350, y1: 1850, x: -4775, y: 1375 },
+    };
+    const CHARGER = { x: -164, y: 88, a: 182 };
+    add('camera.l40s_pro_ultra_map', 'idle', { map_id: 1, rooms: ROOMS, charger_position: CHARGER, vacuum_position: { ...CHARGER } });
+    add('vacuum.l40s_pro_ultra', 'docked', { battery: 100, cleaning_progress: 0, cleaned_area: 0, current_segment: 4 });
+
+    // Simulated cleaning run: lawnmower rows through each requested room, then back to the dock.
+    let route = [], timer = null;
+    function lawnmower(r) {
+      const pts = [], m = 300;
+      let flip = false;
+      for (let y = Math.min(r.y0, r.y1) + m; y <= Math.max(r.y0, r.y1) - m; y += 300) {
+        const a = Math.min(r.x0, r.x1) + m, b = Math.max(r.x0, r.x1) - m;
+        pts.push(...(flip ? [[b, y], [a, y]] : [[a, y], [b, y]]).map(([x, yy]) => ({ x, y: yy, seg: r.room_id })));
+        flip = !flip;
+      }
+      return pts;
+    }
+    function startClean(ids) {
+      route = ids.flatMap((id) => lawnmower(ROOMS[id]));
+      route.push({ ...CHARGER, seg: null, home: true });
+      set('vacuum.l40s_pro_ultra', 'cleaning', { segment_cleaning: true, active_segments: ids, completed_segments: [], current_segment: ids[0], cleaning_progress: 0, cleaned_area: 0 });
+      const total = route.length;
+      clearInterval(timer);
+      timer = setInterval(() => {
+        const pos = S['camera.l40s_pro_ultra_map'].attributes.vacuum_position;
+        const tgt = route[0];
+        if (!tgt) return;
+        const dx = tgt.x - pos.x, dy = tgt.y - pos.y, d = Math.hypot(dx, dy), step = Number(params.get('speed') || 120);
+        const a = (Math.atan2(dy, dx) * 180) / Math.PI;
+        const next = d <= step ? { x: tgt.x, y: tgt.y, a } : { x: pos.x + (dx / d) * step, y: pos.y + (dy / d) * step, a };
+        set('camera.l40s_pro_ultra_map', 'idle', { vacuum_position: next });
+        if (d <= step) {
+          const done = route.shift();
+          const va = S['vacuum.l40s_pro_ultra'].attributes;
+          if (route[0]?.home && !done.home) {
+            set('vacuum.l40s_pro_ultra', 'returning', { completed_segments: va.active_segments, cleaning_progress: 100 });
+          } else if (done.home) {
+            set('vacuum.l40s_pro_ultra', 'docked', { segment_cleaning: false });
+            set('camera.l40s_pro_ultra_map', 'idle', { vacuum_position: { ...CHARGER } });
+            clearInterval(timer);
+          } else if (route[0] && route[0].seg !== done.seg) {
+            set('vacuum.l40s_pro_ultra', 'cleaning', { completed_segments: [...va.completed_segments, done.seg], current_segment: route[0].seg });
+          }
+          const left = route.length;
+          set('vacuum.l40s_pro_ultra', S['vacuum.l40s_pro_ultra'].state, { cleaning_progress: Math.round((100 * (total - left)) / total), cleaned_area: Math.round((29 * (total - left)) / total), battery: 100 - Math.round((18 * (total - left)) / total) });
+        }
+        push();
+      }, 100);
+    }
     add('alarm_control_panel.laverna_alarm', 'disarmed');
     add('person.killian', 'home', { friendly_name: 'Killian' });
     add('person.sinead', 'not_home', { friendly_name: 'Sinéad' });
@@ -69,6 +124,11 @@
       S[id] = { ...S[id], state, attributes: { ...S[id].attributes, ...attrs } };
     };
     async function callService(domain, service, data = {}, target = {}, _notify, returnResponse) {
+      if (service === 'vacuum_clean_segment') {
+        startClean([].concat(data.segments));
+        push();
+        return;
+      }
       if (service === 'get_forecasts') {
         return { response: { 'weather.forecast_home': { forecast: [{ temperature: 16, templow: 9, precipitation_probability: 20 }] } } };
       }
@@ -110,6 +170,7 @@
       const ids = b.dataset.lights.split(','), on = ids.some((i) => S[i].state === 'on');
       callService('light', on ? 'turn_off' : 'turn_on', { entity_id: ids });
     }));
+    document.getElementById('vacall').onclick = () => { startClean([3, 2, 4, 5, 6]); push(); };
     for (const id of (params.get('on') || '').split(',').filter(Boolean)) set(id, S[id]?.state === 'docked' ? 'cleaning' : 'on', id === 'light.cabin_shed_leds_shed_led_strip' ? { rgb_color: [120, 90, 255] } : {});
 
     const config = { height: '100vh' };

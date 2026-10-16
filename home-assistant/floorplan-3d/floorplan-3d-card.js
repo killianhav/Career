@@ -12,6 +12,7 @@
  *   floor: 0                # initial floor: 0 | 1 | all
  *   house_bearing: 95       # compass bearing the BACK of the house faces (for the sun)
  *   devices: [...]          # replace the default entity → room mapping (see DEFAULT_DEVICES)
+ *   vacuum_map: camera.xxx_map   # Dreame map camera: live robot position, rooms, progress
  */
 
 const VERSION = '1.1.0';
@@ -219,7 +220,11 @@ const DEFAULT_DEVICES = [
   { entity: 'media_player.cabin', room: 'cabin', at: [3.1, -8.75], h: 1.6 },
 ];
 
-// A loop through the ground floor that passes through real doorways (for the robot vacuum).
+// Robot-vacuum map (Dreame integration) → model metres. Fitted from the robot's room outlines against
+// the floor plan (max error ≈ 0.3 m). Robot map units are mm; its x axis runs opposite to the model's.
+const VACUUM_TRANSFORM = { sx: -0.9688, ox: 0.265, sz: 0.9372, oz: 4.001 };
+
+// Fallback when no live map is available: a loop through the ground floor via real doorways.
 const VACUUM_PATH = [
   [2.35, 4.45], [2.35, 3.95], [0.3, 3.95], [0.3, 1.7], [2.45, 1.7], [3.1, 0.95], [4.1, 0.95],
   [4.1, 3.7], [3.1, 3.7], [3.1, 2.1], [2.45, 4.3], [1.3, 4.4], [1.3, 5.3], [0.6, 5.3], [0.6, 9.3],
@@ -286,6 +291,9 @@ class Floorplan3DCard extends HTMLElement {
       climate: 'climate.kitchen_kitchen_thermostat',
       alarm: 'alarm_control_panel.laverna_alarm',
       vacuum: 'vacuum.l40s_pro_ultra',
+      vacuum_map: 'camera.l40s_pro_ultra_map',
+      vacuum_clean_service: 'dreame_vacuum.vacuum_clean_segment',
+      vacuum_transform: VACUUM_TRANSFORM,
       persons: ['person.killian', 'person.sinead'],
       devices: DEFAULT_DEVICES,
       three_url: DEFAULT_THREE_URL,
@@ -373,6 +381,7 @@ class Floorplan3DCard extends HTMLElement {
           </div>
           <div class="hud bl"></div>
           <div class="hud br weather"></div>
+          <div class="hud vbar"></div>
           <div class="msg">Loading 3D model…</div>
         </div>
       </ha-card>`;
@@ -387,6 +396,12 @@ class Floorplan3DCard extends HTMLElement {
       if (el) this._moreInfo(el.dataset.entity);
     });
     this._root.querySelector('.weather').addEventListener('click', () => this._moreInfo(this._config.weather));
+    this._root.querySelector('.vbar').addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      if (b.dataset.act === 'clean') this._startSegmentClean();
+      else this._setVacSelect(false);
+    });
     this._updateFloorButtons();
   }
 
@@ -1220,7 +1235,14 @@ class Floorplan3DCard extends HTMLElement {
         dev.bot = bot;
         dev.pathIdx = 0;
         dev.pos = new THREE.Vector2(VACUUM_PATH[0][0], VACUUM_PATH[0][1]);
-        this._box(this._floorGroups[0], at[0] - 0.2, at[1] + 0.12, at[0] + 0.2, at[1] + 0.32, 0.45, this._mats.dark); // dock
+        dev.dock = new THREE.Group();
+        this._box(dev.dock, -0.32, -0.22, -0.12, 0.22, 0.45, this._mats.dark); // base station behind the docked robot
+        this._box(dev.dock, -0.18, -0.2, 0.15, 0.2, 0.012, this._mats.dark); // ramp
+        dev.dock.position.set(at[0], 0, at[1]);
+        dev.dock.rotation.y = Math.PI / 2;
+        this._floorGroups[0].add(dev.dock);
+        this._vacDev = dev;
+        this._buildVacuumTrail();
       }
 
       // HTML marker
@@ -1274,6 +1296,8 @@ class Floorplan3DCard extends HTMLElement {
       h.callService('homeassistant', anyOn ? 'turn_off' : 'turn_on', { entity_id: dev.ids });
     } else if (dev.kind === 'cover') {
       h.callService('cover', 'toggle', { entity_id: dev.ids[0] });
+    } else if (dev.kind === 'vacuum' && this._segments?.length) {
+      this._setVacSelect(!this._vacSelect);
     } else {
       this._moreInfo(dev.camera || dev.ids[0]);
     }
@@ -1485,7 +1509,158 @@ class Floorplan3DCard extends HTMLElement {
       return !room || this._visibleFloor(room.floor);
     });
     const hit = ray.intersectObjects(targets, false)[0];
-    if (hit) this._tapRoom(hit.object.userData.room);
+    if (!hit) return;
+    if (this._vacSelect) {
+      const local = this._floorGroups[0].worldToLocal(hit.point.clone());
+      const seg = this._segmentAt(local.x, local.z);
+      if (seg) this._toggleSegment(seg);
+      return;
+    }
+    this._tapRoom(hit.object.userData.room);
+  }
+
+  /* ---------------- robot vacuum: live map, trail, rooms, cleaning */
+  _vacToModel(p) {
+    const T = this._config.vacuum_transform;
+    return [T.ox + (T.sx * p.x) / 1000, T.oz + (T.sz * p.y) / 1000];
+  }
+
+  _vacHeading(a) {
+    // robot heading (degrees, robot frame) → model rotation.y
+    const T = this._config.vacuum_transform;
+    const r = (a * Math.PI) / 180;
+    return -Math.atan2(Math.sign(T.sz) * Math.sin(r), Math.sign(T.sx) * Math.cos(r));
+  }
+
+  _buildVacuumTrail() {
+    const THREE = this.THREE;
+    const b = (this._trailBounds = { x0: -0.4, z0: -0.4, x1: 5.4, z1: 10.2, ppm: 80 });
+    const c = document.createElement('canvas');
+    c.width = Math.round((b.x1 - b.x0) * b.ppm);
+    c.height = Math.round((b.z1 - b.z0) * b.ppm);
+    this._trailCtx = c.getContext('2d');
+    this._trailTex = new THREE.CanvasTexture(c);
+    this._trailTex.colorSpace = THREE.SRGBColorSpace;
+    const m = new THREE.Mesh(
+      new THREE.PlaneGeometry(b.x1 - b.x0, b.z1 - b.z0),
+      new THREE.MeshBasicMaterial({ map: this._trailTex, transparent: true, opacity: 0.38, depthWrite: false }),
+    );
+    m.rotation.x = -Math.PI / 2;
+    m.position.set((b.x0 + b.x1) / 2, 0.03, (b.z0 + b.z1) / 2);
+    m.renderOrder = 3;
+    this._floorGroups[0].add(m);
+    this._trailLast = null;
+  }
+
+  _trailClear() {
+    const c = this._trailCtx.canvas;
+    this._trailCtx.clearRect(0, 0, c.width, c.height);
+    this._trailTex.needsUpdate = true;
+    this._trailLast = null;
+  }
+
+  _trailAdd(x, z) {
+    const b = this._trailBounds, g = this._trailCtx;
+    const px = (x - b.x0) * b.ppm, py = (z - b.z0) * b.ppm;
+    const last = this._trailLast;
+    if (last && Math.hypot(px - last[0], py - last[1]) < 3) return;
+    g.strokeStyle = 'rgb(41, 160, 246)';
+    g.lineCap = g.lineJoin = 'round';
+    g.lineWidth = 0.3 * b.ppm; // robot width
+    g.beginPath();
+    g.moveTo(...(last || [px, py]));
+    g.lineTo(px, py);
+    g.stroke();
+    this._trailLast = [px, py];
+    this._trailTex.needsUpdate = true;
+  }
+
+  _syncSegments(map) {
+    const THREE = this.THREE;
+    const rooms = map?.rooms || {};
+    const key = `${map?.map_id}:${Object.keys(rooms).join(',')}`;
+    if (key === this._segKey) return;
+    this._segKey = key;
+    for (const sg of this._segments || []) {
+      sg.group.removeFromParent();
+      sg.el.remove();
+    }
+    this._segments = Object.values(rooms).map((r) => {
+      const [ax, az] = this._vacToModel({ x: r.x0, y: r.y0 });
+      const [bx, bz] = this._vacToModel({ x: r.x1, y: r.y1 });
+      const x0 = Math.min(ax, bx), x1 = Math.max(ax, bx), z0 = Math.min(az, bz), z1 = Math.max(az, bz);
+      const group = new THREE.Group();
+      const fill = new THREE.MeshBasicMaterial({ color: '#3ea6ff', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+      const edge = new THREE.MeshBasicMaterial({ color: '#7cc4ff', transparent: true, opacity: 0, depthWrite: false });
+      const plane = (w, d, x, z, mat) => {
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat);
+        m.rotation.x = -Math.PI / 2;
+        m.position.set(x, 0.04, z);
+        m.renderOrder = 4;
+        group.add(m);
+      };
+      const inset = 0.08, e = 0.04;
+      const [ix0, ix1, iz0, iz1] = [x0 + inset, x1 - inset, z0 + inset, z1 - inset];
+      plane(ix1 - ix0, iz1 - iz0, (ix0 + ix1) / 2, (iz0 + iz1) / 2, fill);
+      plane(ix1 - ix0, e, (ix0 + ix1) / 2, iz0, edge);
+      plane(ix1 - ix0, e, (ix0 + ix1) / 2, iz1, edge);
+      plane(e, iz1 - iz0, ix0, (iz0 + iz1) / 2, edge);
+      plane(e, iz1 - iz0, ix1, (iz0 + iz1) / 2, edge);
+      this._floorGroups[0].add(group);
+      const el = document.createElement('button');
+      el.className = 'seg';
+      el.addEventListener('pointerdown', (ev) => ev.stopPropagation());
+      this._markerLayer.appendChild(el);
+      const sg = { id: r.room_id, name: r.custom_name || r.name || `Room ${r.room_id}`, x0, x1, z0, z1, group, fill, edge, el, world: new THREE.Vector3() };
+      [sg.cx, sg.cz] = this._vacToModel({ x: r.x, y: r.y });
+      el.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        if (this._vacSelect) this._toggleSegment(sg);
+        else this._setVacSelect(true);
+      });
+      return sg;
+    });
+    this._vacPicked = new Set();
+  }
+
+  _segmentAt(x, z) {
+    const inside = (this._segments || []).filter((s) => x >= s.x0 && x <= s.x1 && z >= s.z0 && z <= s.z1);
+    inside.sort((a, b) => (a.x1 - a.x0) * (a.z1 - a.z0) - (b.x1 - b.x0) * (b.z1 - b.z0));
+    return inside[0];
+  }
+
+  _setVacSelect(on) {
+    this._vacSelect = on;
+    this._vacPicked = new Set();
+    if (on && this._floorMode !== '0') this._setFloor('0');
+    this._renderVacBar();
+    this._dirty = true;
+  }
+
+  _toggleSegment(sg) {
+    if (this._vacPicked.has(sg.id)) this._vacPicked.delete(sg.id);
+    else this._vacPicked.add(sg.id);
+    this._renderVacBar();
+  }
+
+  _renderVacBar() {
+    const bar = this._root.querySelector('.vbar');
+    if (!this._vacSelect) {
+      bar.innerHTML = '';
+      return;
+    }
+    const names = this._segments.filter((s) => this._vacPicked.has(s.id)).map((s) => s.name);
+    bar.innerHTML = names.length
+      ? `${svg(ICON.vacuum)}<span>Clean <b>${names.join(', ')}</b>?</span><button data-act="clean" class="go">Clean</button><button data-act="cancel">Cancel</button>`
+      : `${svg(ICON.vacuum)}<span>Tap the rooms to clean</span><button data-act="cancel">Cancel</button>`;
+  }
+
+  _startSegmentClean() {
+    const ids = [...this._vacPicked];
+    if (!ids.length || !this._hass) return;
+    const [domain, service] = this._config.vacuum_clean_service.split('.');
+    this._hass.callService(domain, service, { segments: ids.length === 1 ? ids[0] : ids }, { entity_id: this._config.vacuum });
+    this._setVacSelect(false);
   }
 
   _resize() {
@@ -1587,8 +1762,30 @@ class Floorplan3DCard extends HTMLElement {
         }
         case 'vacuum': {
           icon = ICON.vacuum;
+          const prev = d.mode;
           d.mode = st?.state;
-          cls = st?.state === 'cleaning' ? 'on-blue' : '';
+          d.attrs = st?.attributes || {};
+          cls = this._vacSelect ? 'on-blue active' : st?.state === 'cleaning' ? 'on-blue' : '';
+          const map = S[this._config.vacuum_map]?.attributes;
+          if (map?.vacuum_position) {
+            d.live = true;
+            d.goal = this._vacToModel(map.vacuum_position);
+            d.goalHeading = this._vacHeading(map.vacuum_position.a ?? 0);
+            if (!d.placed) {
+              d.pos.set(d.goal[0], d.goal[1]);
+              d.bot.rotation.y = d.goalHeading;
+              d.placed = true;
+            }
+            const ch = map.charger_position;
+            if (ch) {
+              const [cx, cz] = this._vacToModel(ch);
+              d.dock.position.set(cx, 0, cz);
+              d.dock.rotation.y = this._vacHeading(ch.a ?? 0);
+            }
+            this._syncSegments(map);
+          }
+          // a new run starts with a clean trail
+          if (d.mode === 'cleaning' && prev && !['cleaning', 'paused'].includes(prev)) this._trailClear();
           break;
         }
         default:
@@ -1658,7 +1855,25 @@ class Floorplan3DCard extends HTMLElement {
     }
     const vc = S[this._config.vacuum];
     if (vc) {
-      chips.push(`<div class="chip ${vc.state === 'cleaning' ? 'blue' : ''}" data-entity="${vc.entity_id}" title="Vacuum: ${vc.state}">${svg(ICON.vacuum)}</div>`);
+      const a = vc.attributes;
+      const active = ['cleaning', 'returning', 'paused'].includes(vc.state);
+      const seg = this._segments?.find((sg) => sg.id === a.current_segment);
+      let title = '', sub = '';
+      if (vc.state === 'cleaning') {
+        title = a.segment_cleaning && seg ? seg.name : 'Cleaning';
+        sub = [a.cleaning_progress != null ? `${a.cleaning_progress}%` : '', a.cleaned_area != null ? `${a.cleaned_area} m²` : ''].filter(Boolean).join(' · ');
+      } else if (vc.state === 'returning') title = 'Returning';
+      else if (vc.state === 'paused') title = 'Paused';
+      else if (a.washing) title = 'Washing mop';
+      else if (a.drying) {
+        title = 'Drying mop';
+        sub = a.drying_left ? `${a.drying_left} min left` : '';
+      }
+      const batt = a.battery ?? a.battery_level;
+      if (title && batt != null) sub = `${sub ? sub + ' · ' : ''}${batt}%`;
+      chips.push(title
+        ? `<div class="chip wide ${active ? 'blue' : ''}" data-entity="${vc.entity_id}"><i class="ring">${svg(ICON.vacuum)}</i><div><b>${title}</b><small>${sub}</small></div></div>`
+        : `<div class="chip" data-entity="${vc.entity_id}" title="Vacuum: ${vc.state}${batt != null ? ` · ${batt}%` : ''}">${svg(ICON.vacuum)}</div>`);
     }
     const open = this._devices.filter((d) => (d.kind === 'door' || d.kind === 'window') && S[d.ids[0]]?.state === 'on');
     chips.push(`<div class="chip ${open.length ? 'alert' : ''}" title="${open.length ? open.map((d) => S[d.ids[0]].attributes.friendly_name).join(', ') + ' open' : 'All doors & windows closed'}"
@@ -1825,7 +2040,15 @@ class Floorplan3DCard extends HTMLElement {
       if (d.kind !== 'vacuum') continue;
       const cleaning = d.mode === 'cleaning';
       const atDock = d.pathIdx === 0;
-      if (cleaning || !atDock) {
+      if (d.live) {
+        const k2 = 1 - Math.exp(-dt * 2.5);
+        d.pos.x = lerp(d.pos.x, d.goal[0], k2);
+        d.pos.y = lerp(d.pos.y, d.goal[1], k2);
+        let diff = d.goalHeading - d.bot.rotation.y;
+        diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+        d.bot.rotation.y += diff * Math.min(1, dt * 4);
+        if (cleaning) this._trailAdd(d.pos.x, d.pos.y);
+      } else if (cleaning || !atDock) {
         const next = VACUUM_PATH[(d.pathIdx + 1) % VACUUM_PATH.length];
         const dx = next[0] - d.pos.x, dz = next[1] - d.pos.y;
         const dist = Math.hypot(dx, dz);
@@ -1851,6 +2074,48 @@ class Floorplan3DCard extends HTMLElement {
 
     this._renderer.render(this._scene, this._camera);
     this._placeMarkers();
+  }
+
+  _placeSegments(w, h, cam) {
+    if (!this._segments) return;
+    const vd = this._vacDev;
+    const a = vd?.attrs || {};
+    const running = ['cleaning', 'returning', 'paused'].includes(vd?.mode);
+    const show = (this._vacSelect || running) && this._visibleFloor(0);
+    const done = new Set(arr(a.completed_segments));
+    const queued = new Set(arr(a.active_segments));
+    const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 300);
+    for (const sg of this._segments) {
+      const picked = this._vacPicked?.has(sg.id);
+      const current = vd?.mode === 'cleaning' && a.current_segment === sg.id;
+      const isDone = running && done.has(sg.id);
+      let fill = 0, edge = 0;
+      if (this._vacSelect) {
+        fill = picked ? 0.28 : 0.06;
+        edge = picked ? 0.95 : 0.45;
+      } else if (running) {
+        fill = current ? 0.1 + 0.14 * pulse : isDone ? 0.06 : 0;
+        edge = current ? 0.9 : queued.has(sg.id) || isDone ? 0.35 : 0;
+      }
+      sg.fill.opacity = fill;
+      sg.edge.opacity = edge;
+      sg.fill.color.set(isDone && !this._vacSelect ? '#4caf50' : '#3ea6ff');
+      sg.group.visible = show;
+      const el = sg.el;
+      if (!show) {
+        el.style.display = 'none';
+        continue;
+      }
+      const label = `${isDone && !this._vacSelect ? '<i>✓</i>' : ''}${sg.name}`;
+      if (el._html !== label) {
+        el.innerHTML = label;
+        el._html = label;
+      }
+      el.className = `seg ${picked ? 'picked' : ''} ${current && !this._vacSelect ? 'current' : ''} ${isDone ? 'done' : ''}`;
+      sg.world.set(sg.cx, this._floorAnim[0].y + 0.2, sg.cz).project(cam);
+      el.style.display = '';
+      el.style.transform = `translate(${((sg.world.x * 0.5 + 0.5) * w).toFixed(1)}px, ${((-sg.world.y * 0.5 + 0.5) * h).toFixed(1)}px) translate(-50%, -50%)`;
+    }
   }
 
   _animateWeather(dt, t) {
@@ -1899,6 +2164,7 @@ class Floorplan3DCard extends HTMLElement {
   _placeMarkers() {
     const { w, h } = this._size;
     const cam = this._camera;
+    this._placeSegments(w, h, cam);
     for (const d of this._devices) {
       const visible = this._visibleFloor(d.floor) && (d.floor < 0 || this._floorAnim[d.floor].vis > 0.5);
       if (!visible) {
@@ -1953,6 +2219,18 @@ svg { width:18px; height:18px; fill:currentColor; flex:none; }
 @keyframes pulseRed { 0%{ box-shadow:0 0 0 0 rgba(239,83,80,.8);} 100%{ box-shadow:0 0 0 14px rgba(239,83,80,0);} }
 @keyframes pulse { 0%{ box-shadow:0 0 0 0 rgba(41,182,246,.7);} 100%{ box-shadow:0 0 0 12px rgba(41,182,246,0);} }
 
+.seg { position:absolute; left:0; top:0; pointer-events:auto; border:0; cursor:pointer; padding:4px 9px; border-radius:10px; font:600 11px/1.2 inherit;
+  color:#fff; background:rgba(20,60,100,.7); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); box-shadow:inset 0 0 0 1px rgba(124,196,255,.5); white-space:nowrap; }
+.seg i { font-style:normal; color:#7ee787; margin-right:4px; }
+.seg.picked { background:#3ea6ff; box-shadow:0 0 0 3px rgba(62,166,255,.35); }
+.seg.current { background:#3ea6ff; }
+.seg.done { background:rgba(30,80,40,.75); box-shadow:inset 0 0 0 1px rgba(126,231,135,.5); }
+.vbar { left:50%; bottom:14px; transform:translateX(-50%); gap:10px; padding:6px 6px 6px 14px; border-radius:22px; font-size:13px;
+  background:rgba(22,24,28,.85); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:0 4px 18px rgba(0,0,0,.35), inset 0 0 0 1px rgba(62,166,255,.5); }
+.vbar:empty { display:none; }
+.vbar svg { color:#3ea6ff; }
+.vbar button { border:0; border-radius:16px; padding:7px 14px; font:600 12px inherit; cursor:pointer; background:rgba(255,255,255,.12); color:#fff; }
+.vbar button.go { background:#3ea6ff; }
 .hud { position:absolute; display:flex; gap:8px; align-items:center; pointer-events:none; }
 .hud > * { pointer-events:auto; }
 .top { top:14px; left:50%; transform:translateX(-50%); }
@@ -2003,6 +2281,7 @@ svg { width:18px; height:18px; fill:currentColor; flex:none; }
   .pill { padding-left:12px; }
   .who .s { display:none; }
   .weather { right:14px; bottom:64px; }
+  .vbar { bottom:120px; max-width:calc(100% - 28px); }
   .weather .big { font-size:34px; }
 }
 `;

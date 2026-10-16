@@ -7,8 +7,13 @@ Daft.ie ground + first floor plans) using three.js.
   a room's floor, to toggle that room's lights. Long-press any marker for the more-info dialog.
 - **Blinds**, **windows/doors** (red when open), **motion** (pulsing ring), **TVs** (screen lights
   up), **temperatures** and the **thermostat** are shown in place.
-- The **robot vacuum** drives around the ground floor through real doorways while cleaning and
-  returns to its dock.
+- **Robot vacuum** (Dreame integration): the 3D robot follows the real robot's live position and
+  heading from its map camera, with the dock where the real one is. While it cleans it leaves a
+  blue trail of the floor covered (cleared at the start of each run), the room it's in pulses,
+  finished rooms get a ✓, and the bottom-left chip shows room · progress · area · battery.
+  **Tap the vacuum marker** to pick rooms (tap floors or room labels), then **Clean** to send it
+  there (`dreame_vacuum.vacuum_clean_segment`). Long-press it for the usual vacuum dialog.
+  Without a map camera it falls back to a pretend route.
 - **Weather**: rain, snow, fog, drifting clouds and lightning follow `weather.forecast_home`;
   daylight and shadows follow `sun.sun` (night mode makes lit rooms pop).
 - **Floors**: ground, first floor, an exploded view of both, or the garden & cabin (buttons top-left).
@@ -41,6 +46,9 @@ three.js is loaded from jsDelivr; set `three_url:` to self-host it.
 | `floor` | `0` | initial view: `0`, `1`, `all` or `garden` |
 | `house_bearing` | `95` | compass bearing the back of the house faces (sun direction) |
 | `weather`, `sun`, `climate`, `alarm`, `vacuum` | this house's entities | |
+| `vacuum_map` | `camera.l40s_pro_ultra_map` | Dreame map camera (live position, rooms, progress) |
+| `vacuum_transform` | fitted for this house | `{ sx, ox, sz, oz }`: model metres = `o + s × robot mm / 1000` |
+| `vacuum_clean_service` | `dreame_vacuum.vacuum_clean_segment` | service used to clean the picked rooms |
 | `persons` | `[person.killian, person.sinead]` | |
 | `devices` | see `DEFAULT_DEVICES` | list of `{ entity, room, at: [x, z], name?, kind?, camera?, h?, light_at?, range?, power? }` |
 
