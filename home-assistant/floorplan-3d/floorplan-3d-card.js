@@ -191,7 +191,6 @@ const DEFAULT_DEVICES = [
   { entity: 'binary_sensor.back_window', room: 'kitchen', at: [3.8, 0.35] },
   { entity: 'vacuum.l40s_pro_ultra', room: 'kitchen', at: [2.35, 4.45] },
   { entity: 'light.hallway_lamp', room: 'hallway', at: [3.85, 7.3] },
-  { entity: 'binary_sensor.hallway_motion', room: 'hallway', at: [3.85, 6.0] },
   { entity: 'binary_sensor.laverna_hallway_md', room: 'hallway', at: [3.66, 9.3], h: 2.5, ring_at: [3.9, 8.7] }, // alarm PIR, high in the corner left of the front door
   // First floor
   { entity: 'light.ikea_of_sweden_tradfri_bulb_e27_ws_clear_806lm', room: 'bedroom', at: [1.4, 2.9] },

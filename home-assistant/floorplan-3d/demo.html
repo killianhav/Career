@@ -25,7 +25,7 @@
     <button data-lights="light.left_up_cabin_light,light.left_down_cabin_light,light.right_up_cabin_light,light.right_down_cabin_light,light.cabin_shed_leds_shed_led_strip,light.shed_light_3">Cabin lights</button>
     <button data-toggle="binary_sensor.front_door">Front door</button>
     <button data-toggle="binary_sensor.office_window">Office window</button>
-    <button data-toggle="binary_sensor.hallway_motion">Hallway motion</button>
+    <button data-toggle="binary_sensor.laverna_hallway_md">Hallway motion</button>
     <button id="vacall">Vacuum: clean all</button>
     <button data-toggle="media_player.living_room_tv">Living room TV</button>
     <button data-toggle="alarm_control_panel.laverna_alarm">Alarm</button>
@@ -50,7 +50,7 @@
     add('binary_sensor.cabin_cam_motion', 'off', { device_class: 'motion' });
     add('light.cabin_shed_leds_shed_led_strip', 'off', { friendly_name: 'Shed LEDs' });
     add('media_player.cabin', 'off');
-    ['binary_sensor.hallway_motion', 'binary_sensor.laverna_hallway_md'].forEach((b) => add(b, 'off', { device_class: 'motion' }));
+    ['binary_sensor.laverna_hallway_md'].forEach((b) => add(b, 'off', { device_class: 'motion' }));
     add('binary_sensor.kitchen_md', 'on', { device_class: 'motion' });
     add('sensor.temp_sensor_temperature', '18.5', { unit_of_measurement: '°C', device_class: 'temperature' });
     add('climate.kitchen_kitchen_thermostat', 'heat', { current_temperature: 19.6, temperature: 20.5, hvac_action: 'heating', friendly_name: 'Kitchen Thermostat' });
