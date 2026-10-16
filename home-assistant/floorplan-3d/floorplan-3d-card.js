@@ -92,6 +92,7 @@ const FLOORS = [
       ['table', 0.75, 2.35, 1.95, 3.55, '#9a6a3f'],
       ['chair', 0.55, 2.65, 0], ['chair', 0.55, 3.25, 0], ['chair', 2.15, 2.65, 180], ['chair', 2.15, 3.25, 180],
       ['plant', 0.25, 1.6],
+      ['tablet', 2.35, 1.4], // wall-mounted Galaxy Tab A9+ (Fully Kiosk) between the French doors and the kitchen
       ['pir', 0.02, 4.76, 45], // dining-room motion detector (Kitchen MD)
       ['pir', 3.58, 9.37, 45], // hallway motion detector (Laverna Hallway MD)
       // living
@@ -1090,6 +1091,47 @@ class Floorplan3DCard extends HTMLElement {
         const screen = new THREE.MeshStandardMaterial({ color: '#0d0f12', emissive: '#7fb2ff', emissiveIntensity: 0, roughness: 0.25 });
         this._box(g, x1, z1, x2, z2, 0.68, screen, y0);
         if (entity) this._screens[entity] = screen;
+        break;
+      }
+      case 'tablet': {
+        // landscape 11" tablet flush on a wall facing +z; screen shows a miniature dashboard
+        const [x, z] = a;
+        const c = document.createElement('canvas');
+        c.width = 256;
+        c.height = 160;
+        const t = c.getContext('2d');
+        t.fillStyle = '#121418';
+        t.fillRect(0, 0, 256, 160);
+        const tile = (tx, ty, tw, th, col) => {
+          t.fillStyle = col;
+          t.beginPath();
+          t.roundRect(tx, ty, tw, th, 6);
+          t.fill();
+        };
+        t.fillStyle = '#ffffff';
+        t.font = '600 30px sans-serif';
+        t.fillText('08:30', 10, 42);
+        t.fillStyle = '#ffc84a';
+        t.beginPath();
+        t.arc(28, 70, 9, 0, Math.PI * 2);
+        t.fill();
+        tile(8, 92, 70, 26, '#2a2e35');
+        tile(8, 124, 70, 26, '#2a2e35');
+        for (let i = 0; i < 6; i++) tile(88 + (i % 2) * 44, 10 + Math.floor(i / 2) * 40, 38, 34, i === 0 || i === 3 ? '#ffb938' : '#2a2e35');
+        tile(88, 130, 82, 20, '#3ea6ff');
+        tile(180, 10, 68, 52, '#56677a');
+        tile(180, 70, 68, 36, '#2a2e35');
+        tile(180, 112, 68, 38, '#2a2e35');
+        const tex = new THREE.CanvasTexture(c);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        const screen = new THREE.MeshStandardMaterial({ color: '#000', emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: 0.9, roughness: 0.2 });
+        const mats = [M.dark, M.dark, M.dark, M.dark, screen, M.dark];
+        const tab = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.17, 0.012), mats);
+        const y0 = 1.36;
+        tab.position.set(x, y0 + 0.085, z + 0.006);
+        g.add(tab);
+        // hide it with the wall when the cutaway lowers the back wall
+        this._cutWalls.push({ m: tab, y0, y1: y0 + 0.17, top: y0 + 0.17, nx: 0, nz: -1, floor: 0 });
         break;
       }
       case 'pir': {
