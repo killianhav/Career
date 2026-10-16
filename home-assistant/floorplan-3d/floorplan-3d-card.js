@@ -65,7 +65,7 @@ const FLOORS = [
       { a: [2.82, 1.32], b: [2.82, 0.07], t: EXT, o: [[0.17, 0.6, 'w']] },
       { a: [2.82, 0.07], b: [5.0, 0.07], t: EXT, o: [[0.35, 1.57, 'w']] }, // kitchen sink window
       { a: [5.0, 0.07], b: [5.0, 9.45], t: EXT, o: [[4.83, 5.27, 'w']] }, // WC window
-      { a: [5.0, 9.45], b: [3.15, 9.45], t: EXT, o: [[0.1, 0.61, 'w'], [0.66, 1.3, 'd']] }, // front door
+      { a: [5.0, 9.45], b: [3.15, 9.45], t: EXT, o: [[0.08, 0.53, 'w'], [0.68, 1.38, 'D']] }, // black composite front door, doorbell to its right
       { a: [3.15, 9.45], b: [3.15, 9.82], t: EXT },
       { a: [3.15, 9.82], b: [-0.06, 9.82], t: EXT, o: [[0.43, 2.72, 'w']] }, // living bay window
       // interior
@@ -203,7 +203,7 @@ const DEFAULT_DEVICES = [
   { entity: 'cover.blind_1', room: 'office', at: [3.6, 8.95] },
   { entity: 'binary_sensor.office_window', room: 'office', at: [4.2, 8.95] },
   // Front
-  { entity: ['binary_sensor.doorbell_visitor', 'binary_sensor.doorbell_person', 'binary_sensor.doorbell_motion'], kind: 'doorbell', camera: 'camera.doorbell_fluent', name: 'Doorbell', room: 'front', at: [3.5, 9.75], h: 1.3 },
+  { entity: ['binary_sensor.doorbell_visitor', 'binary_sensor.doorbell_person', 'binary_sensor.doorbell_motion'], kind: 'doorbell', camera: 'camera.doorbell_fluent', name: 'Doorbell', room: 'front', at: [4.39, 9.8], h: 1.3 },
   // Garden cabin – up/down wall lights on the front, camera + floodlight on the front-left corner
   // (h = marker height, light_at = [x, y, z] of the 3D light, range in metres, power = brightness scale)
   { entity: 'light.left_up_cabin_light', room: 'garden', at: [0.78, -6.0], h: 2.7, light_at: [0.78, 2.45, -6.05], range: 2.5, power: 0.5 },
@@ -595,10 +595,31 @@ class Floorplan3DCard extends HTMLElement {
         g.beginPath(); g.moveTo(i, s); g.lineTo(i + s, 0); g.stroke();
       }
     };
+    const frontDoor = (g, s) => {
+      // black composite door: raised panels, small glazed top light, chrome handle and letterbox
+      const w = s, h = s;
+      g.fillStyle = '#141516';
+      g.fillRect(0, 0, w, h);
+      const panel = (x, y, pw, ph) => {
+        g.fillStyle = '#1d1f21';
+        g.fillRect(x, y, pw, ph);
+        g.strokeStyle = 'rgba(255,255,255,0.10)';
+        g.lineWidth = 3;
+        g.strokeRect(x + 4, y + 4, pw - 8, ph - 8);
+      };
+      g.fillStyle = '#8fb4c9';
+      g.fillRect(w * 0.2, h * 0.08, w * 0.6, h * 0.12); // glazing
+      panel(w * 0.15, h * 0.26, w * 0.7, h * 0.26);
+      panel(w * 0.15, h * 0.6, w * 0.7, h * 0.32);
+      g.fillStyle = '#c9ccd0';
+      g.fillRect(w * 0.3, h * 0.545, w * 0.4, h * 0.025); // letterbox
+      g.fillRect(w * 0.78, h * 0.47, w * 0.05, h * 0.1); // handle
+    };
     const beamTex = this._canvasTex(128, beam, 1);
     beamTex.wrapS = beamTex.wrapT = this.THREE.ClampToEdgeWrapping;
     return {
       logs: this._canvasTex(256, logs, 1.2),
+      frontDoor: this._canvasTex(512, frontDoor, 1),
       beam: beamTex,
       lattice: this._canvasTex(256, lattice, 0.7),
       lawn: this._canvasTex(512, noise([98, 42, 36], 10, 12, 30000), 3),
@@ -640,6 +661,7 @@ class Floorplan3DCard extends HTMLElement {
       cabinWall: std({ color: '#8a6a4a' }),
       car: std({ color: '#9aa0a6', roughness: 0.25, metalness: 0.6 }),
       deck: std({ color: '#7d5934', roughness: 0.7 }),
+      frontDoor: std({ map: this._tex.frontDoor, roughness: 0.45, metalness: 0.15 }),
       render: std({ color: '#ece2c2' }),
       block: std({ color: '#9b978f' }),
       conifer: std({ color: '#2d4a2b' }),
@@ -769,7 +791,8 @@ class Floorplan3DCard extends HTMLElement {
     env.add(this._tiledPlane(-2.2, 9.95, 7.6, 16.5, T.paving, -0.004)); // driveway
     env.add(this._tiledPlane(-9, 16.5, 16, 19.5, T.gravel, -0.006)); // footpath
     box(-2.2, 16.2, 1.0, 16.6, 0.9, M.leaf); // hedge
-    box(3.47, 9.53, 3.55, 9.56, 0.14, M.dark, 1.2); // video doorbell
+    const bell = box(4.355, 9.53, 4.425, 9.56, 0.14, M.dark, 1.2); // video doorbell, right of the front door
+    this._cutWalls.push({ m: bell, y0: 1.2, y1: 1.34, top: 1.34, nx: 0, nz: 1, floor: 0 }); // hides with the wall cutaway
     const tree = (x, z, sc = 1) => {
       this._cyl(env, x, z, 0.15 * sc, 1.6 * sc, M.trunk);
       const rnd = seeded(Math.round(x * 100 + z * 7));
@@ -993,6 +1016,10 @@ class Floorplan3DCard extends HTMLElement {
         piece(s, e, 0, head, type === 'f' ? style.frosted || M.glass : glass, false);
       } else if (type === 'd') {
         piece(s, e, head, H);
+      } else if (type === 'D') {
+        // closed solid door leaf
+        piece(s, e, head, H);
+        piece(s, e, 0, head, M.frontDoor);
       }
       cur = e;
     }
