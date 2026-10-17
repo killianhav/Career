@@ -7,8 +7,12 @@ dark palette after sunset (tap the half-moon button to override).
 - **Top bar** – quote of the day, who's home, an *All clear* / *x open* / *Armed* status pill, clock.
 - **Systems** – internet, lights on, estimated gas cost today, updates waiting, last backup.
 - **Coming up** – the next two bin collections from `calendar.bins` (colour-coded bins, *Put out
-  tonight* the evening before).
-- **Home** – robot vacuum (start/pause, dock, room progress), alarm Off/Home/Away, people.
+  tonight* the evening before). Tick the next one when the bins are out; it is stored in
+  `input_datetime.bins_put_out` so every screen and phone sees it, and tapping again undoes it.
+- **Home** – robot vacuum (start/pause, dock, room progress) with a **today's clean** progress bar
+  (`input_number.robot_vacuum_daily_progress`, reset at midnight, scheduled Tue/Thu/Sat), the open
+  jobs from `todo.home_jobs` with a tick to complete each one, alarm Off/Home/Away, and people
+  (hidden while there are jobs, to save space).
 - **Today** – current weather, high/low, sunrise/sunset, humidity/wind/UV, 8-hour forecast.
 - **Climate** – thermostat with − / + and the bedroom sensor.
 - **Lights & blinds** – tap to toggle, *All off* for the whole house.

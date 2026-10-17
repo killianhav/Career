@@ -45,6 +45,14 @@
     ['doorbell_person', 'doorbell_motion', 'cabin_cam_motion', 'doorbell_visitor'].forEach((b) => add(`binary_sensor.${b}`, 'off'));
     S['binary_sensor.cabin_cam_motion'].last_changed = new Date(Date.now() - 22 * 60e3).toISOString();
     add('vacuum.l40s_pro_ultra', params.get('vac') || 'docked', { battery: 82, completed_segments: [3, 2] });
+    add('input_number.robot_vacuum_daily_progress', params.get('progress') || '45', { min: 0, max: 100 });
+    add('sensor.l40s_pro_ultra_current_room', 'Living Room');
+    add('input_datetime.bins_put_out', 'unknown');
+    add('todo.home_jobs', '2');
+    let jobs = params.get('jobs') === '0' ? [] : [
+      { uid: 'a', summary: 'Empty the dirty water tank', status: 'needs_action', description: 'Robot vacuum – Dirty Water Tank Status: Not installed or full' },
+      { uid: 'b', summary: 'Clean the vacuum sensors', status: 'needs_action', description: 'Robot vacuum – Sensor Dirty Left: 8' },
+    ];
     add('camera.l40s_pro_ultra_map', 'idle', { access_token: 'demo', rooms: { 2: {}, 3: {}, 4: {}, 5: {}, 6: {} } });
     add('camera.doorbell_fluent', 'idle', { access_token: 'demo' });
     add('camera.cabin_cam_live_view', 'idle', { access_token: 'demo' });
@@ -63,7 +71,19 @@
         return { response: { 'weather.forecast_home': { forecast: data.type === 'hourly' ? hourly : [{ temperature: 14, templow: 8 }] } } };
       }
       if (service === 'get_events') {
-        return { response: { 'calendar.bins': { events: [{ start: iso(tue), end: iso(tue), summary: 'Green bin' }, { start: iso(tue2), end: iso(tue2), summary: 'Black + Brown bins' }] } } };
+        return { response: { 'calendar.bins': { events: [{ start: iso(tue), end: iso(tue), summary: 'Black + Green bins' }, { start: iso(tue2), end: iso(tue2), summary: 'Black + Brown bins' }] } } };
+      }
+      if (domain === 'todo' && service === 'get_items') return { response: { 'todo.home_jobs': { items: jobs.filter((j) => j.status === 'needs_action') } } };
+      if (domain === 'todo' && service === 'update_item') {
+        jobs = jobs.map((j) => (j.uid === data.item ? { ...j, status: data.status } : j));
+        S['todo.home_jobs'] = { ...S['todo.home_jobs'], state: String(jobs.filter((j) => j.status === 'needs_action').length), last_updated: new Date().toISOString() };
+        push();
+        return;
+      }
+      if (domain === 'input_datetime') {
+        S[data.entity_id] = { ...S[data.entity_id], state: data.date };
+        push();
+        return;
       }
       const ids = [].concat(data?.entity_id || target?.entity_id || []);
       for (const id of ids) {

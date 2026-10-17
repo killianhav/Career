@@ -8,7 +8,7 @@
  *   # every entity below is optional and overridable – defaults match this house
  */
 
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 const ICON = {
   sunny: "M12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,2L14.39,5.42C13.65,5.15 12.84,5 12,5C11.16,5 10.35,5.15 9.61,5.42L12,2M3.34,7L7.5,6.65C6.9,7.16 6.36,7.78 5.94,8.5C5.5,9.24 5.25,10 5.11,10.79L3.34,7M3.36,17L5.12,13.23C5.26,14 5.53,14.78 5.95,15.5C6.37,16.24 6.91,16.86 7.5,17.37L3.36,17M20.65,7L18.88,10.79C18.74,10 18.47,9.23 18.05,8.5C17.63,7.78 17.1,7.15 16.5,6.64L20.65,7M20.64,17L16.5,17.36C17.09,16.85 17.62,16.22 18.04,15.5C18.46,14.77 18.73,14 18.87,13.21L20.64,17M12,22L9.59,18.56C10.33,18.83 11.14,19 12,19C12.82,19 13.63,18.83 14.37,18.56L12,22Z",
   night: "M17.75,4.09L15.22,6.03L16.13,9.09L13.5,7.28L10.87,9.09L11.78,6.03L9.25,4.09L12.44,4L13.5,1L14.56,4L17.75,4.09M21.25,11L19.61,12.25L20.2,14.23L18.5,13.06L16.8,14.23L17.39,12.25L15.75,11L17.81,10.95L18.5,9L19.19,10.95L21.25,11M18.97,15.95C19.8,15.87 20.69,17.05 20.16,17.8C19.84,18.25 19.5,18.67 19.08,19.07C15.17,23 8.84,23 4.94,19.07C1.03,15.17 1.03,8.83 4.94,4.93C5.34,4.53 5.76,4.17 6.21,3.85C6.96,3.32 8.14,4.21 8.06,5.04C7.79,7.9 8.75,10.87 10.95,13.06C13.14,15.26 16.1,16.22 18.97,15.95M17.33,17.97C14.5,17.81 11.7,16.64 9.53,14.5C7.36,12.31 6.2,9.5 6.04,6.68C3.23,9.82 3.34,14.64 6.35,17.66C9.37,20.67 14.19,20.78 17.33,17.97Z",
@@ -106,6 +106,10 @@ const DEFAULTS = {
   bins_calendar: 'calendar.bins',
   vacuum: 'vacuum.l40s_pro_ultra',
   vacuum_map: 'camera.l40s_pro_ultra_map',
+  vacuum_progress: 'input_number.robot_vacuum_daily_progress', // reset at midnight by an automation
+  vacuum_days: [2, 4, 6], // scheduled clean days (0 = Sunday): Tue, Thu, Sat
+  jobs_todo: 'todo.home_jobs', // tick-off jobs (vacuum maintenance etc.)
+  bins_done: 'input_datetime.bins_put_out', // date of the collection the bins were put out for
   climate: 'climate.kitchen_kitchen_thermostat',
   bedroom_temp: 'sensor.temp_sensor_temperature',
   bedroom_humidity: 'sensor.temp_sensor_humidity',
@@ -181,6 +185,10 @@ class HomePanelCard extends HTMLElement {
     this._schedule();
   }
 
+  get hass() {
+    return this._hass;
+  }
+
   getCardSize() {
     return 12;
   }
@@ -210,6 +218,7 @@ class HomePanelCard extends HTMLElement {
       const r = await call('weather', 'get_forecasts', { type: 'daily' }, { entity_id: c.weather });
       this._daily = r?.[c.weather]?.forecast || [];
     } catch (e) { /* ignore */ }
+    await this._fetchJobs();
     if (c.bins_calendar) {
       try {
         const start = new Date();
@@ -220,6 +229,18 @@ class HomePanelCard extends HTMLElement {
       } catch (e) {
         this._bins = null;
       }
+    }
+    this._schedule(true);
+  }
+
+  async _fetchJobs() {
+    const h = this._hass, c = this._config;
+    if (!h || !c.jobs_todo || !h.states[c.jobs_todo]) return;
+    try {
+      const r = await h.callService('todo', 'get_items', { status: 'needs_action' }, { entity_id: c.jobs_todo }, false, true);
+      this._jobs = r?.response?.[c.jobs_todo]?.items || [];
+    } catch (e) {
+      this._jobs = [];
     }
     this._schedule(true);
   }
@@ -306,6 +327,11 @@ class HomePanelCard extends HTMLElement {
   _render() {
     const h = this._hass;
     if (!h || !this._root) return;
+    const todo = h.states[this._config.jobs_todo];
+    if (todo && todo.last_updated !== this._jobsKey) {
+      this._jobsKey = todo.last_updated;
+      this._fetchJobs();
+    }
     this._applyTheme();
     this._set('top', this._top());
     this._set('systems', this._systems());
@@ -401,17 +427,21 @@ class HomePanelCard extends HTMLElement {
     if (!ev.length) return `${hd}<p class="muted pad">No collections in the next few weeks.</p>`;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const doneFor = this._hass.states[this._config.bins_done]?.state || '';
     const rows = ev.slice(0, 2).map((e, i) => {
-      const d = new Date(`${String(e.start).slice(0, 10)}T00:00:00`);
+      const dateStr = String(e.start).slice(0, 10);
+      const d = new Date(`${dateStr}T00:00:00`);
+      const done = /^\d{4}-/.test(doneFor) && doneFor >= dateStr;
       const days = Math.round((d - today) / 86400000);
       const when = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
       const bins = Object.keys(BIN_COLOURS).filter((k) => e.summary.toLowerCase().includes(k));
       const icons = bins.map((b) => `<i class="bin" style="--c:${BIN_COLOURS[b]}">${svg(ICON.trash)}</i>`).join('');
       const label = bins.length ? bins.map((b) => b[0].toUpperCase() + b.slice(1)).join(' + ') : esc(e.summary);
-      const hint = days === 1 ? '<em>Put out tonight</em>' : days === 0 ? '<em>Collection today</em>' : `in ${days} days`;
-      return `<div class="binrow ${i === 0 ? 'next' : ''} ${days <= 1 ? 'soon' : ''}">
+      const hint = done ? '<strong>Out ✓</strong>' : days === 1 ? '<em>Put out tonight</em>' : days === 0 ? '<em>Collection today</em>' : `in ${days} days`;
+      const tick = i === 0 ? `<button class="tick ${done ? 'done' : ''}" data-act="bins" data-date="${dateStr}" title="${done ? 'Undo' : 'Bins are out'}">${svg(ICON.check)}</button>` : '';
+      return `<div class="binrow ${i === 0 ? 'next' : ''} ${days <= 1 && !done ? 'soon' : ''} ${done ? 'done' : ''}">
         <div class="bins">${icons}</div>
-        <div class="bt"><b>${label}</b><small>${when} · ${hint}</small></div></div>`;
+        <div class="bt"><b>${label}</b><small>${when} · ${hint}</small></div>${tick}</div>`;
     }).join('');
     return `${hd}${rows}`;
   }
@@ -423,19 +453,36 @@ class HomePanelCard extends HTMLElement {
     if (v) {
       const a = v.attributes;
       const map = S[c.vacuum_map]?.attributes;
-      const rooms = map?.rooms ? Object.keys(map.rooms).length : 0;
+      // rooms in this run (falls back to every room on the map)
+      const rooms = arr(a.active_segments).length || (map?.rooms ? Object.keys(map.rooms).length : 0);
       const done = arr(a.completed_segments).length;
       const running = ['cleaning', 'returning'].includes(v.state);
       const label = { cleaning: 'Cleaning', returning: 'Heading home', docked: a.drying ? 'Drying mop' : 'Docked', paused: 'Paused', idle: 'Idle', error: 'Needs attention' }[v.state] || v.state;
       const batt = a.battery ?? a.battery_level;
       const dots = rooms ? Array.from({ length: rooms }, (_, i) => `<i class="${i < done ? 'on' : ''}"></i>`).join('') : '';
+      // today's scheduled clean, tracked by input_number (0 % at midnight, live while cleaning)
+      const prog = S[c.vacuum_progress];
+      const pct = na(prog) ? null : Math.round(Number(prog.state));
+      const dow = new Date().getDay();
+      const scheduled = arr(c.vacuum_days).includes(dow);
+      const nextDay = (() => {
+        for (let k = 1; k <= 7; k++) if (arr(c.vacuum_days).includes((dow + k) % 7)) return new Date(Date.now() + k * 86400000).toLocaleDateString('en-GB', { weekday: 'long' });
+        return null;
+      })();
+      let progress = '';
+      if (pct != null && (scheduled || pct > 0)) {
+        const msg = pct >= 100 ? 'Done for today' : v.state === 'cleaning' ? `Cleaning${a.segment_cleaning && S['sensor.l40s_pro_ultra_current_room'] ? ' · ' + esc(S['sensor.l40s_pro_ultra_current_room'].state) : ''}` : pct > 0 ? 'Paused part-way' : 'Starts when the alarm is set to Away';
+        progress = `<div class="prog ${pct >= 100 ? 'full' : ''}"><div class="pt"><span>Today's clean · ${msg}</span><b>${pct}%</b></div><div class="bar"><i style="width:${Math.max(0, Math.min(100, pct))}%"></i></div></div>`;
+      } else if (nextDay) {
+        progress = `<div class="prog idle"><div class="pt"><span>Next scheduled clean · ${nextDay}</span></div></div>`;
+      }
       vac = `<div class="vac">
         <button class="vi" data-act="more" data-entity="${c.vacuum}">${svg(ICON.vacuum)}</button>
         <div class="vt"><b>Dreame <small>${batt != null ? `${batt}%` : ''}</small></b><small>${label}${running && rooms ? ` · ${done}/${rooms} rooms` : ''}</small>
           ${running && rooms ? `<span class="dots">${dots}</span>` : ''}</div>
         <button class="iconbtn sm" data-act="call" data-svc="vacuum.${v.state === 'cleaning' ? 'pause' : 'start'}" data-entity="${c.vacuum}" title="${v.state === 'cleaning' ? 'Pause' : 'Start'}">${svg(v.state === 'cleaning' ? ICON.pause : ICON.play)}</button>
         <button class="iconbtn sm" data-act="call" data-svc="vacuum.return_to_base" data-entity="${c.vacuum}" title="Dock">${svg(ICON.dock)}</button>
-      </div>`;
+      </div>${progress}`;
     }
     const al = S[c.alarm];
     const alarmTxt = al ? ({ disarmed: 'Alarm off', armed_home: 'Armed – home', armed_away: 'Armed – away', armed_night: 'Armed – night', triggered: 'Alarm triggered', pending: 'Arming…', arming: 'Arming…' }[al.state] || al.state) : '';
@@ -453,7 +500,14 @@ class HomePanelCard extends HTMLElement {
         <span class="av">${pic ? `<img src="${pic}" alt="">` : `<b>${esc(name[0])}</b>`}<i></i></span>
         <span><b>${esc(name)}</b><small>${esc(where)} · ${ago(s.last_changed).replace(' ago', '')}</small></span></button>`;
     }).join('');
-    return `<div class="hd"><span class="lbl">${svg(ICON.home)}Home</span></div>${vac}${alarm}<div class="people">${people}</div>`;
+    const jobs = (this._jobs || []).filter((j) => !this._ticked?.has(j.uid));
+    const jobList = jobs.length ? `<div class="jobs">${jobs.slice(0, 3).map((j) => `<div class="job">
+        <button class="tick" data-act="job" data-uid="${esc(j.uid)}" title="Mark done">${svg(ICON.check)}</button>
+        <span><b>${esc(j.summary)}</b>${j.description ? `<small>${esc(j.description)}</small>` : ''}</span></div>`).join('')}
+        ${jobs.length > 3 ? `<button class="more" data-act="nav" data-path="/todo?entity_id=${c.jobs_todo}">+${jobs.length - 3} more</button>` : ''}</div>` : '';
+    const jobPill = jobs.length ? `<button class="pill warn" data-act="nav" data-path="/todo?entity_id=${c.jobs_todo}">${svg(ICON.alert)}${jobs.length} job${jobs.length > 1 ? 's' : ''}</button>` : '';
+    // people move to the top bar avatars when there are jobs to make room
+    return `<div class="hd"><span class="lbl">${svg(ICON.home)}Home</span>${jobPill}</div>${vac}${jobList}${alarm}${jobs.length ? '' : `<div class="people">${people}</div>`}`;
   }
 
   _today() {
@@ -666,6 +720,25 @@ class HomePanelCard extends HTMLElement {
         this._wrap.classList.toggle('dark', dark);
         break;
       }
+      case 'job': {
+        const uid = el.dataset.uid;
+        this._ticked = this._ticked || new Set();
+        this._ticked.add(uid); // hide straight away, the list refreshes when HA confirms
+        this._rendered.home = null;
+        this._schedule(true);
+        h.callService('todo', 'update_item', { item: uid, status: 'completed' }, { entity_id: c.jobs_todo });
+        break;
+      }
+      case 'bins': {
+        const date = el.dataset.date;
+        const cur = h.states[c.bins_done]?.state || '';
+        const undo = /^\d{4}-/.test(cur) && cur >= date;
+        const prev = new Date(`${date}T00:00:00`);
+        prev.setDate(prev.getDate() - 7);
+        const value = undo ? `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}-${String(prev.getDate()).padStart(2, '0')}` : date;
+        h.callService('input_datetime', 'set_datetime', { entity_id: c.bins_done, date: value });
+        break;
+      }
       case 'closering':
         this._closeRing();
         break;
@@ -746,6 +819,26 @@ svg { width:16px; height:16px; fill:currentColor; flex:none; }
 .bt em { font-style:normal; color:var(--warn); font-weight:600; }
 .binrow.soon .bt em { color:var(--bad); }
 
+.tick { width:28px; height:28px; flex:none; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1.5px solid var(--muted); color:transparent; margin-left:auto; transition:all .2s; }
+.tick svg { width:18px; height:18px; }
+.tick:hover { color:var(--muted); }
+.tick.done { background:var(--ok); border-color:var(--ok); color:#fff; }
+.binrow.done .bins { opacity:.45; }
+.bt strong { color:var(--ok); font-weight:600; }
+.prog { margin-top:8px; padding:0 2px; }
+.pt { display:flex; justify-content:space-between; align-items:baseline; font-size:11px; color:var(--muted); margin-bottom:5px; }
+.pt b { font-family:Fraunces, Georgia, serif; font-weight:500; font-size:15px; color:var(--ink); }
+.bar { height:7px; border-radius:99px; background:var(--chip); overflow:hidden; box-shadow:inset 0 0 0 1px var(--line); }
+.bar i { display:block; height:100%; border-radius:99px; background:linear-gradient(90deg, #8fb3d9, #5f86b1); transition:width 1s ease; }
+.prog.full .bar i { background:linear-gradient(90deg, #7fb07b, var(--ok)); }
+.prog.idle { margin-top:6px; }
+.jobs { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+.job { display:flex; align-items:center; gap:10px; background:var(--chip); border-radius:12px; padding:6px 10px; border-left:3px solid var(--warn); }
+.job .tick { margin-left:0; order:2; margin-left:auto; }
+.job span { min-width:0; }
+.job b { display:block; font-weight:600; font-size:12.5px; }
+.job small { display:block; color:var(--muted); font-size:10.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.more { font-size:11px; color:var(--muted); font-weight:600; padding:2px 4px; }
 .vac { display:flex; align-items:center; gap:10px; background:var(--chip); border-radius:14px; padding:10px; }
 .vi { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--card); }
 .vt { flex:1; }
