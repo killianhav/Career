@@ -466,7 +466,7 @@ class HomePanelCard extends HTMLElement {
     if (!c.transport_view) return '';
     const bits = [];
     const drive = S[c.drive_time];
-    if (!na(drive)) bits.push(`${svg(ICON.car)}${Math.round(minutesOf(drive.state))} min`);
+    if (!na(drive) && Date.now() - new Date(drive.last_reported || drive.last_updated) < 20 * 60000) bits.push(`${svg(ICON.car)}${Math.round(minutesOf(drive.state))} min`);
     const stop = c.bus_stop && S[c.bus_stop.entity];
     const next = stop && departures(stop, c.bus_stop.walk || 0).find((d) => d.leave >= 0);
     if (next) bits.push(`${svg(ICON.bus)}${esc(next.route)} · ${next.mins < 1 ? 'due' : `${next.mins} min`}`);
@@ -1125,13 +1125,14 @@ class TransportPanelCard extends HTMLElement {
     if (!free && typical.length) free = Math.min(...typical.map((s) => s.v));
     const ratio = free ? now / free : 1;
     const level = ratio < 1.15 ? ['Light traffic', 'ok'] : ratio < 1.4 ? ['Moderate traffic', 'warn'] : ['Heavy traffic', 'bad'];
-    return { st, now, free, level, route: a.route, distance: a.distance };
+    const checked = new Date(st.last_reported || st.last_updated);
+    return { st, now, free, level, route: a.route, distance: parseFloat(a.distance) || null, checked, stale: Date.now() - checked > 20 * 60000 };
   }
 
   _drive() {
     const S = this._hass.states, c = this._config;
     const d = this._driveState();
-    const hd = `<div class="hd"><span class="lbl">${svg(ICON.car)}Drive to ${esc(c.work_name)}</span>${d ? `<span class="pill ${d.level[1]}"><i class="d"></i>${d.level[0]}</span>` : ''}</div>`;
+    const hd = `<div class="hd"><span class="lbl">${svg(ICON.car)}Drive to ${esc(c.work_name)}</span>${d ? `<span class="pill ${d.stale ? '' : d.level[1]}"><i class="d"></i>${d.stale ? `Checked ${this._when(d.checked)}` : d.level[0]}</span>` : ''}</div>`;
     if (!d) {
       return `${hd}<div class="empty">${svg(ICON.car)}<div><b>Live traffic is on the map</b>
         <small>Add a travel-time sensor (<code>${esc(c.drive_time || 'drive_time')}</code>) for drive times and the usual morning pattern.</small></div></div>`;
@@ -1144,12 +1145,17 @@ class TransportPanelCard extends HTMLElement {
       <button class="drive" data-act="more" data-entity="${c.drive_time}">
         <div class="big"><b>${Math.round(d.now)}</b><span>min</span></div>
         <div class="dt">
-          <b>Leave now, arrive ${hhmm(arrive)}</b>
-          <small>${delay > 0 ? `+${delay} min on a clear road` : 'Roads are clear'}${d.distance ? ` · ${esc(num(d.distance, 1))} km` : ''}</small>
+          <b>${d.stale ? `${d.level[0]} at ${hhmm(d.checked)}` : `Leave now, arrive ${hhmm(arrive)}`}</b>
+          <small>${delay > 0 ? `+${delay} min on a clear road` : d.stale ? 'Roads were clear' : 'Roads are clear'}${d.distance ? ` · ${esc(num(d.distance, 1))} km` : ''}</small>
           ${d.route ? `<small>via ${esc(d.route)}</small>` : ''}${fcHtml}
         </div>
       </button>
       ${this._chart(d)}`;
+  }
+
+  _when(d) {
+    const today = new Date().toDateString() === d.toDateString();
+    return today ? hhmm(d) : `${d.toLocaleDateString('en-GB', { weekday: 'short' })} ${hhmm(d)}`;
   }
 
   // Bar chart of the usual weekday morning, today's live value marked.
