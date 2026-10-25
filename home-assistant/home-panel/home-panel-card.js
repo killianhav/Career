@@ -8,7 +8,7 @@
  *   # every entity below is optional and overridable – defaults match this house
  */
 
-const VERSION = '1.1.0';
+const VERSION = '1.2.0';
 const ICON = {
   sunny: "M12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,2L14.39,5.42C13.65,5.15 12.84,5 12,5C11.16,5 10.35,5.15 9.61,5.42L12,2M3.34,7L7.5,6.65C6.9,7.16 6.36,7.78 5.94,8.5C5.5,9.24 5.25,10 5.11,10.79L3.34,7M3.36,17L5.12,13.23C5.26,14 5.53,14.78 5.95,15.5C6.37,16.24 6.91,16.86 7.5,17.37L3.36,17M20.65,7L18.88,10.79C18.74,10 18.47,9.23 18.05,8.5C17.63,7.78 17.1,7.15 16.5,6.64L20.65,7M20.64,17L16.5,17.36C17.09,16.85 17.62,16.22 18.04,15.5C18.46,14.77 18.73,14 18.87,13.21L20.64,17M12,22L9.59,18.56C10.33,18.83 11.14,19 12,19C12.82,19 13.63,18.83 14.37,18.56L12,22Z",
   night: "M17.75,4.09L15.22,6.03L16.13,9.09L13.5,7.28L10.87,9.09L11.78,6.03L9.25,4.09L12.44,4L13.5,1L14.56,4L17.75,4.09M21.25,11L19.61,12.25L20.2,14.23L18.5,13.06L16.8,14.23L17.39,12.25L15.75,11L17.81,10.95L18.5,9L19.19,10.95L21.25,11M18.97,15.95C19.8,15.87 20.69,17.05 20.16,17.8C19.84,18.25 19.5,18.67 19.08,19.07C15.17,23 8.84,23 4.94,19.07C1.03,15.17 1.03,8.83 4.94,4.93C5.34,4.53 5.76,4.17 6.21,3.85C6.96,3.32 8.14,4.21 8.06,5.04C7.79,7.9 8.75,10.87 10.95,13.06C13.14,15.26 16.1,16.22 18.97,15.95M17.33,17.97C14.5,17.81 11.7,16.64 9.53,14.5C7.36,12.31 6.2,9.5 6.04,6.68C3.23,9.82 3.34,14.64 6.35,17.66C9.37,20.67 14.19,20.78 17.33,17.97Z",
@@ -61,6 +61,18 @@ const ICON = {
   doorbell: "M14 15C14 16.11 13.11 17 12 17S10 16.11 10 15 10.9 13 12 13 14 13.9 14 15M18 4V20C18 21.1 17.11 22 16 22H8C6.9 22 6 21.11 6 20V4C6 2.9 6.9 2 8 2H16C17.11 2 18 2.9 18 4M10.5 7C10.5 7.83 11.17 8.5 12 8.5S13.5 7.83 13.5 7 12.83 5.5 12 5.5 10.5 6.17 10.5 7M16 10H8V20H16V10Z",
   check: "M12 2C6.5 2 2 6.5 2 12S6.5 22 12 22 22 17.5 22 12 17.5 2 12 2M12 20C7.59 20 4 16.41 4 12S7.59 4 12 4 20 7.59 20 12 16.41 20 12 20M16.59 7.58L10 14.17L7.41 11.59L6 13L10 17L18 9L16.59 7.58Z",
   alert: "M11,15H13V17H11V15M11,7H13V13H11V7M12,2C6.47,2 2,6.5 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20Z",
+  bus: "M18,11H6V6H18M16.5,17A1.5,1.5 0 0,1 15,15.5A1.5,1.5 0 0,1 16.5,14A1.5,1.5 0 0,1 18,15.5A1.5,1.5 0 0,1 16.5,17M7.5,17A1.5,1.5 0 0,1 6,15.5A1.5,1.5 0 0,1 7.5,14A1.5,1.5 0 0,1 9,15.5A1.5,1.5 0 0,1 7.5,17M4,16C4,16.88 4.39,17.67 5,18.22V20A1,1 0 0,0 6,21H7A1,1 0 0,0 8,20V19H16V20A1,1 0 0,0 17,21H18A1,1 0 0,0 19,20V18.22C19.61,17.67 20,16.88 20,16V6C20,2.5 16.42,2 12,2C7.58,2 4,2.5 4,6V16Z",
+  car: "M5,11L6.5,6.5H17.5L19,11M17.5,16A1.5,1.5 0 0,1 16,14.5A1.5,1.5 0 0,1 17.5,13A1.5,1.5 0 0,1 19,14.5A1.5,1.5 0 0,1 17.5,16M6.5,16A1.5,1.5 0 0,1 5,14.5A1.5,1.5 0 0,1 6.5,13A1.5,1.5 0 0,1 8,14.5A1.5,1.5 0 0,1 6.5,16M18.92,6C18.72,5.42 18.16,5 17.5,5H6.5C5.84,5 5.28,5.42 5.08,6L3,12V20A1,1 0 0,0 4,21H5A1,1 0 0,0 6,20V19H18V20A1,1 0 0,0 19,21H20A1,1 0 0,0 21,20V12L18.92,6Z",
+  bike: "M5,20.5A3.5,3.5 0 0,1 1.5,17A3.5,3.5 0 0,1 5,13.5A3.5,3.5 0 0,1 8.5,17A3.5,3.5 0 0,1 5,20.5M5,12A5,5 0 0,0 0,17A5,5 0 0,0 5,22A5,5 0 0,0 10,17A5,5 0 0,0 5,12M14.8,10H19V8.2H15.8L13.86,4.93C13.57,4.43 13,4.1 12.4,4.1C11.93,4.1 11.5,4.29 11.2,4.6L7.5,8.29C7.19,8.6 7,9 7,9.5C7,10.13 7.33,10.66 7.85,10.97L11.2,13V18H13V11.5L10.75,9.85L13.07,7.5M19,20.5A3.5,3.5 0 0,1 15.5,17A3.5,3.5 0 0,1 19,13.5A3.5,3.5 0 0,1 22.5,17A3.5,3.5 0 0,1 19,20.5M19,12A5,5 0 0,0 14,17A5,5 0 0,0 19,22A5,5 0 0,0 24,17A5,5 0 0,0 19,12M16,4.8C17,4.8 17.8,4 17.8,3C17.8,2 17,1.2 16,1.2C15,1.2 14.2,2 14.2,3C14.2,4 15,4.8 16,4.8Z",
+  walk: "M14.12,10H19V8.2H15.38L13.38,4.87C13.08,4.37 12.54,4.03 11.92,4.03C11.74,4.03 11.58,4.06 11.42,4.11L6,5.8V11H7.8V7.33L9.91,6.67L6,22H7.8L10.67,13.89L13,17V22H14.8V15.59L12.31,11.05L13.04,8.18M14,3.8C15,3.8 15.8,3 15.8,2C15.8,1 15,0.2 14,0.2C13,0.2 12.2,1 12.2,2C12.2,3 13,3.8 14,3.8Z",
+  swap: "M21,9L17,5V8H10V10H17V13M7,11L3,15L7,19V16H14V14H7V11Z",
+  phone: "M17,1H7A2,2 0 0,0 5,3V21A2,2 0 0,0 7,23H17A2,2 0 0,0 19,21V3A2,2 0 0,0 17,1M17,19H7V5H17V19M16,13H13V8H11V13H8L12,17L16,13Z",
+  back: "M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z",
+  umbrella: "M12,4C8.9,4 6.18,6.03 5.3,9H18.7C17.82,6.04 15.09,4 12,4M12,2A9,9 0 0,1 21,11H13V19A3,3 0 0,1 10,22A3,3 0 0,1 7,19V18H9V19A1,1 0 0,0 10,20A1,1 0 0,0 11,19V11H3A9,9 0 0,1 12,2Z",
+  work: "M20,6C20.58,6 21.05,6.2 21.42,6.59C21.8,7 22,7.45 22,8V19C22,19.55 21.8,20 21.42,20.41C21.05,20.8 20.58,21 20,21H4C3.42,21 2.95,20.8 2.58,20.41C2.2,20 2,19.55 2,19V8C2,7.45 2.2,7 2.58,6.59C2.95,6.2 3.42,6 4,6H8V4C8,3.42 8.2,2.95 8.58,2.58C8.95,2.2 9.42,2 10,2H14C14.58,2 15.05,2.2 15.42,2.58C15.8,2.95 16,3.42 16,4V6H20M4,8V19H20V8H4M14,6V4H10V6H14Z",
+  route: "M18,15A3,3 0 0,1 21,18A3,3 0 0,1 18,21C16.69,21 15.58,20.17 15.17,19H14V17H15.17C15.58,15.83 16.69,15 18,15M18,17A1,1 0 0,0 17,18A1,1 0 0,0 18,19A1,1 0 0,0 19,18A1,1 0 0,0 18,17M18,8A1.43,1.43 0 0,0 19.43,6.57C19.43,5.78 18.79,5.14 18,5.14C17.21,5.14 16.57,5.78 16.57,6.57A1.43,1.43 0 0,0 18,8M18,2.57A4,4 0 0,1 22,6.57C22,9.56 18,14 18,14C18,14 14,9.56 14,6.57A4,4 0 0,1 18,2.57M8.83,17H10V19H8.83C8.42,20.17 7.31,21 6,21A3,3 0 0,1 3,18C3,16.69 3.83,15.58 5,15.17V14H7V15.17C7.85,15.47 8.53,16.15 8.83,17M6,17A1,1 0 0,0 5,18A1,1 0 0,0 6,19A1,1 0 0,0 7,18A1,1 0 0,0 6,17M6,3A3,3 0 0,1 9,6C9,7.31 8.17,8.42 7,8.83V10H5V8.83C3.83,8.42 3,7.31 3,6A3,3 0 0,1 6,3M6,5A1,1 0 0,0 5,6A1,1 0 0,0 6,7A1,1 0 0,0 7,6A1,1 0 0,0 6,5M11,19V17H13V19H11M7,13H5V11H7V13Z",
+  train: "M12,2C8,2 4,2.5 4,6V15.5A3.5,3.5 0 0,0 7.5,19L6,20.5V21H8.23L10.23,19H14L16,21H18V20.5L16.5,19A3.5,3.5 0 0,0 20,15.5V6C20,2.5 16.42,2 12,2M7.5,17A1.5,1.5 0 0,1 6,15.5A1.5,1.5 0 0,1 7.5,14A1.5,1.5 0 0,1 9,15.5A1.5,1.5 0 0,1 7.5,17M11,10H6V6H11V10M13,10V6H18V10H13M16.5,17A1.5,1.5 0 0,1 15,15.5A1.5,1.5 0 0,1 16.5,14A1.5,1.5 0 0,1 18,15.5A1.5,1.5 0 0,1 16.5,17Z",
+  live: "M4.93,4.93C3.12,6.74 2,9.24 2,12C2,14.76 3.12,17.26 4.93,19.07L6.34,17.66C4.89,16.22 4,14.22 4,12C4,9.79 4.89,7.78 6.34,6.34L4.93,4.93M19.07,4.93L17.66,6.34C19.11,7.78 20,9.79 20,12C20,14.22 19.11,16.22 17.66,17.66L19.07,19.07C20.88,17.26 22,14.76 22,12C22,9.24 20.88,6.74 19.07,4.93M7.76,7.76C6.67,8.85 6,10.35 6,12C6,13.65 6.67,15.15 7.76,16.24L9.17,14.83C8.45,14.11 8,13.11 8,12C8,10.89 8.45,9.89 9.17,9.17L7.76,7.76M16.24,7.76L14.83,9.17C15.55,9.89 16,10.89 16,12C16,13.11 15.55,14.11 14.83,14.83L16.24,16.24C17.33,15.15 18,13.65 18,12C18,10.35 17.33,8.85 16.24,7.76M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10Z",
 };
 const svg = (d, cls = '') => `<svg viewBox="0 0 24 24" class="${cls}"><path d="${d}"/></svg>`;
 
@@ -150,6 +162,9 @@ const DEFAULTS = {
     { name: 'Floodlight', entity: 'light.cabin_cam_light' },
   ],
   camera_refresh: 10,
+  transport_view: 'transport', // swipe right (or tap the commute pill) to open it
+  bus_stop: { entity: 'sensor.tfi_gtfs_stop_1682', walk: 4 },
+  drive_time: 'sensor.drive_to_work',
 };
 
 const BIN_COLOURS = { black: '#2d2d2d', green: '#4f8a4b', brown: '#8a5a3b', blue: '#3c6fb0', grey: '#8d8d8d' };
@@ -167,6 +182,65 @@ function ago(iso) {
   return `${Math.round(s / 86400)}d ago`;
 }
 
+
+const hhmm = (d) => new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+// Switch dashboard view (same dashboard) and remember which way to slide the new view in.
+function goView(view, from) {
+  const dash = location.pathname.split('/').filter(Boolean)[0] || 'lovelace';
+  window.__hpSlide = { from, t: Date.now() };
+  history.pushState(null, '', `/${dash}/${view}`);
+  window.dispatchEvent(new CustomEvent('location-changed'));
+}
+
+function slideIn(wrap) {
+  const s = window.__hpSlide;
+  if (!wrap || !s || Date.now() - s.t > 1500) return;
+  window.__hpSlide = null;
+  wrap.classList.remove('in-left', 'in-right');
+  void wrap.offsetWidth;
+  wrap.classList.add(`in-${s.from}`);
+}
+
+// Horizontal swipe (finger or mouse drag): cb('right') when the finger moves left → right.
+function onSwipe(el, cb) {
+  let s = null;
+  const start = (x, y) => (s = { x, y, t: Date.now() });
+  const end = (x, y) => {
+    if (!s) return;
+    const dx = x - s.x, dy = y - s.y, dt = Date.now() - s.t;
+    s = null;
+    if (Math.abs(dx) > 90 && Math.abs(dx) > 2 * Math.abs(dy) && dt < 900) cb(dx > 0 ? 'right' : 'left');
+  };
+  el.addEventListener('touchstart', (e) => (e.touches.length === 1 ? start(e.touches[0].clientX, e.touches[0].clientY) : (s = null)), { passive: true });
+  el.addEventListener('touchend', (e) => end(e.changedTouches[0].clientX, e.changedTouches[0].clientY), { passive: true });
+  el.addEventListener('mousedown', (e) => start(e.clientX, e.clientY));
+  window.addEventListener('mouseup', (e) => end(e.clientX, e.clientY));
+}
+
+// TFI GTFS stop sensor → upcoming departures. Times are local and carry no offset.
+function departures(st, walk = 0) {
+  const now = Date.now();
+  return (st?.attributes?.arrivals || [])
+    .map((a) => {
+      const at = new Date(a.real_time_arrival || a.scheduled_arrival).getTime();
+      const sched = new Date(a.scheduled_arrival).getTime();
+      const live = !!a.real_time_arrival;
+      const mins = Math.floor((at - now) / 60000);
+      return { ...a, at, live, mins, late: live ? Math.round((at - sched) / 60000) : 0, leave: mins - walk };
+    })
+    .filter((d) => d.mins >= 0)
+    .sort((a, b) => a.at - b.at);
+}
+
+// Travel-time sensors report minutes as the state; attributes vary by integration.
+function minutesOf(v) {
+  if (v == null) return null;
+  if (typeof v === 'number') return v;
+  const m = String(v).match(/(?:(\d+)\s*h\w*)?\s*(\d+(?:\.\d+)?)\s*m/i);
+  if (m) return Number(m[1] || 0) * 60 + Number(m[2]);
+  return isNaN(Number(v)) ? null : Number(v);
+}
 class HomePanelCard extends HTMLElement {
   setConfig(config) {
     this._config = { ...DEFAULTS, ...config };
@@ -197,6 +271,7 @@ class HomePanelCard extends HTMLElement {
     this._tick = setInterval(() => this._schedule(true), 1000);
     this._camTimer = setInterval(() => this._refreshCameras(), (this._config?.camera_refresh || 10) * 1000);
     this._dataTimer = setInterval(() => this._fetchAll(), 15 * 60 * 1000);
+    slideIn(this._wrap);
   }
 
   disconnectedCallback() {
@@ -279,11 +354,14 @@ class HomePanelCard extends HTMLElement {
           </div>
         </main>
         <div class="ring hidden" data-part="ring"></div>
+        ${this._config.transport_view ? `<button class="edge" data-act="transport" title="Transport">${svg(ICON.bus)}</button>` : ''}
       </div>`;
     this._wrap = this._root.querySelector('.wrap');
     this._rendered = {};
     this._buildCameras();
     this._root.addEventListener('click', (e) => this._onClick(e));
+    if (this._config.transport_view) onSwipe(this._wrap, (dir) => dir === 'right' && goView(this._config.transport_view, 'left'));
+    slideIn(this._wrap);
     // fonts live in the document so they work inside the shadow root
     if (!document.getElementById('home-panel-fonts')) {
       const l = document.createElement('link');
@@ -375,10 +453,25 @@ class HomePanelCard extends HTMLElement {
     return `<div class="quote"><p>“${esc(q.replace(/^“|”$/g, ''))}”</p><span>${esc(who)}</span></div>
       <div class="right">
         <div class="avs">${avatars}</div>
+        ${this._commutePill()}
         <button class="pill big ${status.cls}" data-act="${status.act}" data-entity="${status.entity || ''}">${status.html}</button>
         <button class="iconbtn" data-act="theme" title="Day / night">${svg(ICON.contrast)}</button>
         <div class="clock"><b>${time}</b><span>${date}</span></div>
       </div>`;
+  }
+
+  // Next bus (and drive time when there's a sensor) – opens the transport view.
+  _commutePill() {
+    const S = this._hass.states, c = this._config;
+    if (!c.transport_view) return '';
+    const bits = [];
+    const drive = S[c.drive_time];
+    if (!na(drive)) bits.push(`${svg(ICON.car)}${Math.round(minutesOf(drive.state))} min`);
+    const stop = c.bus_stop && S[c.bus_stop.entity];
+    const next = stop && departures(stop, c.bus_stop.walk || 0).find((d) => d.leave >= 0);
+    if (next) bits.push(`${svg(ICON.bus)}${esc(next.route)} · ${next.mins < 1 ? 'due' : `${next.mins} min`}`);
+    if (!bits.length) bits.push(`${svg(ICON.route)}Transport`);
+    return `<button class="pill big commute" data-act="transport">${bits.join('<i class="sep"></i>')}</button>`;
   }
 
   _securityStatus() {
@@ -739,6 +832,9 @@ class HomePanelCard extends HTMLElement {
         h.callService('input_datetime', 'set_datetime', { entity_id: c.bins_done, date: value });
         break;
       }
+      case 'transport':
+        goView(c.transport_view, 'left');
+        break;
       case 'closering':
         this._closeRing();
         break;
@@ -747,6 +843,523 @@ class HomePanelCard extends HTMLElement {
     }
   }
 }
+
+/* ---------------------------------------------------------------------------------------------
+ * transport-panel-card — the commute page: Google Maps journey, live drive time + the usual
+ * morning traffic, bus departures from the stop, and the weather for the trip.
+ *
+ *   type: custom:transport-panel-card     # panel view, swipe left to go back to `home_view`
+ * ------------------------------------------------------------------------------------------- */
+const TRANSPORT_DEFAULTS = {
+  home: 'zone.home',
+  work: 'zone.work', // zone, "lat,lng" or an address
+  work_name: 'Work',
+  weather: 'weather.forecast_home',
+  sun: 'sun.sun',
+  persons: ['person.killian', 'person.sinead'],
+  drive_time: 'sensor.drive_to_work', // travel-time sensor (minutes), optional
+  drive_forecast: null, // a travel-time sensor with a fixed departure time, optional
+  bus_stops: [{ entity: 'sensor.tfi_gtfs_stop_1682', walk: 4 }],
+  commute: ['06:30', '09:30'], // the weekday morning window for the traffic chart + weather
+  history_days: 21,
+  mode: 'driving',
+  maps_api_key: null, // Google Maps Embed API key; without one the classic embed is used
+  notify: [
+    { name: 'Killian', service: 'notify.mobile_app_killian_s_samsung' },
+    { name: 'Sinéad', service: 'notify.mobile_app_sinead_s_iphone' },
+  ],
+  home_view: 'home',
+};
+
+const MODES = [
+  { id: 'driving', name: 'Drive', icon: 'car', flag: 'd' },
+  { id: 'transit', name: 'Bus', icon: 'bus', flag: 'r' },
+  { id: 'bicycling', name: 'Cycle', icon: 'bike', flag: 'b' },
+  { id: 'walking', name: 'Walk', icon: 'walk', flag: 'w' },
+];
+
+const toMin = (hm) => {
+  const [h, m] = hm.split(':').map(Number);
+  return h * 60 + m;
+};
+
+class TransportPanelCard extends HTMLElement {
+  setConfig(config) {
+    this._config = { ...TRANSPORT_DEFAULTS, ...config };
+    let saved = null;
+    try {
+      saved = JSON.parse(localStorage.getItem('transport-panel') || 'null');
+    } catch (e) { /* storage blocked */ }
+    this._mode = saved?.mode || this._config.mode;
+    this._reverse = false;
+    this._rendered = {};
+    if (this._root) this._build();
+  }
+
+  set hass(hass) {
+    const first = !this._hass;
+    this._hass = hass;
+    if (!this._root) {
+      this._root = this.attachShadow({ mode: 'open' });
+      this._build();
+    }
+    if (first) this._fetchAll();
+    this._schedule();
+  }
+
+  get hass() {
+    return this._hass;
+  }
+
+  getCardSize() {
+    return 12;
+  }
+
+  connectedCallback() {
+    this._tick = setInterval(() => this._schedule(true), 1000);
+    this._dataTimer = setInterval(() => this._fetchAll(), 15 * 60 * 1000);
+    // the embedded map has no live feed of its own – reload it so the traffic colours stay fresh
+    this._mapTimer = setInterval(() => this._map(true), 10 * 60 * 1000);
+    slideIn(this._wrap);
+  }
+
+  disconnectedCallback() {
+    clearInterval(this._tick);
+    clearInterval(this._dataTimer);
+    clearInterval(this._mapTimer);
+  }
+
+  async _fetchAll() {
+    const h = this._hass, c = this._config;
+    if (!h) return;
+    try {
+      const r = await h.callService('weather', 'get_forecasts', { type: 'hourly' }, { entity_id: c.weather }, false, true);
+      this._hourly = r?.response?.[c.weather]?.forecast || [];
+    } catch (e) { /* weather provider may not support hourly */ }
+    if (c.drive_time && h.states[c.drive_time] && h.callWS) {
+      try {
+        const end = new Date();
+        const start = new Date(end.getTime() - c.history_days * 86400000);
+        const r = await h.callWS({
+          type: 'history/history_during_period', start_time: start.toISOString(), end_time: end.toISOString(),
+          entity_ids: [c.drive_time], minimal_response: true, no_attributes: true, significant_changes_only: false,
+        });
+        this._typical = this._buildTypical(r?.[c.drive_time] || []);
+      } catch (e) {
+        this._typical = null;
+      }
+    }
+    this._schedule(true);
+  }
+
+  // Average weekday drive time for each 15 minutes of the morning window, from the sensor history.
+  _buildTypical(hist) {
+    const pts = hist
+      .map((p) => ({ t: (p.lu ?? p.lc ?? 0) * 1000 || new Date(p.last_updated || p.last_changed).getTime(), v: Number(p.s ?? p.state) }))
+      .filter((p) => !isNaN(p.v) && p.v > 0)
+      .sort((a, b) => a.t - b.t);
+    const [from, to] = this._config.commute.map(toMin);
+    const slots = [];
+    for (let m = from; m <= to; m += 15) slots.push({ m, sum: 0, n: 0 });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let d = 1; d <= this._config.history_days; d++) {
+      const day = new Date(today.getTime() - d * 86400000);
+      if (day.getDay() === 0 || day.getDay() === 6) continue;
+      for (const s of slots) {
+        const t = day.getTime() + s.m * 60000;
+        let v = null;
+        for (const p of pts) {
+          if (p.t > t) break;
+          if (t - p.t < 2 * 3600000) v = p.v;
+        }
+        if (v != null) {
+          s.sum += v;
+          s.n++;
+        }
+      }
+    }
+    const out = slots.map((s) => ({ m: s.m, v: s.n ? s.sum / s.n : null, n: s.n }));
+    return out.some((s) => s.v != null) ? out : null;
+  }
+
+  _schedule(force) {
+    if (this._pending && !force) return;
+    this._pending = true;
+    requestAnimationFrame(() => {
+      this._pending = false;
+      this._render();
+    });
+  }
+
+  _build() {
+    this._root.innerHTML = `<style>${STYLE}${TRANSPORT_STYLE}</style>
+      <div class="wrap transport">
+        <header class="top" data-part="top"></header>
+        <main class="tgrid">
+          <section class="card mapcard">
+            <div class="hd" data-part="maphd"></div>
+            <div class="map"><iframe title="Map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div>
+          </section>
+          <div class="col">
+            <section class="card" data-part="drive"></section>
+            <section class="card" data-part="bus"></section>
+            <section class="card grow" data-part="trip"></section>
+          </div>
+        </main>
+        <div class="toast" data-part="toast"></div>
+      </div>`;
+    this._wrap = this._root.querySelector('.wrap');
+    this._frame = this._root.querySelector('iframe');
+    this._rendered = {};
+    this._mapUrl = null;
+    this._root.addEventListener('click', (e) => this._onClick(e));
+    onSwipe(this._wrap, (dir) => dir === 'left' && goView(this._config.home_view, 'right'));
+    slideIn(this._wrap);
+  }
+
+  _set(part, html) {
+    if (this._rendered[part] === html) return;
+    this._rendered[part] = html;
+    const el = this._root.querySelector(`[data-part="${part}"]`);
+    if (el) el.innerHTML = html;
+  }
+
+  _render() {
+    const h = this._hass;
+    if (!h || !this._root) return;
+    const sun = h.states[this._config.sun];
+    let theme = null;
+    try {
+      theme = localStorage.getItem('home-panel-theme');
+    } catch (e) { /* ignore */ }
+    this._wrap.classList.toggle('dark', theme ? theme === 'dark' : sun?.state === 'below_horizon');
+    this._set('top', this._top());
+    this._set('maphd', this._mapHead());
+    this._set('drive', this._drive());
+    this._set('bus', this._bus());
+    this._set('trip', this._trip());
+    this._map();
+  }
+
+  /* ---------- places ---------- */
+  _place(ref) {
+    const z = this._hass.states[ref];
+    if (z && z.attributes.latitude != null) return { q: `${z.attributes.latitude},${z.attributes.longitude}`, name: z.attributes.friendly_name };
+    return ref ? { q: ref, name: ref } : null;
+  }
+
+  _route() {
+    const c = this._config;
+    const home = this._place(c.home), work = this._place(c.work);
+    const a = { ...home, name: 'Home' }, b = work ? { ...work, name: c.work_name } : null;
+    return this._reverse ? [b, a] : [a, b];
+  }
+
+  _map(force) {
+    const c = this._config;
+    const [from, to] = this._route();
+    if (!from || !to || !this._frame) return;
+    const mode = MODES.find((m) => m.id === this._mode) || MODES[0];
+    const e = encodeURIComponent;
+    const url = c.maps_api_key
+      ? `https://www.google.com/maps/embed/v1/directions?key=${e(c.maps_api_key)}&origin=${e(from.q)}&destination=${e(to.q)}&mode=${mode.id}&region=ie&language=en-GB`
+      : `https://maps.google.com/maps?saddr=${e(from.q)}&daddr=${e(to.q)}&dirflg=${mode.flag}${mode.id === 'driving' ? '&layer=t' : ''}&hl=en-GB&output=embed`;
+    if (url === this._mapUrl && !force) return;
+    this._mapUrl = url;
+    this._frame.src = url;
+  }
+
+  _mapsLink() {
+    const [from, to] = this._route();
+    const e = encodeURIComponent;
+    return `https://www.google.com/maps/dir/?api=1&origin=${e(from.q)}&destination=${e(to.q)}&travelmode=${this._mode}`;
+  }
+
+  /* ---------- sections ---------- */
+  _top() {
+    const S = this._hass.states, c = this._config;
+    const now = new Date();
+    const people = arr(c.persons).map((p) => {
+      const s = S[p];
+      if (!s) return '';
+      const name = (s.attributes.friendly_name || p).split(' ')[0];
+      const where = s.state === 'home' ? 'Home' : s.state === 'not_home' ? 'Away' : s.state;
+      const pic = s.attributes.entity_picture;
+      return `<button class="who ${s.state === 'home' ? 'home' : ''}" data-act="more" data-entity="${p}">
+        <span class="av ${s.state === 'home' ? 'home' : 'away'}">${pic ? `<img src="${pic}" alt="">` : `<b>${esc(name[0])}</b>`}<i></i></span>
+        <span><b>${esc(name)}</b><small>${esc(where)}</small></span></button>`;
+    }).join('');
+    return `<div class="title">
+        <button class="iconbtn" data-act="home" title="Home">${svg(ICON.back)}</button>
+        <div><h1>Transport</h1><span>${now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}</span></div>
+      </div>
+      <div class="right">
+        <div class="whos">${people}</div>
+        <div class="clock"><b>${hhmm(now)}</b><span>Swipe left for home</span></div>
+      </div>`;
+  }
+
+  _mapHead() {
+    const [from, to] = this._route();
+    if (!to) return `<span class="lbl">${svg(ICON.route)}Journey</span><span class="muted">Set <code>work:</code> to a zone or address</span>`;
+    const modes = MODES.map((m) => `<button class="${m.id === this._mode ? 'on' : ''}" data-act="mode" data-mode="${m.id}">${svg(ICON[m.icon])}${m.name}</button>`).join('');
+    const phones = arr(this._config.notify).filter((n) => this._hass.services?.notify?.[n.service.split('.')[1]] ?? true)
+      .map((n, i) => `<button class="pill btn" data-act="send" data-i="${i}" title="Send directions to ${esc(n.name)}'s phone">${svg(ICON.phone)}${esc(n.name)}</button>`).join('');
+    return `<div class="journey">
+        <span class="lbl">${svg(ICON.route)}Journey</span>
+        <span class="ends"><b>${esc(from.name)}</b><button class="iconbtn sm" data-act="swap" title="Reverse">${svg(ICON.swap)}</button><b>${esc(to.name)}</b></span>
+      </div>
+      <div class="seg modes">${modes}</div>
+      <div class="phones">${phones}</div>`;
+  }
+
+  _driveState() {
+    const S = this._hass.states, c = this._config;
+    const st = S[c.drive_time];
+    if (na(st)) return null;
+    const a = st.attributes;
+    const now = minutesOf(st.state);
+    let free = minutesOf(a.duration_without_traffic ?? a.static_duration ?? (a.duration_in_traffic != null ? a.duration : null));
+    const typical = this._typical?.filter((s) => s.v != null) || [];
+    if (!free && typical.length) free = Math.min(...typical.map((s) => s.v));
+    const ratio = free ? now / free : 1;
+    const level = ratio < 1.15 ? ['Light traffic', 'ok'] : ratio < 1.4 ? ['Moderate traffic', 'warn'] : ['Heavy traffic', 'bad'];
+    return { st, now, free, level, route: a.route, distance: a.distance };
+  }
+
+  _drive() {
+    const S = this._hass.states, c = this._config;
+    const d = this._driveState();
+    const hd = `<div class="hd"><span class="lbl">${svg(ICON.car)}Drive to ${esc(c.work_name)}</span>${d ? `<span class="pill ${d.level[1]}"><i class="d"></i>${d.level[0]}</span>` : ''}</div>`;
+    if (!d) {
+      return `${hd}<div class="empty">${svg(ICON.car)}<div><b>Live traffic is on the map</b>
+        <small>Add a travel-time sensor (<code>${esc(c.drive_time || 'drive_time')}</code>) for drive times and the usual morning pattern.</small></div></div>`;
+    }
+    const arrive = new Date(Date.now() + d.now * 60000);
+    const delay = d.free ? Math.round(d.now - d.free) : 0;
+    const fc = S[c.drive_forecast];
+    const fcHtml = !na(fc) ? `<small class="fc">Forecast ${esc(fc.attributes.friendly_name?.match(/\d{1,2}[:.]\d{2}/)?.[0] || 'later')}: <b>${Math.round(minutesOf(fc.state))} min</b></small>` : '';
+    return `${hd}
+      <button class="drive" data-act="more" data-entity="${c.drive_time}">
+        <div class="big"><b>${Math.round(d.now)}</b><span>min</span></div>
+        <div class="dt">
+          <b>Leave now, arrive ${hhmm(arrive)}</b>
+          <small>${delay > 0 ? `+${delay} min on a clear road` : 'Roads are clear'}${d.distance ? ` · ${esc(num(d.distance, 1))} km` : ''}</small>
+          ${d.route ? `<small>via ${esc(d.route)}</small>` : ''}${fcHtml}
+        </div>
+      </button>
+      ${this._chart(d)}`;
+  }
+
+  // Bar chart of the usual weekday morning, today's live value marked.
+  _chart(d) {
+    const t = this._typical;
+    if (!t) return '<div class="muted small">The usual morning traffic appears here after a few weekdays of history.</div>';
+    const vals = t.filter((s) => s.v != null).map((s) => s.v);
+    const max = Math.max(...vals, d?.now || 0), min = Math.min(...vals);
+    const best = t.reduce((b, s) => (s.v != null && (b == null || s.v < b.v) ? s : b), null);
+    const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+    const bars = t.map((s) => {
+      const hgt = s.v == null ? 4 : 18 + (82 * (s.v - min * 0.8)) / (max - min * 0.8 || 1);
+      const lvl = s.v == null ? '' : s.v / min < 1.15 ? 'ok' : s.v / min < 1.4 ? 'warn' : 'bad';
+      const cur = nowMin >= s.m && nowMin < s.m + 15 ? 'cur' : '';
+      const lab = s.m % 60 === 0 ? `${String(s.m / 60).padStart(2, '0')}:00` : '';
+      return `<div class="b ${lvl} ${cur} ${s === best ? 'best' : ''}" title="${Math.floor(s.m / 60)}:${String(s.m % 60).padStart(2, '0')} · ${s.v == null ? '–' : Math.round(s.v) + ' min'}">
+        <i style="height:${Math.min(100, hgt).toFixed(0)}%"></i><small>${lab}</small></div>`;
+    }).join('');
+    const bt = best ? `${Math.floor(best.m / 60)}:${String(best.m % 60).padStart(2, '0')}` : '';
+    return `<div class="sub">Usual weekday morning${best ? ` · quickest leaving ${bt} (${Math.round(best.v)} min)` : ''}</div><div class="bars">${bars}</div>`;
+  }
+
+  _bus() {
+    const S = this._hass.states, c = this._config;
+    const stops = arr(c.bus_stops).filter((b) => S[b.entity]);
+    if (!stops.length) return `<div class="hd"><span class="lbl">${svg(ICON.bus)}Bus</span></div><div class="muted">No bus stop sensor</div>`;
+    return stops.map((b) => {
+      const st = S[b.entity];
+      const walk = b.walk || 0;
+      const list = departures(st, walk);
+      const next = list.find((x) => x.leave >= 0);
+      let lead = '<div class="leave muted">No more buses listed</div>';
+      if (next) {
+        const cls = next.leave <= 1 ? 'bad' : next.leave <= 5 ? 'warn' : 'ok';
+        lead = `<div class="leave ${cls}"><b>${next.leave <= 1 ? 'Leave now' : `Leave in ${next.leave} min`}</b>
+          <span>for the ${esc(next.route)} at ${hhmm(next.at)}${walk ? ` · ${walk} min walk` : ''}</span></div>`;
+      }
+      const rows = list.slice(0, 4).map((x) => `<div class="dep ${x.leave < 0 ? 'gone' : ''}">
+          <span class="route">${esc(x.route)}</span>
+          <span class="to"><b>${esc(x.headsign)}</b><small>${x.live ? `<i class="livedot"></i>${x.late > 1 ? `${x.late} min late` : x.late < -1 ? `${-x.late} min early` : 'On time'}` : 'Timetable'}</small></span>
+          <span class="due"><b>${x.mins < 1 ? 'Due' : `${x.mins}<small>min</small>`}</b><small>${hhmm(x.at)}</small></span>
+        </div>`).join('');
+      return `<div class="hd"><span class="lbl">${svg(ICON.bus)}${esc(st.attributes.stop_name || 'Bus stop')}</span>
+          <span class="muted">updated ${ago(st.last_updated)}</span></div>${lead}<div class="deps">${rows}</div>`;
+    }).join('');
+  }
+
+  // Weather for the next commute: this morning while it's still on, otherwise the next weekday morning.
+  _trip() {
+    const S = this._hass.states, c = this._config;
+    const w = S[c.weather];
+    const [from, to] = c.commute.map(toMin);
+    const now = new Date();
+    const day = new Date(now);
+    day.setHours(0, 0, 0, 0);
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    if (nowMin > to) day.setDate(day.getDate() + 1);
+    while (day.getDay() === 0 || day.getDay() === 6) day.setDate(day.getDate() + 1);
+    const start = day.getTime() + Math.max(from, day.toDateString() === now.toDateString() ? nowMin - 30 : 0) * 60000;
+    const end = day.getTime() + to * 60000;
+    const hours = (this._hourly || []).filter((f) => {
+      const t = new Date(f.datetime).getTime();
+      return t >= start - 1800000 && t <= end;
+    });
+    const isToday = day.toDateString() === now.toDateString();
+    const tomorrow = new Date(now.getTime() + 86400000).toDateString() === day.toDateString();
+    const when = isToday ? 'This morning' : tomorrow ? 'Tomorrow morning' : `${day.toLocaleDateString('en-GB', { weekday: 'long' })} morning`;
+    const sun = S[c.sun];
+    const rise = sun?.attributes?.next_rising;
+    const hd = `<div class="hd"><span class="lbl">${svg(ICON.umbrella)}${when}</span>${rise ? `<span class="muted">Sunrise ${hhmm(rise)}</span>` : ''}</div>`;
+    if (!w || !hours.length) {
+      return `${hd}<div class="muted">${w ? 'Hourly forecast not available that far ahead yet.' : 'No weather entity.'}</div>`;
+    }
+    const rainy = (f) => /rain|pour|snow|hail|sleet|lightning/.test(f.condition) || (f.precipitation_probability ?? 0) >= 50;
+    const wet = hours.filter(rainy);
+    const cold = hours.some((f) => f.temperature <= 1);
+    const windy = hours.some((f) => (f.wind_speed ?? 0) >= 40);
+    const tips = [];
+    if (wet.length) tips.push(['bad', `Rain from ${hhmm(wet[0].datetime)} – wet roads, allow 10 min extra`]);
+    if (cold) tips.push(['warn', 'Near freezing – check for ice and frost on the car']);
+    if (windy) tips.push(['warn', 'Strong wind – take care on the M50']);
+    if (!tips.length) tips.push(['ok', 'Dry and settled for the drive']);
+    const strip = hours.slice(0, 6).map((f) => {
+      const [, k] = COND[f.condition] || ['', 'cloudy'];
+      const p = f.precipitation_probability;
+      return `<div class="hr"><small>${hhmm(f.datetime)}</small>${svg(ICON[k] || ICON.cloudy, `wx ${k}`)}<b>${num(f.temperature)}°</b>
+        ${p != null ? `<span class="rain"><i style="height:${Math.max(4, p)}%"></i></span><small>${num(p)}%</small>` : ''}</div>`;
+    }).join('');
+    return `${hd}<div class="hours trip" style="grid-template-columns:repeat(${Math.min(6, hours.length)}, 1fr)">${strip}</div>
+      <div class="tips">${tips.map(([cls, t]) => `<div class="tip ${cls}"><i class="d"></i>${esc(t)}</div>`).join('')}</div>`;
+  }
+
+  _toast(msg) {
+    const el = this._root.querySelector('[data-part="toast"]');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(this._toastT);
+    this._toastT = setTimeout(() => el.classList.remove('show'), 2500);
+  }
+
+  _onClick(e) {
+    const el = e.target.closest('[data-act]');
+    if (!el) return;
+    const h = this._hass, c = this._config;
+    switch (el.dataset.act) {
+      case 'home':
+        goView(c.home_view, 'right');
+        break;
+      case 'more':
+        this.dispatchEvent(new CustomEvent('hass-more-info', { detail: { entityId: el.dataset.entity }, bubbles: true, composed: true }));
+        break;
+      case 'mode':
+        this._mode = el.dataset.mode;
+        try {
+          localStorage.setItem('transport-panel', JSON.stringify({ mode: this._mode }));
+        } catch (err) { /* ignore */ }
+        this._schedule(true);
+        break;
+      case 'swap':
+        this._reverse = !this._reverse;
+        this._schedule(true);
+        break;
+      case 'send': {
+        const n = arr(c.notify)[Number(el.dataset.i)];
+        if (!n) break;
+        const [, to] = this._route();
+        const url = this._mapsLink();
+        const [d, s] = n.service.split('.');
+        h.callService(d, s, {
+          title: `Directions to ${to.name}`,
+          message: `${MODES.find((m) => m.id === this._mode)?.name || 'Route'} – tap to open Google Maps`,
+          data: { clickAction: url, url, actions: [{ action: 'URI', title: 'Open Maps', uri: url }] },
+        }).then(() => this._toast(`Sent to ${n.name}'s phone`), () => this._toast('Could not send'));
+        break;
+      }
+      default:
+        break;
+    }
+  }
+}
+
+const TRANSPORT_STYLE = `
+.title { display:flex; align-items:center; gap:12px; }
+.title h1 { margin:0; font-family:Fraunces, Georgia, serif; font-weight:400; font-size:28px; letter-spacing:-.5px; line-height:1; }
+.title span { font-size:11px; color:var(--muted); }
+.whos { display:flex; gap:8px; }
+.who { display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:999px; padding:3px 12px 3px 3px; }
+.who .av { width:30px; height:30px; margin:0; box-shadow:none; }
+.who b { display:block; font-size:12px; font-weight:600; line-height:1.1; }
+.who small { color:var(--muted); font-size:10.5px; }
+.tgrid { flex:1; min-height:0; display:grid; grid-template-columns:1.55fr 1fr; gap:12px; }
+.mapcard { display:flex; flex-direction:column; padding-bottom:14px; }
+.mapcard .hd { flex-wrap:wrap; }
+.journey { display:flex; align-items:center; gap:12px; }
+.ends { display:flex; align-items:center; gap:8px; font-family:Fraunces, Georgia, serif; font-size:17px; }
+.ends b { font-weight:400; }
+.modes button { display:flex; align-items:center; gap:5px; }
+.modes svg { width:14px; height:14px; }
+.phones { display:flex; gap:6px; }
+.phones .pill { padding:6px 11px; }
+.map { flex:1; min-height:0; border-radius:14px; overflow:hidden; background:var(--chip); }
+.map iframe { width:100%; height:100%; border:0; display:block; }
+.wrap.dark .map iframe { filter:invert(.92) hue-rotate(180deg) saturate(.7) brightness(.95); }
+.empty { display:flex; gap:12px; align-items:center; background:var(--chip); border-radius:14px; padding:12px; }
+.empty > svg { width:28px; height:28px; color:var(--muted); }
+.empty b { display:block; font-weight:600; }
+.empty small, .small { color:var(--muted); font-size:11px; }
+code { font-size:10.5px; background:var(--card); padding:1px 4px; border-radius:4px; }
+.drive { display:flex; align-items:center; gap:14px; width:100%; }
+.big { display:flex; align-items:baseline; gap:4px; }
+.big b { font-family:Fraunces, Georgia, serif; font-weight:400; font-size:54px; line-height:.9; letter-spacing:-2px; }
+.big span { color:var(--muted); font-size:14px; }
+.dt b { display:block; font-weight:600; font-size:13px; }
+.dt small { display:block; color:var(--muted); font-size:11.5px; }
+.dt .fc b { display:inline; }
+.bars { display:flex; align-items:flex-end; gap:3px; height:64px; }
+.bars .b { flex:1; height:100%; display:flex; flex-direction:column; justify-content:flex-end; position:relative; }
+.bars i { display:block; border-radius:4px 4px 2px 2px; background:var(--line); }
+.bars .ok i { background:#9cc39a; } .bars .warn i { background:#e2b06c; } .bars .bad i { background:#d98577; }
+.bars .best i { box-shadow:0 0 0 2px var(--ok); }
+.bars .cur i { outline:2px solid var(--ink); outline-offset:1px; }
+.bars small { position:absolute; bottom:-15px; left:0; font-size:9.5px; color:var(--muted); white-space:nowrap; }
+.card[data-part="drive"] { padding-bottom:22px; }
+.leave { display:flex; align-items:baseline; gap:8px; padding:8px 12px; border-radius:12px; background:var(--chip); margin-bottom:8px; }
+.leave b { font-family:Fraunces, Georgia, serif; font-weight:500; font-size:19px; }
+.leave span { color:var(--muted); font-size:11.5px; }
+.leave.ok b { color:var(--ok); } .leave.warn b { color:var(--warn); } .leave.bad b { color:var(--bad); }
+.deps { display:flex; flex-direction:column; }
+.dep { display:flex; align-items:center; gap:10px; padding:6px 2px; }
+.dep + .dep { border-top:1px solid var(--line); }
+.dep.gone { opacity:.45; }
+.route { min-width:38px; height:26px; padding:0 6px; border-radius:7px; background:#f2c200; color:#1c1c1c; font-weight:700; display:flex; align-items:center; justify-content:center; font-size:13px; }
+.to { flex:1; min-width:0; }
+.to b { display:block; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.to small { color:var(--muted); font-size:11px; display:flex; align-items:center; gap:5px; }
+.livedot { width:7px; height:7px; border-radius:50%; background:var(--ok); animation:pulse 1.6s infinite; font-style:normal; }
+@keyframes pulse { 50% { box-shadow:0 0 0 4px rgba(79,138,75,.2); } }
+.due { text-align:right; }
+.due b { display:block; font-family:Fraunces, Georgia, serif; font-weight:500; font-size:20px; line-height:1; }
+.due b small { font-family:Inter, sans-serif; font-size:10px; color:var(--muted); margin-left:2px; }
+.due > small { color:var(--muted); font-size:10.5px; }
+.hours.trip .rain { display:flex; align-items:flex-end; width:6px; height:22px; margin:4px auto 0; background:var(--chip); border-radius:3px; overflow:hidden; }
+.hours.trip .rain i { display:block; width:100%; background:#5f86b1; }
+.tips { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+.tip { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:500; background:var(--chip); border-radius:10px; padding:7px 10px; }
+.tip .d { width:7px; height:7px; border-radius:50%; flex:none; }
+.tip.ok .d { background:var(--ok); } .tip.warn .d { background:var(--warn); } .tip.bad .d { background:var(--bad); }
+.toast { position:absolute; left:50%; bottom:22px; transform:translate(-50%, 20px); background:var(--ink); color:var(--bg); padding:9px 16px; border-radius:999px; font-weight:600; opacity:0; transition:all .25s; pointer-events:none; }
+.toast.show { opacity:1; transform:translate(-50%, 0); }
+`;
 
 const STYLE = `
 :host { display:block; height:100%; }
@@ -928,7 +1541,13 @@ svg { width:16px; height:16px; fill:currentColor; flex:none; }
 .ring.hidden { display:none; }
 .ringbox { width:min(860px, 88%); background:var(--card); border-radius:22px; padding:16px; }
 .ringbox img { width:100%; border-radius:14px; display:block; background:#000; }
-.wrap { position:relative; }
+.wrap { position:relative; touch-action:pan-y; }
+.wrap.in-left { animation:inL .35s ease-out; } .wrap.in-right { animation:inR .35s ease-out; }
+@keyframes inL { from { transform:translateX(-60px); opacity:.2; } } @keyframes inR { from { transform:translateX(60px); opacity:.2; } }
+.commute { color:var(--ink); gap:7px; }
+.commute .sep { width:1px; height:12px; background:var(--line); margin:0 2px; }
+.edge { position:absolute; left:0; top:50%; transform:translateY(-50%); width:14px; height:64px; border-radius:0 10px 10px 0; background:var(--card); border:1px solid var(--line); border-left:0; display:flex; align-items:center; justify-content:center; color:var(--muted); opacity:.8; z-index:2; }
+.edge svg { width:11px; height:11px; }
 `;
 
 if (!customElements.get('home-panel-card')) {
@@ -936,4 +1555,9 @@ if (!customElements.get('home-panel-card')) {
   window.customCards = window.customCards || [];
   window.customCards.push({ type: 'home-panel-card', name: 'Home panel', description: 'One-screen wall tablet home page.' });
   console.info(`%c HOME-PANEL-CARD %c ${VERSION} `, 'background:#9a7a52;color:#fff;font-weight:700', 'background:#222;color:#fff');
+}
+
+if (!customElements.get('transport-panel-card')) {
+  customElements.define('transport-panel-card', TransportPanelCard);
+  window.customCards.push({ type: 'transport-panel-card', name: 'Transport panel', description: 'Commute page: map, drive time, buses, trip weather.' });
 }

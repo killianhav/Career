@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transport Panel Demo</title>
+  <style>html, body { margin: 0; height: 100%; background: #111; } transport-panel-card { display: block; height: 100vh; --hp-height: 100vh; }</style>
+</head>
+<body>
+  <transport-panel-card></transport-panel-card>
+  <script type="module">
+    const params = new URLSearchParams(location.search);
+    const S = {};
+    const add = (id, state, attributes = {}) =>
+      (S[id] = { entity_id: id, state, attributes: { friendly_name: id.split('.')[1].replace(/_/g, ' '), ...attributes }, last_changed: new Date(Date.now() - 3600e3).toISOString(), last_updated: new Date(Date.now() - 50e3).toISOString() });
+    const local = (ms) => { const d = new Date(ms); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19); };
+    const night = params.get('night') === '1';
+    add('sun.sun', night ? 'below_horizon' : 'above_horizon', { next_rising: new Date(Date.now() + 14 * 3600e3).toISOString() });
+    add('zone.home', 'zoning', { latitude: 53.3740574, longitude: -6.3819305, friendly_name: 'Home' });
+    add('zone.work', '0', { latitude: 53.27056, longitude: -6.19594, friendly_name: 'Work' });
+    add('person.killian', 'home', { friendly_name: 'Killian' });
+    add('person.sinead', params.get('sinead') || 'Work', { friendly_name: 'Sinéad' });
+    add('weather.forecast_home', 'cloudy', { temperature: 9 });
+    const now = Date.now();
+    add('sensor.tfi_gtfs_stop_1682', 'OK', {
+      stop_name: 'Oaktree Green',
+      arrivals: [
+        { agency: 'Dublin Bus', headsign: 'Wilton Terrace', route: '37', real_time_arrival: local(now + 3.5 * 60e3), scheduled_arrival: local(now + 2 * 60e3) },
+        { agency: 'Dublin Bus', headsign: 'Wilton Terrace', route: '37', real_time_arrival: local(now + 11.5 * 60e3), scheduled_arrival: local(now + 11.5 * 60e3) },
+        { agency: 'Dublin Bus', headsign: 'Wilton Terrace', route: '37', real_time_arrival: null, scheduled_arrival: local(now + 41.5 * 60e3) },
+      ],
+    });
+    if (params.get('drive') !== '0') add('sensor.drive_to_work', params.get('mins') || '38', { duration: 26, distance: 21.4, route: 'M50 S; N11' });
+    const hourly = Array.from({ length: 30 }, (_, i) => {
+      const t = new Date(now); t.setMinutes(0, 0, 0); t.setHours(t.getHours() + i);
+      const h = t.getHours();
+      return { datetime: t.toISOString(), temperature: 6 + (h > 9 && h < 17 ? 4 : 0), condition: h >= 8 && h <= 9 ? 'rainy' : 'cloudy', precipitation_probability: h >= 7 && h <= 9 ? 40 + (h - 7) * 25 : 10, wind_speed: 18 };
+    });
+    // three weeks of weekday history: peak around 08:15
+    const hist = [];
+    for (let d = 21; d >= 1; d--) {
+      for (let m = 6 * 60; m <= 10 * 60; m += 10) {
+        const t = new Date(now); t.setHours(0, 0, 0, 0); t.setDate(t.getDate() - d); t.setMinutes(m);
+        const peak = Math.exp(-(((m - 495) / 45) ** 2));
+        hist.push({ s: String(Math.round(25 + 22 * peak + Math.random() * 4)), lu: t.getTime() / 1000 });
+      }
+    }
+    const card = document.querySelector('transport-panel-card');
+    const services = { notify: { mobile_app_killian_s_samsung: {}, mobile_app_sinead_s_iphone: {} } };
+    const hass = () => ({
+      states: { ...S }, services,
+      callService: async (d, s, data) => {
+        if (s === 'get_forecasts') return { response: { 'weather.forecast_home': { forecast: hourly } } };
+        console.log('service', d, s, JSON.stringify(data));
+      },
+      callWS: async () => ({ 'sensor.drive_to_work': hist }),
+    });
+    await import('./home-panel-card.js');
+    card.setConfig({});
+    card.hass = hass();
+  </script>
+</body>
+</html>

@@ -19,6 +19,8 @@ dark palette after sunset (tap the half-moon button to override).
 - **Cameras** – doorbell, cabin and vacuum map snapshots (refresh every 10 s, tap for live view).
 - **Garden & cabin** – cabin and shed door contacts, cabin lights.
 - **Doorbell** – when it rings, a live camera overlay opens for two minutes.
+- **Commute pill** (top bar) – drive time to work and the next bus; tap it, the bus tab on the left
+  edge, or **swipe left → right** anywhere to open the Transport view.
 
 ## Install
 
@@ -31,3 +33,27 @@ type: custom:home-panel-card
 
 Every entity is overridable in the card config (see `DEFAULTS` at the top of the file). Fonts
 (Fraunces, Inter) load from Google Fonts. `demo.html` renders it with simulated states.
+
+## Transport view
+
+`transport-panel-card` (same file) is the commute page. Put it in a second panel view with path
+`transport`; swipe right → left (or the ‹ button) to go back to `home_view`.
+
+```yaml
+type: custom:transport-panel-card
+```
+
+- **Journey** – Google Maps directions Home → Work (`zone.home` → `zone.work`) with the live traffic
+  layer. Switch Drive / Bus / Cycle / Walk, reverse the trip, or send the route to a phone
+  (`notify.mobile_app_*`, tap the notification to open Google Maps). Set `maps_api_key` to use
+  the Maps Embed API instead of the classic embed.
+- **Drive to work** – a travel-time sensor (`drive_time`, minutes): time now, arrival time, traffic
+  level against the free-flow time, and a bar chart of the usual weekday morning (06:30–09:30,
+  averaged from the sensor's last 3 weeks of history) with the quickest time to leave.
+  `drive_forecast` can point at a second sensor with a fixed departure time.
+- **Bus** – departures from the TFI GTFS stop sensor(s) in `bus_stops` (live / late / timetable),
+  and *Leave in x min* allowing for the `walk` to the stop.
+- **This / tomorrow morning** – hourly weather across the next weekday commute with rain chance,
+  plus warnings for rain, frost and strong wind.
+
+`transport-demo.html` renders it with simulated states.

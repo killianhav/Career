@@ -56,6 +56,10 @@
     add('camera.l40s_pro_ultra_map', 'idle', { access_token: 'demo', rooms: { 2: {}, 3: {}, 4: {}, 5: {}, 6: {} } });
     add('camera.doorbell_fluent', 'idle', { access_token: 'demo' });
     add('camera.cabin_cam_live_view', 'idle', { access_token: 'demo' });
+    const local = (ms) => { const d = new Date(ms); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19); };
+    add('sensor.tfi_gtfs_stop_1682', 'OK', { stop_name: 'Oaktree Green', arrivals: [
+      { headsign: 'Wilton Terrace', route: '37', real_time_arrival: local(Date.now() + 12.5 * 60e3), scheduled_arrival: local(Date.now() + 12 * 60e3) }] });
+    add('sensor.drive_to_work', '34', { duration: 26 });
     for (const id of (params.get('on') || '').split(',').filter(Boolean)) S[id].state = 'on';
 
     const hourly = Array.from({ length: 10 }, (_, i) => ({
