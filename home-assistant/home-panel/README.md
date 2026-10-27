@@ -18,7 +18,11 @@ dark palette after sunset (tap the half-moon button to override).
 - **Lights & blinds** – tap to toggle, *All off* for the whole house.
 - **Cameras** – doorbell, cabin and vacuum map snapshots (refresh every 10 s, tap for live view).
 - **Garden & cabin** – cabin and shed door contacts, cabin lights.
-- **Doorbell** – when it rings, a live camera overlay opens for two minutes.
+- **Camera pop-ups** – a doorbell press, or motion at the cabin, opens a full-screen live feed (HA's
+  own player, so WebRTC / HLS) for 30 seconds, on both the home and transport views. *+30 s* keeps
+  it open, × closes it; the doorbell takes over from a cabin pop-up but not the other way round.
+  Configure with `alerts:` (`trigger`, `camera`, `title`, `seconds`, `aspect`, `priority`).
+- **Cameras** tiles grey out and say *Offline* when a camera drops off.
 - **Commute pill** (top bar) – drive time to work and the next bus; tap it, the bus tab on the left
   edge, or **swipe left → right** anywhere to open the Transport view.
 

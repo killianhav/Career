@@ -107,6 +107,12 @@ const COND = {
   'snowy-rainy': ['Sleet', 'sleet'], sunny: ['Sunny', 'sunny'], windy: ['Windy', 'windy'], 'windy-variant': ['Windy', 'windy'],
 };
 
+// Full-screen live camera pop-ups (doorbell press, cabin motion).
+const DEFAULT_ALERTS = [
+  { trigger: 'binary_sensor.doorbell_visitor', camera: 'camera.doorbell_fluent', title: 'Someone’s at the front door', icon: 'doorbell', seconds: 30, aspect: '4:3', priority: 2 },
+  { trigger: 'binary_sensor.cabin_cam_motion', camera: 'camera.cabin_cam_live_view', fallback: 'camera.cabin_cam_snapshot', title: 'Motion at the cabin', icon: 'cctv', seconds: 30, aspect: '16:9', priority: 1 },
+];
+
 const DEFAULTS = {
   persons: ['person.killian', 'person.sinead'],
   weather: 'weather.forecast_home',
@@ -125,8 +131,7 @@ const DEFAULTS = {
   climate: 'climate.kitchen_kitchen_thermostat',
   bedroom_temp: 'sensor.temp_sensor_temperature',
   bedroom_humidity: 'sensor.temp_sensor_humidity',
-  doorbell: 'binary_sensor.doorbell_visitor',
-  doorbell_camera: 'camera.doorbell_fluent',
+  alerts: DEFAULT_ALERTS, // full-screen live camera pop-ups
   cameras: [
     { entity: 'camera.doorbell_fluent', name: 'Front door', motion: ['binary_sensor.doorbell_person', 'binary_sensor.doorbell_motion'] },
     // tile shows ring-mqtt's 30 s snapshots; tapping opens the Ring live view
@@ -242,6 +247,112 @@ function minutesOf(v) {
   if (m) return Number(m[1] || 0) * 60 + Number(m[2]);
   return isNaN(Number(v)) ? null : Number(v);
 }
+
+// Shared by both panel cards.
+class CameraAlerts {
+  constructor(host) {
+    this.host = host; // the card's .wrap
+    this.open = null;
+    // which trigger changes have already been shown, across both cards, so switching view doesn't re-open one
+    window.__hpAlertSeen = window.__hpAlertSeen || {};
+  }
+
+  update(hass, alerts) {
+    this.hass = hass;
+    if (this.card) this.card.hass = hass;
+    for (const a of arr(alerts)) {
+      const st = hass.states[a.trigger];
+      if (st?.state !== 'on' || window.__hpAlertSeen[a.trigger] === st.last_changed) continue;
+      // only fresh events – not one that was already on when the page loaded a while later
+      if (Date.now() - new Date(st.last_changed) > 60000) continue;
+      if (this.open && (this.open.priority || 0) > (a.priority || 0)) continue;
+      window.__hpAlertSeen[a.trigger] = st.last_changed;
+      this.show(a, st.last_changed);
+    }
+    if (this.open) this._tickLabel();
+  }
+
+  async show(a, since) {
+    this.close();
+    this.open = { ...a, until: Date.now() + (a.seconds || 30) * 1000, since };
+    const el = document.createElement('div');
+    el.className = 'alert';
+    const [w, hgt] = String(a.aspect || '16:9').split(':').map(Number);
+    el.style.setProperty('--ar', `${w} / ${hgt}`);
+    el.innerHTML = `<div class="abar">
+        <span class="atitle">${svg(ICON[a.icon] || ICON.cctv)}<b>${esc(a.title)}</b><small>${hhmm(since)}</small></span>
+        <span class="abtns"><span class="acount" data-acount></span>
+          <button class="pill big" data-alert="more">+30 s</button>
+          <button class="iconbtn" data-alert="close" title="Close">${svg(ICON.close)}</button></span>
+      </div><div class="avid" data-avid></div>`;
+    el.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-alert]');
+      if (!b) return;
+      e.stopPropagation();
+      if (b.dataset.alert === 'close') this.close();
+      else this.open.until += 30000;
+    });
+    this.host.appendChild(el);
+    this.el = el;
+    clearInterval(this.timer);
+    this.timer = setInterval(() => this._tickLabel(), 500);
+    this._tickLabel();
+    await this._video(el.querySelector('[data-avid]'), a);
+  }
+
+  // HA's own picture-entity card in live mode plays HLS / WebRTC streams (Reolink, Ring); outside HA fall back to MJPEG.
+  async _video(box, a) {
+    const token = (id) => this.hass.states[id]?.attributes?.access_token;
+    try {
+      const helpers = await window.loadCardHelpers?.();
+      if (!helpers || !this.el?.contains(box)) throw new Error('no helpers');
+      const card = helpers.createCardElement({ type: 'picture-entity', entity: a.camera, camera_view: 'live', show_name: false, show_state: false, aspect_ratio: a.aspect, tap_action: { action: 'none' } });
+      card.hass = this.hass;
+      this.card = card;
+      box.appendChild(card);
+    } catch (e) {
+      const cam = a.fallback || a.camera;
+      box.innerHTML = `<img alt="" src="/api/camera_proxy_stream/${cam}?token=${token(cam)}">`;
+    }
+  }
+
+  _tickLabel() {
+    if (!this.open || !this.el) return;
+    const left = Math.ceil((this.open.until - Date.now()) / 1000);
+    if (left <= 0) return this.close();
+    const c = this.el.querySelector('[data-acount]');
+    const t = `Closes in ${left}s`;
+    if (c && c.textContent !== t) c.textContent = t;
+  }
+
+  close() {
+    clearInterval(this.timer);
+    this.el?.remove();
+    this.el = null;
+    this.card = null;
+    this.open = null;
+  }
+}
+
+const ALERT_STYLE = `
+.alert { position:fixed; inset:0; z-index:20; background:#000; display:flex; flex-direction:column; color:#fff; animation:afade .25s ease-out; }
+@keyframes afade { from { opacity:0; } }
+.abar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 18px; background:linear-gradient(#000, #0d0b09); }
+.atitle { display:flex; align-items:center; gap:10px; }
+.atitle svg { width:24px; height:24px; color:#ff6a5a; animation:apulse 1.2s infinite; }
+@keyframes apulse { 50% { opacity:.35; } }
+.atitle b { font-family:Fraunces, Georgia, serif; font-weight:400; font-size:24px; }
+.atitle small { color:#a99f92; font-size:13px; }
+.abtns { display:flex; align-items:center; gap:10px; }
+.acount { color:#a99f92; font-size:12px; font-variant-numeric:tabular-nums; min-width:84px; text-align:right; }
+.alert .pill.big { background:#26221d; border-color:#3a342c; color:#fff; }
+.alert .iconbtn { width:44px; height:44px; background:#26221d; border-color:#3a342c; color:#fff; }
+.alert .iconbtn svg { width:22px; height:22px; }
+.avid { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
+.avid > * { width:min(100%, calc((100vh - 70px) * var(--ar))); max-height:100%; }
+.avid img { display:block; aspect-ratio:var(--ar); object-fit:contain; background:#111; }
+.avid hui-picture-entity-card { display:block; --ha-card-border-radius:0; --ha-card-border-width:0; }
+`;
 class HomePanelCard extends HTMLElement {
   setConfig(config) {
     this._config = { ...DEFAULTS, ...config };
@@ -332,7 +443,7 @@ class HomePanelCard extends HTMLElement {
   }
 
   _build() {
-    this._root.innerHTML = `<style>${STYLE}</style>
+    this._root.innerHTML = `<style>${STYLE}${ALERT_STYLE}</style>
       <div class="wrap">
         <header class="top" data-part="top"></header>
         <main class="grid">
@@ -354,10 +465,11 @@ class HomePanelCard extends HTMLElement {
             <section class="card grow" data-part="cabin"></section>
           </div>
         </main>
-        <div class="ring hidden" data-part="ring"></div>
         ${this._config.transport_view ? `<button class="edge" data-act="transport" title="Transport">${svg(ICON.bus)}</button>` : ''}
       </div>`;
     this._wrap = this._root.querySelector('.wrap');
+    this._alerts?.close();
+    this._alerts = new CameraAlerts(this._wrap);
     this._rendered = {};
     this._buildCameras();
     this._root.addEventListener('click', (e) => this._onClick(e));
@@ -425,7 +537,7 @@ class HomePanelCard extends HTMLElement {
     this._set('lights', this._lights());
     this._set('cabin', this._cabin());
     this._cameraStatus();
-    this._doorbell();
+    this._alerts.update(h, this._config.alerts);
   }
 
   _applyTheme() {
@@ -750,31 +862,6 @@ class HomePanelCard extends HTMLElement {
     if (pill) pill.className = cls;
   }
 
-  _doorbell() {
-    const S = this._hass.states, c = this._config;
-    const ring = this._root.querySelector('[data-part="ring"]');
-    const bell = S[c.doorbell];
-    // open once per ring (a new last_changed), so closing it doesn't immediately reopen it
-    if (bell?.state === 'on' && bell.last_changed !== this._ringKey) {
-      this._ringKey = bell.last_changed;
-      this._ringOpen = true;
-      const tok = S[c.doorbell_camera]?.attributes?.access_token;
-      ring.innerHTML = `<div class="ringbox"><div class="hd"><span class="lbl">${svg(ICON.doorbell)}Someone’s at the front door</span>
-        <button class="iconbtn" data-act="closering">${svg(ICON.close)}</button></div>
-        <img src="/api/camera_proxy_stream/${c.doorbell_camera}?token=${tok}" alt=""></div>`;
-      ring.classList.remove('hidden');
-      clearTimeout(this._ringTimer);
-      this._ringTimer = setTimeout(() => this._closeRing(), 120000);
-    }
-  }
-
-  _closeRing() {
-    const ring = this._root.querySelector('[data-part="ring"]');
-    ring.classList.add('hidden');
-    ring.innerHTML = '';
-    this._ringOpen = false;
-  }
-
   /* ---------- interaction ---------- */
   _onClick(e) {
     const el = e.target.closest('[data-act]');
@@ -848,9 +935,6 @@ class HomePanelCard extends HTMLElement {
       case 'transport':
         goView(c.transport_view, 'left');
         break;
-      case 'closering':
-        this._closeRing();
-        break;
       default:
         break;
     }
@@ -882,6 +966,7 @@ const TRANSPORT_DEFAULTS = {
     { name: 'Sinéad', service: 'notify.mobile_app_sinead_s_iphone' },
   ],
   home_view: 'home',
+  alerts: DEFAULT_ALERTS,
 };
 
 const MODES = [
@@ -1006,7 +1091,7 @@ class TransportPanelCard extends HTMLElement {
   }
 
   _build() {
-    this._root.innerHTML = `<style>${STYLE}${TRANSPORT_STYLE}</style>
+    this._root.innerHTML = `<style>${STYLE}${TRANSPORT_STYLE}${ALERT_STYLE}</style>
       <div class="wrap transport">
         <header class="top" data-part="top"></header>
         <main class="tgrid">
@@ -1023,6 +1108,8 @@ class TransportPanelCard extends HTMLElement {
         <div class="toast" data-part="toast"></div>
       </div>`;
     this._wrap = this._root.querySelector('.wrap');
+    this._alerts?.close();
+    this._alerts = new CameraAlerts(this._wrap);
     this._frame = this._root.querySelector('iframe');
     this._rendered = {};
     this._mapUrl = null;
@@ -1053,6 +1140,7 @@ class TransportPanelCard extends HTMLElement {
     this._set('bus', this._bus());
     this._set('trip', this._trip());
     this._map();
+    this._alerts.update(h, this._config.alerts);
   }
 
   /* ---------- places ---------- */
@@ -1558,10 +1646,6 @@ svg { width:16px; height:16px; fill:currentColor; flex:none; }
 .mini { display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 4px; border-radius:12px; background:var(--chip); font-size:10.5px; font-weight:600; text-align:center; }
 .mini.on { background:var(--on); color:var(--onink); }
 
-.ring { position:absolute; inset:0; background:rgba(10,8,6,.55); display:flex; align-items:center; justify-content:center; z-index:5; }
-.ring.hidden { display:none; }
-.ringbox { width:min(860px, 88%); background:var(--card); border-radius:22px; padding:16px; }
-.ringbox img { width:100%; border-radius:14px; display:block; background:#000; }
 .wrap { position:relative; touch-action:pan-y; }
 .wrap.in-left { animation:inL .35s ease-out; } .wrap.in-right { animation:inR .35s ease-out; }
 @keyframes inL { from { transform:translateX(-60px); opacity:.2; } } @keyframes inR { from { transform:translateX(60px); opacity:.2; } }
