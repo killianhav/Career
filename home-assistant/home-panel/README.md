@@ -21,7 +21,8 @@ dark palette after sunset (tap the half-moon button to override).
 - **Camera pop-ups** – a doorbell press, or motion at the cabin, opens a full-screen live feed (HA's
   own player, so WebRTC / HLS) for 30 seconds, on both the home and transport views. *+30 s* keeps
   it open, × closes it; the doorbell takes over from a cabin pop-up but not the other way round.
-  Configure with `alerts:` (`trigger`, `camera`, `title`, `seconds`, `aspect`, `priority`).
+  Configure with `alerts:` (`trigger`, `camera`, `title`, `seconds`, `aspect`, `priority`, and
+  `require`: an attribute that must be `true`, used for Ring's `personDetected` on the cabin).
 - **Cameras** tiles grey out and say *Offline* when a camera drops off.
 - **Commute pill** (top bar) – drive time to work and the next bus; tap it, the bus tab on the left
   edge, or **swipe left → right** anywhere to open the Transport view.

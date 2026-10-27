@@ -110,7 +110,7 @@ const COND = {
 // Full-screen live camera pop-ups (doorbell press, cabin motion).
 const DEFAULT_ALERTS = [
   { trigger: 'binary_sensor.doorbell_visitor', camera: 'camera.doorbell_fluent', title: 'Someone’s at the front door', icon: 'doorbell', seconds: 30, aspect: '4:3', priority: 2 },
-  { trigger: 'binary_sensor.cabin_cam_motion', camera: 'camera.cabin_cam_live_view', fallback: 'camera.cabin_cam_snapshot', title: 'Motion at the cabin', icon: 'cctv', seconds: 30, aspect: '16:9', priority: 1 },
+  { trigger: 'binary_sensor.cabin_cam_motion', camera: 'camera.cabin_cam_live_view', fallback: 'camera.cabin_cam_snapshot', require: 'personDetected', title: 'Someone at the cabin', icon: 'cctv', seconds: 30, aspect: '16:9', priority: 1 },
 ];
 
 const DEFAULTS = {
@@ -263,6 +263,8 @@ class CameraAlerts {
     for (const a of arr(alerts)) {
       const st = hass.states[a.trigger];
       if (st?.state !== 'on' || window.__hpAlertSeen[a.trigger] === st.last_changed) continue;
+      // e.g. ring-mqtt's personDetected, so bushes blowing in the wind don't open it
+      if (a.require && st.attributes[a.require] !== true) continue;
       // only fresh events – not one that was already on when the page loaded a while later
       if (Date.now() - new Date(st.last_changed) > 60000) continue;
       if (this.open && (this.open.priority || 0) > (a.priority || 0)) continue;
