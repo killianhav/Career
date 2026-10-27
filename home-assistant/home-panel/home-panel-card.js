@@ -129,7 +129,8 @@ const DEFAULTS = {
   doorbell_camera: 'camera.doorbell_fluent',
   cameras: [
     { entity: 'camera.doorbell_fluent', name: 'Front door', motion: ['binary_sensor.doorbell_person', 'binary_sensor.doorbell_motion'] },
-    { entity: 'camera.cabin_cam_live_view', name: 'Cabin', motion: ['binary_sensor.cabin_cam_motion'] },
+    // tile shows ring-mqtt's 30 s snapshots; tapping opens the Ring live view
+    { entity: 'camera.cabin_cam_snapshot', live: 'camera.cabin_cam_live_view', name: 'Cabin', motion: ['binary_sensor.cabin_cam_motion'] },
     { entity: 'camera.l40s_pro_ultra_map', name: 'Vacuum map' },
   ],
   contacts: [
@@ -375,8 +376,8 @@ class HomePanelCard extends HTMLElement {
   _buildCameras() {
     const box = this._root.querySelector('[data-cams]');
     box.innerHTML = this._config.cameras
-      .map((c, i) => `<button class="cam ${i === 0 ? 'wide' : ''}" data-act="more" data-entity="${c.entity}">
-        <img alt="" data-cam="${c.entity}"><span class="cap">${esc(c.name)}</span><span class="dot" data-cam-dot="${i}"></span></button>`)
+      .map((c, i) => `<button class="cam ${i === 0 ? 'wide' : ''}" data-act="more" data-entity="${c.live || c.entity}">
+        <img alt="" data-cam="${c.entity}"><span class="cap" data-cam-cap="${i}">${esc(c.name)}</span><span class="dot" data-cam-dot="${i}"></span></button>`)
       .join('');
     this._refreshCameras();
   }
@@ -390,7 +391,11 @@ class HomePanelCard extends HTMLElement {
       if (!token) return;
       const url = `/api/camera_proxy/${img.dataset.cam}?token=${token}&t=${Date.now()}`;
       const pre = new Image();
-      pre.onload = () => (img.src = url);
+      pre.onload = () => {
+        img.src = url;
+        img.dataset.failed = '';
+      };
+      pre.onerror = () => (img.dataset.failed = '1');
       pre.src = url;
     });
   }
@@ -716,6 +721,14 @@ class HomePanelCard extends HTMLElement {
       const active = arr(cam.motion).some((m) => S[m]?.state === 'on');
       const dot = this._root.querySelector(`[data-cam-dot="${i}"]`);
       if (dot) dot.classList.toggle('live', active);
+      // say so when the camera has dropped off rather than showing a blank or frozen tile
+      const st = S[cam.entity];
+      const img = this._root.querySelector(`img[data-cam="${cam.entity}"]`);
+      const off = !st || st.state === 'unavailable' || img?.dataset.failed === '1';
+      const cap = this._root.querySelector(`[data-cam-cap="${i}"]`);
+      const text = off ? `${cam.name} · Offline` : cam.name;
+      if (cap && cap.textContent !== text) cap.textContent = text;
+      cap?.closest('.cam').classList.toggle('off', off);
       arr(cam.motion).forEach((m) => {
         const s = S[m];
         if (s && (!latest || s.last_changed > latest.s.last_changed)) latest = { s, cam };
@@ -1530,6 +1543,8 @@ svg { width:16px; height:16px; fill:currentColor; flex:none; }
 .cam img { width:100%; height:100%; object-fit:cover; display:block; }
 .cap { position:absolute; left:8px; bottom:7px; font-size:11px; font-weight:600; color:#fff; text-shadow:0 1px 4px rgba(0,0,0,.6); }
 .cam .dot { position:absolute; right:8px; top:8px; width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.5); }
+.cam.off img { filter:grayscale(1) brightness(.45); }
+.cam.off .cap { color:#ffb4a8; }
 .cam .dot.live { background:#ff5a4e; box-shadow:0 0 0 4px rgba(255,90,78,.3); }
 
 .doors { display:flex; flex-direction:column; gap:8px; }
