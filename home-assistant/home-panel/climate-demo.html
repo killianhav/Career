@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Climate Panel Demo</title>
+  <style>html, body { margin: 0; height: 100%; background: #111; } climate-panel-card { display: block; height: 100vh; --hp-height: 100vh; }</style>
+</head>
+<body>
+  <climate-panel-card></climate-panel-card>
+  <script type="module">
+    // ?night=1  ?heating=1  ?boost=1  ?off=1
+    const params = new URLSearchParams(location.search);
+    const S = {};
+    const add = (id, state, attributes = {}) =>
+      (S[id] = { entity_id: id, state, attributes: { friendly_name: id.split('.')[1].replace(/_/g, ' '), ...attributes }, last_changed: new Date(Date.now() - 3600e3).toISOString() });
+    const heating = params.get('heating') === '1' || params.get('boost') === '1';
+    add('sun.sun', params.get('night') === '1' ? 'below_horizon' : 'above_horizon');
+    add('climate.kitchen_kitchen_thermostat', params.get('off') === '1' ? 'off' : 'heat', {
+      friendly_name: 'Kitchen Thermostat', hvac_modes: ['heat', 'off'], preset_modes: ['none', 'eco'], preset_mode: 'none', min_temp: 10, max_temp: 32,
+      current_temperature: 20.2, temperature: params.get('boost') === '1' ? 21 : heating ? 21.5 : 17.5, current_humidity: 57, hvac_action: heating ? 'heating' : 'idle',
+    });
+    add('sensor.kitchen_kitchen_thermostat_temperature', '20.2', { unit_of_measurement: '°C' });
+    add('sensor.kitchen_kitchen_thermostat_humidity', '57', { unit_of_measurement: '%' });
+    add('sensor.temp_sensor_temperature', '20.5', { unit_of_measurement: '°C' });
+    add('sensor.temp_sensor_humidity', '63', { unit_of_measurement: '%' });
+    add('script.heating_boost', 'off');
+    add('input_number.heating_boost_temperature', '21', { min: 15, max: 25, step: 0.5 });
+    add('input_number.heating_boost_previous_temperature', '17.5');
+    add('input_text.heating_boost_previous_mode', 'heat');
+    add('timer.heating_boost', params.get('boost') === '1' ? 'active' : 'idle', params.get('boost') === '1'
+      ? { duration: '1:00:00', finishes_at: new Date(Date.now() + 38 * 60e3).toISOString(), remaining: '0:38:00' } : { duration: '1:00:00' });
+
+    // 24 h of fake history: house warms in the morning and evening when the heating runs
+    const now = Date.now(), start = now - 24 * 3600e3;
+    const hourOf = (t) => new Date(t).getHours() + new Date(t).getMinutes() / 60;
+    const onAt = (t) => { const h = hourOf(t); return (h >= 6.5 && h < 8.5) || (h >= 17 && h < 21.5); };
+    const series = (base, amp, noise) => {
+      const out = []; let v = base;
+      for (let t = start; t <= now; t += 10 * 60e3) {
+        v += (onAt(t) ? amp : -amp * 0.45) + (Math.random() - 0.5) * noise;
+        v = Math.max(base - 2.5, Math.min(base + 3, v));
+        out.push({ s: v.toFixed(1), lu: t / 1000 });
+      }
+      return out;
+    };
+    const hum = (base) => Array.from({ length: 145 }, (_, i) => ({ s: (base + 6 * Math.sin(i / 14) + (Math.random() - 0.5) * 2).toFixed(0), lu: (start + i * 10 * 60e3) / 1000 }));
+    const clim = [];
+    for (let t = start; t <= now; t += 30 * 60e3) clim.push({ s: 'heat', lu: t / 1000, a: { hvac_action: onAt(t) ? 'heating' : 'idle', temperature: onAt(t) ? 21 : 17.5 } });
+    const callWS = async (msg) => {
+      if (msg.type !== 'history/history_during_period') throw new Error('unsupported');
+      const out = {};
+      for (const id of msg.entity_ids) {
+        if (id.includes('kitchen_kitchen_thermostat_temperature')) out[id] = series(19, 0.12, 0.05);
+        else if (id === 'sensor.temp_sensor_temperature') out[id] = series(19.5, 0.07, 0.06);
+        else if (id.includes('humidity')) out[id] = hum(id.includes('temp_sensor') ? 61 : 55);
+        else if (id.startsWith('climate.')) out[id] = clim;
+      }
+      return out;
+    };
+    const callService = async (domain, service, data) => {
+      console.log('callService', domain, service, JSON.stringify(data));
+      const c = S['climate.kitchen_kitchen_thermostat'];
+      if (domain === 'climate' && service === 'set_temperature') S[c.entity_id] = { ...c, attributes: { ...c.attributes, temperature: data.temperature } };
+      if (domain === 'climate' && service === 'set_hvac_mode') S[c.entity_id] = { ...c, state: data.hvac_mode, attributes: { ...c.attributes, hvac_action: data.hvac_mode === 'off' ? 'off' : 'idle' } };
+      if (domain === 'climate' && service === 'set_preset_mode') S[c.entity_id] = { ...c, attributes: { ...c.attributes, preset_mode: data.preset_mode } };
+      if (domain === 'input_number') S[data.entity_id] = { ...S[data.entity_id], state: String(data.value) };
+      if (domain === 'script') {
+        const v = data.variables;
+        S['timer.heating_boost'] = { ...S['timer.heating_boost'], state: 'active', attributes: { duration: `${Math.floor(v.minutes / 60)}:${String(v.minutes % 60).padStart(2, '0')}:00`, finishes_at: new Date(Date.now() + v.minutes * 60e3).toISOString() } };
+        S[c.entity_id] = { ...S[c.entity_id], attributes: { ...S[c.entity_id].attributes, temperature: v.temperature, hvac_action: 'heating' } };
+      }
+      if (domain === 'timer' && service === 'cancel') S['timer.heating_boost'] = { ...S['timer.heating_boost'], state: 'idle' };
+      push();
+    };
+    const card = document.querySelector('climate-panel-card');
+    const push = () => (card.hass = { states: { ...S }, callService, callWS });
+    await import('./home-panel-card.js');
+    card.setConfig({});
+    push();
+  </script>
+</body>
+</html>

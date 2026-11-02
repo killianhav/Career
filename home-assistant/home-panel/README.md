@@ -14,7 +14,7 @@ dark palette after sunset (tap the half-moon button to override).
   jobs from `todo.home_jobs` with a tick to complete each one, alarm Off/Home/Away, and people
   (hidden while there are jobs, to save space).
 - **Today** – current weather, high/low, sunrise/sunset, humidity/wind/UV, 8-hour forecast.
-- **Climate** – thermostat with − / + and the bedroom sensor.
+- **Climate** – moved to its own Climate view (swipe left, or the thermometer tab on the right edge).
 - **Lights & blinds** – tap to toggle, *All off* for the whole house.
 - **Cameras** – doorbell, cabin and vacuum map snapshots (refresh every 10 s, tap for live view).
 - **Garden & cabin** – cabin and shed door contacts, cabin lights.
@@ -66,3 +66,23 @@ type: custom:transport-panel-card
   plus warnings for rain, frost and strong wind.
 
 `transport-demo.html` renders it with simulated states.
+
+## Climate view
+
+`climate-panel-card` (same file) is the heating page. Put it in a panel view with path `climate`;
+swipe left → right (or the ‹ button) to go back to `home_view`.
+
+```yaml
+type: custom:climate-panel-card
+```
+
+- **Ring dial** – Nest-style tick ring for the thermostat: the set point in the middle, ticks lit
+  between the room temperature and the set point, orange while the boiler is firing. − / + change
+  the set point (sent once you stop tapping, as the Nest API is rate-limited); Heat / Eco / Off.
+- **Boost** – pick a temperature and 30 min / 1 hr / 2 hrs. Runs `script.heating_boost`, which
+  remembers the current set point / mode and starts `timer.heating_boost`; the *Heating boost – End*
+  automation puts it back when the timer finishes or the boost is cancelled.
+- **Rooms** – Kitchen (the thermostat) and Bedroom: temperature, trend over the last hour,
+  humidity with a comfort label, 24 h low / high, and a 24 h graph with time and value axes,
+  humidity on its own scale, and for the thermostat room the set point and when the heating ran.
+  `climate-demo.html` renders it with simulated history.

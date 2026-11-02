@@ -8,7 +8,7 @@
  *   # every entity below is optional and overridable – defaults match this house
  */
 
-const VERSION = '1.2.0';
+const VERSION = '1.3.0';
 const ICON = {
   music: "M21,3V15.5A3.5,3.5 0 0,1 17.5,19A3.5,3.5 0 0,1 14,15.5A3.5,3.5 0 0,1 17.5,12C18.04,12 18.55,12.12 19,12.34V6.47L9,8.6V17.5A3.5,3.5 0 0,1 5.5,21A3.5,3.5 0 0,1 2,17.5A3.5,3.5 0 0,1 5.5,14C6.04,14 6.55,14.12 7,14.34V6L21,3Z",
   play: "M8,5.14V19.14L19,12.14L8,5.14Z",
@@ -241,6 +241,7 @@ const DEFAULTS = {
   ],
   camera_refresh: 10,
   transport_view: 'transport', // swipe right (or tap the commute pill) to open it
+  climate_view: 'climate', // swipe left (or the thermometer tab on the right edge) to open it
   bus_stop: { entity: 'sensor.tfi_gtfs_stop_1682', walk: 4 },
   drive_time: 'sensor.drive_to_work',
   guest_mode: 'input_boolean.guest_mode', // top-bar Guest mode toggle
@@ -526,12 +527,11 @@ class HomePanelCard extends HTMLElement {
         <main class="grid">
           <div class="col">
             <section class="card" data-part="systems"></section>
-            <section class="card" data-part="bins"></section>
             <section class="card grow" data-part="home"></section>
           </div>
           <div class="col">
             <section class="card" data-part="today"></section>
-            <section class="card" data-part="climate"></section>
+            <section class="card" data-part="bins"></section>
             <section class="card grow" data-part="lights"></section>
           </div>
           <div class="col">
@@ -543,6 +543,7 @@ class HomePanelCard extends HTMLElement {
           </div>
         </main>
         ${this._config.transport_view ? `<button class="edge" data-act="transport" title="Transport">${svg(ICON.bus)}</button>` : ''}
+        ${this._config.climate_view ? `<button class="edge r" data-act="climate" title="Climate">${svg(ICON.thermo)}</button>` : ''}
         <div data-part="music"></div>
       </div>`;
     this._wrap = this._root.querySelector('.wrap');
@@ -551,7 +552,10 @@ class HomePanelCard extends HTMLElement {
     this._rendered = {};
     this._buildCameras();
     this._root.addEventListener('click', (e) => this._onClick(e));
-    if (this._config.transport_view) onSwipe(this._wrap, (dir) => dir === 'right' && goView(this._config.transport_view, 'left'));
+    onSwipe(this._wrap, (dir) => {
+      if (dir === 'right' && this._config.transport_view) goView(this._config.transport_view, 'left');
+      if (dir === 'left' && this._config.climate_view) goView(this._config.climate_view, 'right');
+    });
     slideIn(this._wrap);
     // fonts live in the document so they work inside the shadow root
     if (!document.getElementById('home-panel-fonts')) {
@@ -611,7 +615,6 @@ class HomePanelCard extends HTMLElement {
     this._set('bins', this._binsCard());
     this._set('home', this._home());
     this._set('today', this._today());
-    this._set('climate', this._climate());
     this._set('lights', this._lights());
     this._set('cabin', this._cabin());
     if (this._musicOpen && Date.now() - this._musicTouched > 180000) this._musicOpen = false; // wall tablet: drop back to home
@@ -917,8 +920,8 @@ class HomePanelCard extends HTMLElement {
         <span><b>${esc(j.summary)}</b>${j.description ? `<small>${esc(j.description)}</small>` : ''}</span></div>`).join('')}
         ${jobs.length > 3 ? `<button class="more" data-act="nav" data-path="/todo?entity_id=${c.jobs_todo}">+${jobs.length - 3} more</button>` : ''}</div>` : '';
     const jobPill = jobs.length ? `<button class="pill warn" data-act="nav" data-path="/todo?entity_id=${c.jobs_todo}">${svg(ICON.alert)}${jobs.length} job${jobs.length > 1 ? 's' : ''}</button>` : '';
-    // people move to the top bar avatars when there are jobs to make room
-    return `<div class="hd"><span class="lbl">${svg(ICON.home)}Home</span>${jobPill}</div>${vac}${jobList}${alarm}${jobs.length ? '' : `<div class="people">${people}</div>`}`;
+    // the Home card has the full column height now (bins moved to the middle), so people always fit
+    return `<div class="hd"><span class="lbl">${svg(ICON.home)}Home</span>${jobPill}</div>${vac}${jobList}${alarm}<div class="people">${people}</div>`;
   }
 
   _today() {
@@ -951,34 +954,6 @@ class HomePanelCard extends HTMLElement {
       </button>
       <div class="facts"><span>Humidity <b>${num(a.humidity)}%</b></span><span>Wind <b>${num(a.wind_speed)}</b> ${unit}</span><span>UV <b>${num(a.uv_index, 1)}</b></span></div>
       ${strip ? `<div class="hours">${strip}</div>` : ''}`;
-  }
-
-  _climate() {
-    const S = this._hass.states, c = this._config;
-    const cl = S[c.climate];
-    const bt = S[c.bedroom_temp], bh = S[c.bedroom_humidity];
-    if (!cl) return '';
-    const a = cl.attributes;
-    const heating = a.hvac_action === 'heating';
-    const off = cl.state === 'off';
-    const status = off ? 'Off' : heating ? 'Heating' : 'Idle';
-    return `<div class="hd"><span class="lbl">${svg(ICON.thermo)}Climate <span class="lbln">${num(a.current_temperature, 1)}° inside</span></span>
-        <span class="pill ${heating ? 'heat' : off ? '' : 'ok'}"><i class="d"></i>${status}</span></div>
-      <div class="zones">
-        <div class="zone">
-          <button class="zi ${heating ? 'heat' : ''}" data-act="more" data-entity="${c.climate}">${svg(ICON.fire)}</button>
-          <div class="zt"><b>Downstairs</b><small>${off ? 'Heating off' : `Set to ${num(a.temperature, 1)}°`}</small></div>
-          <div class="stepper">
-            <button data-act="temp" data-delta="-0.5">${svg(ICON.minus)}</button>
-            <span class="serif">${num(a.temperature, 1)}°</span>
-            <button data-act="temp" data-delta="0.5">${svg(ICON.plus)}</button>
-          </div>
-        </div>
-        ${bt ? `<button class="zone" data-act="more" data-entity="${c.bedroom_temp}">
-          <span class="zi">${svg(ICON.thermo)}</span>
-          <div class="zt"><b>Bedroom</b><small>${bh ? `Humidity ${num(bh.state)}%` : ''}</small></div>
-          <span class="serif big">${num(bt.state, 1)}°</span></button>` : ''}
-      </div>`;
   }
 
   _lights() {
@@ -1072,6 +1047,9 @@ class HomePanelCard extends HTMLElement {
     const ids = (el.dataset.entity || '').split(',').filter(Boolean);
     const moreInfo = (entityId) => this.dispatchEvent(new CustomEvent('hass-more-info', { detail: { entityId }, bubbles: true, composed: true }));
     switch (act) {
+      case 'climate':
+        goView(c.climate_view, 'right');
+        break;
       case 'music':
         this._musicOpen = true;
         this._musicTouched = Date.now();
@@ -1904,7 +1882,526 @@ svg { width:16px; height:16px; fill:currentColor; flex:none; }
 .commute .sep { width:1px; height:12px; background:var(--line); margin:0 2px; }
 .edge { position:absolute; left:0; top:50%; transform:translateY(-50%); width:14px; height:64px; border-radius:0 10px 10px 0; background:var(--card); border:1px solid var(--line); border-left:0; display:flex; align-items:center; justify-content:center; color:var(--muted); opacity:.8; z-index:2; }
 .edge svg { width:11px; height:11px; }
+.edge.r { left:auto; right:0; border-radius:10px 0 0 10px; border-left:1px solid var(--line); border-right:0; }
 `;
+
+/* ====================================================================================
+ * Climate panel – thermostat ring dial, boost, and per-room 24 h graphs.
+ * Same look as the home page (cream paper by day, dark after sunset).
+ * ==================================================================================== */
+const CLIMATE_DEFAULTS = {
+  climate: 'climate.kitchen_kitchen_thermostat',
+  sun: 'sun.sun',
+  home_view: 'home',
+  dial_range: [10, 28], // °C shown around the ring
+  rooms: [
+    { name: 'Kitchen', temp: 'sensor.kitchen_kitchen_thermostat_temperature', humidity: 'sensor.kitchen_kitchen_thermostat_humidity', thermostat: true },
+    { name: 'Bedroom', temp: 'sensor.temp_sensor_temperature', humidity: 'sensor.temp_sensor_humidity' },
+  ],
+  boost_script: 'script.heating_boost',
+  boost_timer: 'timer.heating_boost',
+  boost_temp: 'input_number.heating_boost_temperature',
+  boost_options: [30, 60, 120], // minutes
+  history_hours: 24,
+};
+
+const polar = (cx, cy, r, deg) => [cx + r * Math.cos((deg * Math.PI) / 180), cy + r * Math.sin((deg * Math.PI) / 180)];
+const durText = (min) => (min >= 60 ? `${min / 60} hr${min > 60 ? 's' : ''}` : `${min} min`);
+
+class ClimatePanelCard extends HTMLElement {
+  setConfig(config) {
+    this._config = { ...CLIMATE_DEFAULTS, ...config };
+    this._rendered = {};
+    if (this._root) this._build();
+  }
+
+  set hass(hass) {
+    const first = !this._hass;
+    this._hass = hass;
+    if (!this._root) {
+      this._root = this.attachShadow({ mode: 'open' });
+      this._build();
+    }
+    if (first) this._fetchHistory();
+    this._schedule();
+  }
+
+  get hass() {
+    return this._hass;
+  }
+
+  getCardSize() {
+    return 12;
+  }
+
+  connectedCallback() {
+    this._tick = setInterval(() => this._schedule(true), 1000);
+    this._histTimer = setInterval(() => this._fetchHistory(), 5 * 60 * 1000);
+    slideIn(this._wrap);
+  }
+
+  disconnectedCallback() {
+    clearInterval(this._tick);
+    clearInterval(this._histTimer);
+  }
+
+  _schedule(force) {
+    if (this._pending && !force) return;
+    this._pending = true;
+    requestAnimationFrame(() => {
+      this._pending = false;
+      this._render();
+    });
+  }
+
+  _build() {
+    this._root.innerHTML = `<style>${STYLE}${TRANSPORT_STYLE}${CLIMATE_STYLE}${ALERT_STYLE}</style>
+      <div class="wrap climate">
+        <header class="top" data-part="top"></header>
+        <main class="cgrid">
+          <div class="col">
+            <section class="card dialcard grow" data-part="dial"></section>
+            <section class="card" data-part="boost"></section>
+          </div>
+          <div class="col" data-part="rooms"></div>
+        </main>
+      </div>`;
+    this._wrap = this._root.querySelector('.wrap');
+    this._alerts?.close();
+    this._alerts = new CameraAlerts(this._wrap);
+    this._rendered = {};
+    this._root.addEventListener('click', (e) => this._onClick(e));
+    onSwipe(this._wrap, (dir) => dir === 'right' && goView(this._config.home_view, 'left'));
+    slideIn(this._wrap);
+  }
+
+  _set(part, html) {
+    if (this._rendered[part] === html) return;
+    this._rendered[part] = html;
+    const el = this._root.querySelector(`[data-part="${part}"]`);
+    if (el) el.innerHTML = html;
+  }
+
+  _render() {
+    const h = this._hass;
+    if (!h || !this._root) return;
+    let theme = null;
+    try {
+      theme = localStorage.getItem('home-panel-theme');
+    } catch (e) { /* ignore */ }
+    this._wrap.classList.toggle('dark', theme ? theme === 'dark' : h.states[this._config.sun]?.state === 'below_horizon');
+    this._set('top', this._top());
+    this._set('dial', this._dial());
+    this._set('boost', this._boost());
+    this._set('rooms', this._rooms());
+    this._alerts.update(h, this._config.alerts || DEFAULT_ALERTS);
+  }
+
+  /* ---------- data ---------- */
+  async _fetchHistory() {
+    const h = this._hass, c = this._config;
+    if (!h?.callWS) return;
+    const end = new Date();
+    const start = new Date(end.getTime() - c.history_hours * 3600000);
+    const ids = arr(c.rooms).flatMap((r) => [r.temp, r.humidity]).filter((id) => id && h.states[id]);
+    const pts = (rows) => (rows || [])
+      .map((p) => ({ t: (p.lu ?? p.lc ?? 0) * 1000 || new Date(p.last_updated || p.last_changed).getTime(), v: Number(p.s ?? p.state), a: p.a || p.attributes }))
+      .filter((p) => p.t)
+      .sort((x, y) => x.t - y.t);
+    try {
+      const r = await h.callWS({
+        type: 'history/history_during_period', start_time: start.toISOString(), end_time: end.toISOString(),
+        entity_ids: ids, minimal_response: true, no_attributes: true, significant_changes_only: false,
+      });
+      this._hist = Object.fromEntries(ids.map((id) => [id, pts(r?.[id]).filter((p) => !isNaN(p.v))]));
+    } catch (e) {
+      this._hist = null;
+    }
+    try {
+      // thermostat attributes: set point and whether the boiler was firing
+      const r = await h.callWS({
+        type: 'history/history_during_period', start_time: start.toISOString(), end_time: end.toISOString(),
+        entity_ids: [c.climate], minimal_response: false, no_attributes: false, significant_changes_only: false,
+      });
+      this._climHist = pts(r?.[c.climate]).map((p) => ({ t: p.t, mode: p.a?.hvac_action || '', set: Number(p.a?.temperature), off: (p.s ?? p.state) === 'off' }));
+    } catch (e) {
+      this._climHist = null;
+    }
+    this._histAt = Date.now();
+    this._schedule(true);
+  }
+
+  /* ---------- header ---------- */
+  _top() {
+    const c = this._config, cl = this._hass.states[c.climate];
+    const now = new Date();
+    const a = cl?.attributes || {};
+    const heating = a.hvac_action === 'heating';
+    const status = !cl ? '' : cl.state === 'off' ? 'Heating off' : heating ? 'Heating now' : a.preset_mode === 'eco' ? 'Eco' : 'Idle';
+    return `<div class="title">
+        <button class="iconbtn" data-act="home" title="Home">${svg(ICON.back)}</button>
+        <div><h1>Climate</h1><span>${now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}</span></div>
+      </div>
+      <div class="right">
+        ${cl ? `<span class="pill big ${heating ? 'heat' : cl.state === 'off' ? '' : 'ok'}"><i class="d"></i>${status}</span>` : ''}
+        <div class="clock"><b>${hhmm(now)}</b><span>Swipe right for home</span></div>
+      </div>`;
+  }
+
+  /* ---------- ring dial ---------- */
+  _target() {
+    const a = this._hass.states[this._config.climate]?.attributes || {};
+    if (this._pendingTarget != null && Date.now() - this._pendingAt < 15000 && Number(a.temperature) !== this._pendingTarget) return this._pendingTarget;
+    this._pendingTarget = null;
+    return Number(a.temperature);
+  }
+
+  _dial() {
+    const c = this._config, S = this._hass.states;
+    const cl = S[c.climate];
+    if (!cl) return '<p class="muted pad">Thermostat not found.</p>';
+    const a = cl.attributes;
+    const off = cl.state === 'off';
+    const eco = a.preset_mode === 'eco';
+    const heating = a.hvac_action === 'heating';
+    const boosting = S[c.boost_timer]?.state === 'active';
+    const target = this._target();
+    const cur = Number(a.current_temperature);
+    const [lo, hi] = c.dial_range;
+    const ang = (v) => 135 + (270 * (Math.max(lo, Math.min(hi, v)) - lo)) / (hi - lo);
+    const cx = 170, cy = 170, R = 150;
+    // Nest-style tick ring: ticks between the room and the set point light up
+    const n = 72;
+    const a1 = isNaN(cur) ? null : ang(cur), a2 = isNaN(target) || off ? null : ang(target);
+    const ticks = [];
+    for (let i = 0; i <= n; i++) {
+      const d = 135 + (270 * i) / n;
+      const lit = a1 != null && a2 != null && d >= Math.min(a1, a2) - 0.01 && d <= Math.max(a1, a2) + 0.01;
+      const [x1, y1] = polar(cx, cy, R - 4, d), [x2, y2] = polar(cx, cy, R - (lit ? 22 : 14), d);
+      ticks.push(`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" class="tk ${lit ? 'lit' : ''}"/>`);
+    }
+    const marker = (deg, cls) => {
+      const [x1, y1] = polar(cx, cy, R + 2, deg), [x2, y2] = polar(cx, cy, R - 30, deg);
+      return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" class="${cls}"/>`;
+    };
+    const curLbl = (() => {
+      if (a1 == null) return '';
+      const [x, y] = polar(cx, cy, R - 44, a1);
+      return `<text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" class="curlbl">${num(cur, 1)}</text>`;
+    })();
+    const [lx, ly] = polar(cx, cy, R - 6, 135), [hx, hy] = polar(cx, cy, R - 6, 405);
+    const label = off ? 'Heating off' : boosting ? 'Boosting to' : heating ? 'Heating to' : eco ? 'Eco · set to' : 'Set to';
+    const mood = off ? 'off' : heating ? 'heat' : 'idle';
+    const hum = a.current_humidity != null ? ` · ${num(a.current_humidity)}% humidity` : '';
+    return `<div class="hd"><span class="lbl">${svg(ICON.thermo)}Thermostat <span class="lbln">${esc(a.friendly_name || '')}</span></span>
+        <div class="seg">
+          <button class="${!off && !eco ? 'sel' : ''}" data-act="cmode" data-mode="heat">${svg(ICON.fire)}Heat</button>
+          ${arr(a.preset_modes).includes('eco') ? `<button class="${!off && eco ? 'sel' : ''}" data-act="cmode" data-mode="eco">Eco</button>` : ''}
+          <button class="${off ? 'sel' : ''}" data-act="cmode" data-mode="off">Off</button>
+        </div></div>
+      <div class="dialwrap">
+        <button class="dbtn" data-act="ctemp" data-delta="-0.5" ${off ? 'disabled' : ''} title="Cooler">${svg(ICON.minus)}</button>
+        <div class="dial ${mood}">
+          <svg viewBox="0 0 340 340">
+            <circle cx="${cx}" cy="${cy}" r="${R + 14}" class="disc"/>
+            ${ticks.join('')}
+            ${a2 != null ? marker(a2, 'tgt') : ''}
+            ${a1 != null ? marker(a1, 'cur') : ''}
+            ${curLbl}
+            <text x="${lx.toFixed(1)}" y="${(ly + 18).toFixed(1)}" class="rng">${lo}°</text>
+            <text x="${hx.toFixed(1)}" y="${(hy + 18).toFixed(1)}" class="rng">${hi}°</text>
+          </svg>
+          <div class="dc">
+            <span class="dl">${label}</span>
+            <b class="dt">${off ? '–' : num(target, 1)}<sup>°</sup></b>
+            <span class="di">Inside ${num(cur, 1)}°${hum}</span>
+          </div>
+        </div>
+        <button class="dbtn" data-act="ctemp" data-delta="0.5" ${off ? 'disabled' : ''} title="Warmer">${svg(ICON.plus)}</button>
+      </div>`;
+  }
+
+  /* ---------- boost ---------- */
+  _boost() {
+    const c = this._config, S = this._hass.states;
+    const timer = S[c.boost_timer], bt = S[c.boost_temp];
+    if (!timer || !S[c.boost_script]) return '<p class="muted pad">Boost isn’t set up.</p>';
+    const temp = this._boostTemp ?? Number(bt?.state ?? 21);
+    this._boostTemp = temp;
+    if (timer.state === 'active') {
+      const ends = new Date(timer.attributes.finishes_at).getTime();
+      const total = (() => {
+        const [hh, mm, ss] = String(timer.attributes.duration || '1:00:00').split(':').map(Number);
+        return ((hh * 60 + mm) * 60 + ss) * 1000;
+      })();
+      const left = Math.max(0, ends - Date.now());
+      const mins = Math.ceil(left / 60000);
+      const pct = total ? Math.min(100, 100 - (left / total) * 100) : 0;
+      return `<div class="hd"><span class="lbl">${svg(ICON.fire)}Boost <span class="lbln">on until ${hhmm(ends)}</span></span>
+          <button class="pill big" data-act="bcancel">Cancel boost</button></div>
+        <div class="bactive">
+          <b class="serif">${num(S[c.climate]?.attributes?.temperature, 1)}°</b>
+          <div class="bprog"><div class="mbar"><i style="width:${pct.toFixed(1)}%"></i></div>
+            <span class="muted">${mins >= 60 ? `${Math.floor(mins / 60)} hr${mins % 60 ? ` ${mins % 60} min` : ''}` : `${mins} min`} left · then back to ${this._restoreText()}</span></div>
+        </div>`;
+    }
+    return `<div class="hd"><span class="lbl">${svg(ICON.fire)}Boost <span class="lbln">heat for a while, then back to normal</span></span></div>
+      <div class="boost">
+        <div class="stepper">
+          <button data-act="btemp" data-delta="-0.5">${svg(ICON.minus)}</button>
+          <span class="serif">${num(temp, 1)}°</span>
+          <button data-act="btemp" data-delta="0.5">${svg(ICON.plus)}</button>
+        </div>
+        <div class="bopts">${arr(c.boost_options).map((m) => `<button class="bopt" data-act="boost" data-min="${m}">${durText(m)}</button>`).join('')}</div>
+      </div>`;
+  }
+
+  _restoreText() {
+    const S = this._hass.states;
+    const mode = S['input_text.heating_boost_previous_mode']?.state;
+    const t = S['input_number.heating_boost_previous_temperature']?.state;
+    if (mode === 'off') return 'off';
+    if (mode === 'eco') return 'Eco';
+    return t ? `${num(t, 1)}°` : 'your setting';
+  }
+
+  /* ---------- rooms ---------- */
+  _rooms() {
+    return arr(this._config.rooms).map((r) => this._room(r)).join('');
+  }
+
+  _room(r) {
+    const S = this._hass.states;
+    const t = S[r.temp], hu = S[r.humidity];
+    if (!t) return '';
+    const temps = this._hist?.[r.temp] || [];
+    const hums = this._hist?.[r.humidity] || [];
+    const now = Date.now();
+    const vals = temps.map((p) => p.v).concat(Number(t.state)).filter((v) => !isNaN(v));
+    const lo = vals.length ? Math.min(...vals) : null, hi = vals.length ? Math.max(...vals) : null;
+    // trend: now vs an hour ago
+    const hrAgo = [...temps].reverse().find((p) => p.t <= now - 3600000);
+    const delta = hrAgo ? Number(t.state) - hrAgo.v : null;
+    const trend = delta == null ? '' : Math.abs(delta) < 0.2 ? 'steady' : `${delta > 0 ? '↑' : '↓'} ${Math.abs(delta).toFixed(1)}° in the last hour`;
+    const h = Number(hu?.state);
+    const comfort = isNaN(h) ? '' : h < 40 ? ['Dry', 'warn'] : h <= 60 ? ['Comfortable', 'ok'] : h <= 70 ? ['A bit humid', 'warn'] : ['Humid', 'bad'];
+    const heatMins = r.thermostat ? this._heatingMinutes() : null;
+    return `<section class="card grow room">
+      <div class="hd"><span class="lbl">${svg(ICON.thermo)}${esc(r.name)}</span>
+        ${comfort ? `<span class="pill ${comfort[1]}"><i class="d"></i>${comfort[0]}</span>` : ''}</div>
+      <div class="rtop">
+        <button class="rbig" data-act="more" data-entity="${r.temp}"><b class="serif">${num(t.state, 1)}°</b><small class="muted">${esc(trend)}</small></button>
+        <div class="rfacts">
+          ${hu ? `<button data-act="more" data-entity="${r.humidity}"><span>Humidity</span><b>${num(hu.state)}%</b></button>` : ''}
+          ${lo != null ? `<div><span>24 h low / high</span><b>${num(lo, 1)}° / ${num(hi, 1)}°</b></div>` : ''}
+          ${heatMins != null ? `<div><span>Heating on</span><b>${heatMins >= 60 ? `${Math.floor(heatMins / 60)}h ${heatMins % 60}m` : `${heatMins}m`}</b></div>` : ''}
+        </div>
+      </div>
+      ${this._graph(r, temps, hums)}
+    </section>`;
+  }
+
+  _heatingMinutes() {
+    const hist = this._climHist;
+    if (!hist?.length) return null;
+    const now = Date.now();
+    let ms = 0;
+    hist.forEach((p, i) => {
+      const next = hist[i + 1]?.t ?? now;
+      if (p.mode === 'heating') ms += next - p.t;
+    });
+    return Math.round(ms / 60000);
+  }
+
+  // 24 h temperature line (with the set point and heating periods for the thermostat room) and humidity as a faint line.
+  _graph(r, temps, hums) {
+    if (this._hist === undefined) return '<div class="graph muted">Loading history…</div>';
+    if (temps.length < 2) return '<div class="graph muted">Not enough history yet.</div>';
+    const W = 520, H = 150, L = 30, Rt = 34, T = 8, B = 20;
+    const now = Date.now(), t0 = now - this._config.history_hours * 3600000;
+    const x = (t) => L + ((Math.max(t, t0) - t0) / (now - t0)) * (W - L - Rt);
+    const climPts = r.thermostat ? (this._climHist || []) : [];
+    const setVals = climPts.filter((p) => !p.off && !isNaN(p.set)).map((p) => p.set);
+    const tv = temps.map((p) => p.v).concat(setVals);
+    let lo = Math.floor(Math.min(...tv) - 0.5), hi = Math.ceil(Math.max(...tv) + 0.5);
+    if (hi - lo < 4) { const m = (hi + lo) / 2; lo = Math.floor(m - 2); hi = Math.ceil(m + 2); }
+    const y = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+    const line = (pts, yf) => {
+      const seg = pts.map((p) => [x(p.t), yf(p.v)]);
+      seg.push([x(now), seg[seg.length - 1][1]]);
+      return 'M' + seg.map(([a, b]) => `${a.toFixed(1)},${b.toFixed(1)}`).join('L');
+    };
+    const tPath = line(temps, y);
+    const area = `${tPath}L${x(now).toFixed(1)},${H - B}L${x(temps[0].t).toFixed(1)},${H - B}Z`;
+    // heating periods as soft bands, set point as a dashed step line
+    let bands = '', setPath = '';
+    if (climPts.length) {
+      climPts.forEach((p, i) => {
+        if (p.mode !== 'heating') return;
+        const x1 = x(p.t), x2 = x(climPts[i + 1]?.t ?? now);
+        if (x2 - x1 > 0.5) bands += `<rect x="${x1.toFixed(1)}" y="${T}" width="${(x2 - x1).toFixed(1)}" height="${H - T - B}" class="hb"/>`;
+      });
+      const steps = [];
+      climPts.forEach((p, i) => {
+        if (p.off || isNaN(p.set)) return;
+        const x1 = x(p.t), x2 = x(climPts[i + 1]?.t ?? now), yy = y(p.set).toFixed(1);
+        steps.push(`M${x1.toFixed(1)},${yy}L${x2.toFixed(1)},${yy}`);
+      });
+      setPath = steps.join('');
+    }
+    // humidity on its own 0–100 % scale (right axis)
+    const yh = (v) => T + (1 - v / 100) * (H - T - B);
+    const hPath = hums.length > 1 ? line(hums, yh) : '';
+    const grid = [lo, (lo + hi) / 2, hi].map((v) => `<line x1="${L}" x2="${W - Rt}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" class="gl"/><text x="${L - 6}" y="${(y(v) + 3).toFixed(1)}" class="ax" text-anchor="end">${Number.isInteger(v) ? v : v.toFixed(1)}°</text>`).join('');
+    const hAxis = hPath ? [40, 60].map((v) => `<text x="${W - Rt + 6}" y="${(yh(v) + 3).toFixed(1)}" class="ax hu">${v}%</text>`).join('') : '';
+    const ticks = [];
+    const d = new Date(t0);
+    d.setMinutes(0, 0, 0);
+    for (let t = d.getTime() + 3600000; t < now; t += 3600000) {
+      if (new Date(t).getHours() % 6) continue;
+      ticks.push(`<text x="${x(t).toFixed(1)}" y="${H - 5}" class="ax" text-anchor="middle">${String(new Date(t).getHours()).padStart(2, '0')}:00</text>`);
+    }
+    return `<div class="graph"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+        ${bands}${grid}${hAxis}
+        ${hPath ? `<path d="${hPath}" class="hl"/>` : ''}
+        <path d="${area}" class="ta"/>
+        <path d="${tPath}" class="tl"/>
+        ${setPath ? `<path d="${setPath}" class="sp"/>` : ''}
+        <circle cx="${x(now).toFixed(1)}" cy="${y(temps[temps.length - 1].v).toFixed(1)}" r="3.5" class="tn"/>
+        ${ticks.join('')}
+      </svg>
+      <div class="legend"><span><i class="lt"></i>Temperature</span>${hPath ? '<span><i class="lh"></i>Humidity</span>' : ''}${setPath ? '<span><i class="ls"></i>Set point</span><span><i class="lb"></i>Heating on</span>' : ''}</div>
+    </div>`;
+  }
+
+  /* ---------- actions ---------- */
+  _onClick(e) {
+    const el = e.target.closest('[data-act]');
+    if (!el || el.disabled) return;
+    const h = this._hass, c = this._config;
+    const cl = h.states[c.climate];
+    switch (el.dataset.act) {
+      case 'home':
+        goView(c.home_view, 'left');
+        break;
+      case 'more':
+        this.dispatchEvent(new CustomEvent('hass-more-info', { detail: { entityId: el.dataset.entity }, bubbles: true, composed: true }));
+        break;
+      case 'ctemp': {
+        const base = this._target();
+        if (isNaN(base)) break;
+        const [mn, mx] = [cl.attributes.min_temp ?? 10, cl.attributes.max_temp ?? 32];
+        this._pendingTarget = Math.max(mn, Math.min(mx, Math.round((base + Number(el.dataset.delta)) * 2) / 2));
+        this._pendingAt = Date.now();
+        // wait for the taps to stop before telling the Nest (it rate-limits)
+        clearTimeout(this._tempTimer);
+        this._tempTimer = setTimeout(() => {
+          h.callService('climate', 'set_temperature', { entity_id: c.climate, temperature: this._pendingTarget })
+            .catch(() => (this._pendingTarget = null));
+        }, 900);
+        this._schedule(true);
+        break;
+      }
+      case 'cmode': {
+        const m = el.dataset.mode;
+        if (m === 'off') h.callService('climate', 'set_hvac_mode', { entity_id: c.climate, hvac_mode: 'off' });
+        else if (m === 'eco') h.callService('climate', 'set_preset_mode', { entity_id: c.climate, preset_mode: 'eco' });
+        else {
+          const p = cl.state === 'off' ? h.callService('climate', 'set_hvac_mode', { entity_id: c.climate, hvac_mode: 'heat' }) : Promise.resolve();
+          p.then(() => cl.attributes.preset_mode === 'eco' && h.callService('climate', 'set_preset_mode', { entity_id: c.climate, preset_mode: 'none' }));
+        }
+        break;
+      }
+      case 'btemp': {
+        const bt = h.states[c.boost_temp]?.attributes || {};
+        this._boostTemp = Math.max(bt.min ?? 15, Math.min(bt.max ?? 25, this._boostTemp + Number(el.dataset.delta)));
+        clearTimeout(this._btTimer);
+        this._btTimer = setTimeout(() => h.callService('input_number', 'set_value', { entity_id: c.boost_temp, value: this._boostTemp }), 900);
+        this._schedule(true);
+        break;
+      }
+      case 'boost':
+        clearTimeout(this._btTimer);
+        h.callService('script', 'turn_on', { entity_id: c.boost_script, variables: { minutes: Number(el.dataset.min), temperature: this._boostTemp } });
+        break;
+      case 'bcancel':
+        h.callService('timer', 'cancel', { entity_id: c.boost_timer });
+        this._boostTemp = null;
+        break;
+      default:
+    }
+  }
+}
+
+const CLIMATE_STYLE = `
+.cgrid { flex:1; min-height:0; display:grid; grid-template-columns:1.12fr 1fr; gap:12px; }
+.dialcard { display:flex; flex-direction:column; }
+.seg { display:flex; background:var(--chip); border-radius:999px; padding:3px; gap:2px; }
+.seg button { display:flex; align-items:center; gap:5px; padding:7px 14px; border-radius:999px; font-weight:600; font-size:12px; color:var(--muted); }
+.seg button svg { width:13px; height:13px; }
+.seg button.sel { background:var(--card); color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.dialwrap { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; gap:18px; }
+.dbtn { width:60px; height:60px; border-radius:50%; background:var(--chip); display:flex; align-items:center; justify-content:center; flex:none; }
+.dbtn svg { width:26px; height:26px; } .dbtn:disabled { opacity:.35; }
+.dial { position:relative; height:100%; max-height:400px; aspect-ratio:1; }
+.dial svg { width:100%; height:100%; display:block; }
+.dial .disc { fill:var(--chip); stroke:var(--line); stroke-width:1; transition:fill .6s; }
+.dial.heat .disc { fill:#e07a3a; } .wrap.dark .dial.heat .disc { fill:#b85a22; }
+.dial .tk { stroke:var(--muted); stroke-opacity:.45; stroke-width:2; stroke-linecap:round; }
+.dial .tk.lit { stroke:var(--ink); stroke-opacity:.95; stroke-width:2.6; }
+.dial.heat .tk { stroke:#fff; stroke-opacity:.45; } .dial.heat .tk.lit { stroke:#fff; stroke-opacity:1; }
+.dial .tgt { stroke:var(--ink); stroke-width:5; stroke-linecap:round; } .dial.heat .tgt { stroke:#fff; }
+.dial .cur { stroke:var(--label); stroke-width:3; stroke-linecap:round; } .dial.heat .cur { stroke:#ffe1c9; }
+.dial .curlbl { font:600 13px Inter, system-ui, sans-serif; fill:var(--label); text-anchor:middle; } .dial.heat .curlbl { fill:#ffe9d8; }
+.dial .rng { font:600 11px Inter, system-ui, sans-serif; fill:var(--muted); text-anchor:middle; } .dial.heat .rng { fill:#ffe1c9; }
+.dc { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; pointer-events:none; }
+.dl { font-size:11px; letter-spacing:.16em; text-transform:uppercase; font-weight:600; color:var(--label); }
+.dt { font-family:Fraunces, Georgia, serif; font-weight:300; font-size:96px; line-height:1; letter-spacing:-3px; margin:4px 0 2px; }
+.dt sup { font-size:40px; vertical-align:top; position:relative; top:10px; }
+.di { font-size:12.5px; color:var(--muted); }
+.dial.heat .dl, .dial.heat .dt, .dial.heat .di { color:#fff; }
+.dial.off .dt { color:var(--muted); }
+.boost { display:flex; align-items:center; gap:16px; }
+.boost .stepper span { font-size:26px; min-width:70px; }
+.boost .stepper button { width:38px; height:38px; background:var(--chip); }
+.bopts { flex:1; display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+.bopt { padding:14px 8px; border-radius:14px; background:var(--chip); font-weight:600; text-align:center; font-size:14px; }
+.bopt:active { background:var(--on); color:var(--onink); }
+.bactive { display:flex; align-items:center; gap:16px; }
+.bactive b { font-size:38px; color:var(--heat); }
+.bprog { flex:1; display:flex; flex-direction:column; gap:6px; }
+.mbar { height:6px; border-radius:3px; background:var(--chip); overflow:hidden; } .mbar i { display:block; height:100%; background:var(--heat); }
+.room { display:flex; flex-direction:column; }
+.rtop { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+.rbig { display:flex; flex-direction:column; }
+.rbig b { font-size:44px; line-height:1; letter-spacing:-1px; }
+.rfacts { display:flex; gap:8px; }
+.rfacts > * { background:var(--chip); border-radius:12px; padding:6px 10px; display:flex; flex-direction:column; min-width:74px; }
+.rfacts span { font-size:10px; color:var(--muted); font-weight:600; letter-spacing:.04em; }
+.rfacts b { font-size:14px; font-weight:600; }
+.graph { flex:1; min-height:0; display:flex; flex-direction:column; justify-content:flex-end; margin-top:8px; font-size:12px; }
+.graph svg { width:100%; flex:1; min-height:0; }
+.graph .gl { stroke:var(--line); stroke-width:1; }
+.graph .ax { font:500 10px Inter, system-ui, sans-serif; fill:var(--muted); } .graph .ax.hu { fill:#6f97b8; }
+.graph .ta { fill:var(--heat); fill-opacity:.08; }
+.graph .tl { fill:none; stroke:var(--heat); stroke-width:2.2; stroke-linejoin:round; }
+.graph .hl { fill:none; stroke:#6f97b8; stroke-width:1.4; stroke-opacity:.7; stroke-linejoin:round; }
+.graph .sp { fill:none; stroke:var(--ink); stroke-width:1.4; stroke-dasharray:4 4; stroke-opacity:.55; }
+.graph .hb { fill:var(--heat); fill-opacity:.12; }
+.graph .tn { fill:var(--heat); stroke:var(--card); stroke-width:2; }
+.legend { display:flex; gap:14px; font-size:10.5px; color:var(--muted); padding-left:30px; }
+.legend span { display:flex; align-items:center; gap:5px; }
+.legend i { width:14px; height:3px; border-radius:2px; display:inline-block; }
+.legend .lt { background:var(--heat); } .legend .lh { background:#6f97b8; }
+.legend .ls { background:repeating-linear-gradient(90deg, var(--ink) 0 4px, transparent 4px 7px); opacity:.6; }
+.legend .lb { height:9px; background:var(--heat); opacity:.2; }
+`;
+
+if (!customElements.get('climate-panel-card')) {
+  customElements.define('climate-panel-card', ClimatePanelCard);
+  window.customCards = window.customCards || [];
+  window.customCards.push({ type: 'climate-panel-card', name: 'Climate panel', description: 'Thermostat ring dial, boost and room graphs.' });
+}
 
 if (!customElements.get('home-panel-card')) {
   customElements.define('home-panel-card', HomePanelCard);
