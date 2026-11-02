@@ -15,7 +15,8 @@ dark palette after sunset (tap the half-moon button to override).
   (hidden while there are jobs, to save space).
 - **Today** – current weather, high/low, sunrise/sunset, humidity/wind/UV, 8-hour forecast.
 - **Climate** – moved to its own Climate view (swipe left, or the thermometer tab on the right edge).
-- **Lights & blinds** – tap to toggle, *All off* for the whole house.
+- **Lights & blinds** – only the lights that are on (inside and out); tap the card for the Lights
+  view. *All off* turns off the house; blinds toggle in place.
 - **Cameras** – doorbell, cabin and vacuum map snapshots (refresh every 10 s, tap for live view).
 - **Garden & cabin** – cabin and shed door contacts, cabin lights.
 - **Music** – a Spotify pill in the top bar (shows the track while something plays) opens a
@@ -86,3 +87,11 @@ type: custom:climate-panel-card
   humidity with a comfort label, 24 h low / high, and a 24 h graph with time and value axes,
   humidity on its own scale, and for the thermostat room the set point and when the heating ran.
   `climate-demo.html` renders it with simulated history.
+
+## Lights view
+
+`lights-panel-card` (same file), in a panel view with path `lights`. Every light by floor and room
+(`LIGHT_GROUPS`, overridable with `groups:`): tap a tile to toggle, drag the slider for brightness,
+a warm ↔ cool slider for white-spectrum bulbs and colour dots for RGB strips. Each floor has its
+own *Off*, and *Everything off* covers inside and out. The four cabin up/down lights are also
+controlled together through the `light.cabin_wall_lights` group.

@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Home Panel Demo</title>
-  <style>html, body { margin: 0; height: 100%; background: #111; } home-panel-card { display: block; height: 100vh; --hp-height: 100vh; }</style>
+  <style>html, body { margin: 0; height: 100%; background: #111; } home-panel-card, lights-panel-card { display: block; height: 100vh; --hp-height: 100vh; }</style>
 </head>
 <body>
-  <home-panel-card></home-panel-card>
+  <script>document.write(`<${new URLSearchParams(location.search).get('card') || 'home-panel-card'}></${new URLSearchParams(location.search).get('card') || 'home-panel-card'}>`);</script>
   <script type="module">
     const params = new URLSearchParams(location.search);
     const S = {};
@@ -43,15 +43,26 @@
     add('climate.kitchen_kitchen_thermostat', 'heat', { current_temperature: 19.6, temperature: 20.5, hvac_action: 'heating' });
     add('sensor.temp_sensor_temperature', '18.5');
     add('sensor.temp_sensor_humidity', '65');
-    add('light.lamp', 'on', { brightness: 200, friendly_name: 'Lamp' });
-    add('light.kitchen_driver', 'on', { brightness: 255 });
-    add('light.hallway_lamp', 'off');
-    add('light.ikea_of_sweden_tradfri_bulb_e27_ws_clear_806lm', 'off');
-    add('light.landing_2', 'unavailable');
-    ['left_up', 'left_down', 'right_up', 'right_down'].forEach((l) => add(`light.${l}_cabin_light`, 'off'));
-    add('light.shed_light_3', 'off');
-    add('light.cabin_shed_leds_shed_led_strip', 'on');
-    add('light.cabin_cam_light', 'off');
+    const dim = { supported_color_modes: ['brightness'] }, ct = { supported_color_modes: ['color_temp'], min_color_temp_kelvin: 2202, max_color_temp_kelvin: 4000 }, onoff = { supported_color_modes: ['onoff'] };
+    add('light.lamp', 'on', { ...dim, brightness: 200, friendly_name: 'Lamp' });
+    add('light.kitchen_driver', 'on', { ...dim, brightness: 255 });
+    add('light.hallway_lamp', params.get('alloff') ? 'off' : 'on', { ...ct, brightness: 90, color_temp_kelvin: 2700 });
+    add('light.ikea_of_sweden_tradfri_bulb_e27_ws_clear_806lm', 'off', ct);
+    add('light.landing_2', 'unavailable', ct);
+    ['left_up', 'left_down', 'right_up', 'right_down'].forEach((l, i) => add(`light.${l}_cabin_light`, i < 2 && !params.get('alloff') ? 'on' : 'off', { ...dim, brightness: i < 2 ? 180 : undefined }));
+    add('light.cabin_wall_lights', 'on', { ...dim, brightness: 180, entity_id: ['light.left_up_cabin_light', 'light.left_down_cabin_light', 'light.right_up_cabin_light', 'light.right_down_cabin_light'] });
+    add('light.shed_light_3', 'off', onoff);
+    add('light.cabin_shed_leds_shed_led_strip', 'on', { supported_color_modes: ['rgb'], brightness: 120, rgb_color: [255, 147, 41] });
+    add('light.cabin_cam_light', 'off', onoff);
+    add('light.shed_light_2', 'off', onoff);
+    add('light.front_light_2', 'off', onoff);
+    if (params.get('alloff')) ['light.lamp', 'light.kitchen_driver', 'light.cabin_shed_leds_shed_led_strip'].forEach((id) => (S[id].state = 'off'));
+    const syncGroup = () => {
+      const g = S['light.cabin_wall_lights'], ms = g.attributes.entity_id.map((m) => S[m]);
+      const on = ms.filter((m) => m.state === 'on');
+      S['light.cabin_wall_lights'] = { ...g, state: on.length ? 'on' : 'off', attributes: { ...g.attributes, brightness: on.length ? Math.round(on.reduce((a, m) => a + (m.attributes.brightness || 255), 0) / on.length) : null } };
+    };
+    syncGroup();
     ['blind_1', 'blind_2', 'blind_3'].forEach((b) => add(`cover.${b}`, 'open', { current_position: 100 }));
     add('cover.blind_4', 'closed', { current_position: 0 });
     ['back_door', 'front_door', 'side_door', 'front_window_left', 'front_window_right', 'back_window', 'back_window_bedroom', 'office_window', 'spare_room_window']
@@ -118,6 +129,21 @@
         push();
         return;
       }
+      if (domain === 'light') {
+        let ids = [].concat(data?.entity_id || target?.entity_id || []);
+        const groupOn = (id) => S[id]?.state === 'on';
+        ids = ids.flatMap((id) => (id === 'light.cabin_wall_lights' ? S[id].attributes.entity_id.map((m) => [m, groupOn(id)]) : [[id, groupOn(id)]]));
+        for (const [id, wasOn] of ids) {
+          const st = S[id]; if (!st) continue;
+          const turnOn = service === 'turn_on' || (service === 'toggle' && !wasOn);
+          const a = { ...st.attributes };
+          if (turnOn) { if (data.brightness_pct) a.brightness = Math.round(data.brightness_pct * 2.55); else if (a.supported_color_modes?.[0] !== 'onoff') a.brightness = a.brightness || 255; if (data.color_temp_kelvin) a.color_temp_kelvin = data.color_temp_kelvin; if (data.rgb_color) a.rgb_color = data.rgb_color; }
+          S[id] = { ...st, state: turnOn ? 'on' : 'off', attributes: a };
+        }
+        syncGroup();
+        push();
+        return;
+      }
       const ids = [].concat(data?.entity_id || target?.entity_id || []);
       for (const id of ids) {
         if (!S[id]) continue;
@@ -128,7 +154,7 @@
       }
       push();
     }
-    const card = document.querySelector('home-panel-card');
+    const card = document.querySelector(params.get('card') || 'home-panel-card');
     const push = () => (card.hass = { states: { ...S }, callService, callWS });
     await import('./home-panel-card.js');
     card.setConfig({});
