@@ -18,6 +18,10 @@ dark palette after sunset (tap the half-moon button to override).
 - **Lights & blinds** – tap to toggle, *All off* for the whole house.
 - **Cameras** – doorbell, cabin and vacuum map snapshots (refresh every 10 s, tap for live view).
 - **Garden & cabin** – cabin and shed door contacts, cabin lights.
+- **Music** – a Spotify pill in the top bar (shows the track while something plays) opens a
+  full-screen player: artwork, play/pause/skip, shuffle, volume, a *Play on* speaker picker (the
+  Spotify Connect devices, e.g. the Echos; `music_speakers` sets their order) and your playlists.
+  Uses the first `media_player.spotify_*` unless `music:` is set; closes itself after 3 minutes.
 - **Camera pop-ups** – a doorbell press, or motion at the cabin, opens a full-screen live feed (HA's
   own player, so WebRTC / HLS) for 30 seconds, on both the home and transport views. *+30 s* keeps
   it open, × closes it; the doorbell takes over from a cabin pop-up but not the other way round.

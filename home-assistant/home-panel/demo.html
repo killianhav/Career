@@ -18,6 +18,21 @@
     add('sun.sun', night ? 'below_horizon' : 'above_horizon', { next_setting: new Date(Date.now() + 4 * 3600e3).toISOString(), next_rising: new Date(Date.now() + 9 * 3600e3).toISOString() });
     add('person.killian', 'home', { friendly_name: 'Killian' });
     add('person.sinead', 'not_home', { friendly_name: 'Sinéad' });
+    const art = (c) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><rect width='10' height='10' fill='${c}'/><circle cx='5' cy='5' r='3' fill='rgba(255,255,255,.35)'/></svg>`)}`;
+    const music = params.get('music') === '1';
+    add('media_player.spotify_killian', music ? 'playing' : 'idle', {
+      friendly_name: 'Spotify Killian', source_list: ['Kitchen Echo Show', 'Living Room Echo', 'Killian’s S24'], source: music ? 'Kitchen Echo Show' : undefined,
+      media_title: music ? 'Northern Sky' : undefined, media_artist: music ? 'Nick Drake' : undefined, media_album_name: music ? 'Bryter Layter' : undefined,
+      media_duration: 225, media_position: 72, media_position_updated_at: new Date().toISOString(), volume_level: 0.4, shuffle: false,
+      entity_picture: music ? art('#7a5a3a') : undefined,
+    });
+    const playlists = [['Sunday Morning', '#c98a4b'], ['Dinner Party', '#5a3e6b'], ['Irish Trad', '#3f6b4a'], ['Focus', '#2f4f6b'], ['80s Hits', '#b5486a'], ['Chill', '#6b8aa0']]
+      .map(([title, c], i) => ({ title, can_play: true, media_content_id: `spotify:playlist:${i}`, media_content_type: 'spotify://playlist', thumbnail: art(c) }));
+    const callWS = async (msg) => {
+      if (msg.type !== 'media_player/browse_media') throw new Error('unsupported');
+      if (!msg.media_content_id) return { children: [{ title: 'Playlists', media_content_id: 'current_user_playlists', media_content_type: 'current_user_playlists' }, { title: 'Artists', media_content_id: 'a', media_content_type: 'a' }] };
+      return { children: playlists };
+    };
     add('input_boolean.guest_mode', params.get('guests') === '1' ? 'on' : 'off', { friendly_name: 'Guest mode' });
     add('alarm_control_panel.laverna_alarm', 'disarmed', { friendly_name: 'Laverna Alarm' });
     add('binary_sensor.m4r_wan_status', 'on');
@@ -91,6 +106,18 @@
         push();
         return;
       }
+      if (domain === 'media_player') {
+        const m = S['media_player.spotify_killian'], a = { ...m.attributes };
+        if (service === 'select_source') a.source = data.source;
+        if (service === 'volume_set') a.volume_level = data.volume_level;
+        if (service === 'shuffle_set') a.shuffle = data.shuffle;
+        let st = m.state;
+        if (service === 'media_play_pause') st = st === 'playing' ? 'paused' : 'playing';
+        if (service === 'play_media') { st = 'playing'; const p = playlists.find((x) => x.media_content_id === data.media_content_id); Object.assign(a, { media_title: 'Track from ' + p.title, media_artist: 'Various', media_album_name: p.title, entity_picture: p.thumbnail, media_position: 0, media_position_updated_at: new Date().toISOString() }); }
+        S['media_player.spotify_killian'] = { ...m, state: st, attributes: a };
+        push();
+        return;
+      }
       const ids = [].concat(data?.entity_id || target?.entity_id || []);
       for (const id of ids) {
         if (!S[id]) continue;
@@ -102,7 +129,7 @@
       push();
     }
     const card = document.querySelector('home-panel-card');
-    const push = () => (card.hass = { states: { ...S }, callService });
+    const push = () => (card.hass = { states: { ...S }, callService, callWS });
     await import('./home-panel-card.js');
     card.setConfig({});
     push();

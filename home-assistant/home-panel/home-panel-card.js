@@ -10,6 +10,13 @@
 
 const VERSION = '1.2.0';
 const ICON = {
+  music: "M21,3V15.5A3.5,3.5 0 0,1 17.5,19A3.5,3.5 0 0,1 14,15.5A3.5,3.5 0 0,1 17.5,12C18.04,12 18.55,12.12 19,12.34V6.47L9,8.6V17.5A3.5,3.5 0 0,1 5.5,21A3.5,3.5 0 0,1 2,17.5A3.5,3.5 0 0,1 5.5,14C6.04,14 6.55,14.12 7,14.34V6L21,3Z",
+  play: "M8,5.14V19.14L19,12.14L8,5.14Z",
+  pause: "M14,19H18V5H14M6,19H10V5H6V19Z",
+  next: "M16,18H18V6H16M6,18L14.5,12L6,6V18Z",
+  prev: "M6,18V6H8V18H6M9.5,12L18,6V18L9.5,12Z",
+  shuffle: "M17,3L22.25,7.5L17,12L22.25,16.5L17,21V18H14.26L11.44,15.18L13.56,13.06L15.5,15H17V12L17,9H15.5L6.5,18H2V15H5.26L14.26,6H17V3M2,6H6.5L9.32,8.82L7.2,10.94L5.26,9H2V6Z",
+  speaker: "M12,12A3,3 0 0,0 9,15A3,3 0 0,0 12,18A3,3 0 0,0 15,15A3,3 0 0,0 12,12M12,20A5,5 0 0,1 7,15A5,5 0 0,1 12,10A5,5 0 0,1 17,15A5,5 0 0,1 12,20M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8C10.89,8 10,7.1 10,6C10,4.89 10.89,4 12,4M17,2H7C5.89,2 5,2.89 5,4V20A2,2 0 0,0 7,22H17A2,2 0 0,0 19,20V4C19,2.89 18.1,2 17,2Z",
   guests: "M12,5.5A3.5,3.5 0 0,1 15.5,9A3.5,3.5 0 0,1 12,12.5A3.5,3.5 0 0,1 8.5,9A3.5,3.5 0 0,1 12,5.5M5,8C5.56,8 6.08,8.15 6.53,8.42C6.38,9.85 6.8,11.27 7.66,12.38C7.16,13.34 6.16,14 5,14A3,3 0 0,1 2,11A3,3 0 0,1 5,8M19,8A3,3 0 0,1 22,11A3,3 0 0,1 19,14C17.84,14 16.84,13.34 16.34,12.38C17.2,11.27 17.62,9.85 17.47,8.42C17.92,8.15 18.44,8 19,8M5.5,18.25C5.5,16.18 8.41,14.5 12,14.5C15.59,14.5 18.5,16.18 18.5,18.25V20H5.5V18.25M0,20V18.5C0,17.11 1.89,15.94 4.45,15.6C3.86,16.28 3.5,17.22 3.5,18.25V20H0M24,20H20.5V18.25C20.5,17.22 20.14,16.28 19.55,15.6C22.11,15.94 24,17.11 24,18.5V20Z",
   sunny: "M12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,2L14.39,5.42C13.65,5.15 12.84,5 12,5C11.16,5 10.35,5.15 9.61,5.42L12,2M3.34,7L7.5,6.65C6.9,7.16 6.36,7.78 5.94,8.5C5.5,9.24 5.25,10 5.11,10.79L3.34,7M3.36,17L5.12,13.23C5.26,14 5.53,14.78 5.95,15.5C6.37,16.24 6.91,16.86 7.5,17.37L3.36,17M20.65,7L18.88,10.79C18.74,10 18.47,9.23 18.05,8.5C17.63,7.78 17.1,7.15 16.5,6.64L20.65,7M20.64,17L16.5,17.36C17.09,16.85 17.62,16.22 18.04,15.5C18.46,14.77 18.73,14 18.87,13.21L20.64,17M12,22L9.59,18.56C10.33,18.83 11.14,19 12,19C12.82,19 13.63,18.83 14.37,18.56L12,22Z",
   night: "M17.75,4.09L15.22,6.03L16.13,9.09L13.5,7.28L10.87,9.09L11.78,6.03L9.25,4.09L12.44,4L13.5,1L14.56,4L17.75,4.09M21.25,11L19.61,12.25L20.2,14.23L18.5,13.06L16.8,14.23L17.39,12.25L15.75,11L17.81,10.95L18.5,9L19.19,10.95L21.25,11M18.97,15.95C19.8,15.87 20.69,17.05 20.16,17.8C19.84,18.25 19.5,18.67 19.08,19.07C15.17,23 8.84,23 4.94,19.07C1.03,15.17 1.03,8.83 4.94,4.93C5.34,4.53 5.76,4.17 6.21,3.85C6.96,3.32 8.14,4.21 8.06,5.04C7.79,7.9 8.75,10.87 10.95,13.06C13.14,15.26 16.1,16.22 18.97,15.95M17.33,17.97C14.5,17.81 11.7,16.64 9.53,14.5C7.36,12.31 6.2,9.5 6.04,6.68C3.23,9.82 3.34,14.64 6.35,17.66C9.37,20.67 14.19,20.78 17.33,17.97Z",
@@ -237,6 +244,8 @@ const DEFAULTS = {
   bus_stop: { entity: 'sensor.tfi_gtfs_stop_1682', walk: 4 },
   drive_time: 'sensor.drive_to_work',
   guest_mode: 'input_boolean.guest_mode', // top-bar Guest mode toggle
+  music: null, // Spotify media_player; null = the first media_player.spotify_*
+  music_speakers: [], // Spotify Connect names to show first (e.g. the Echos); others follow
 };
 
 const BIN_COLOURS = { black: '#2d2d2d', green: '#4f8a4b', brown: '#8a5a3b', blue: '#3c6fb0', grey: '#8d8d8d' };
@@ -534,6 +543,7 @@ class HomePanelCard extends HTMLElement {
           </div>
         </main>
         ${this._config.transport_view ? `<button class="edge" data-act="transport" title="Transport">${svg(ICON.bus)}</button>` : ''}
+        <div data-part="music"></div>
       </div>`;
     this._wrap = this._root.querySelector('.wrap');
     this._alerts?.close();
@@ -604,8 +614,127 @@ class HomePanelCard extends HTMLElement {
     this._set('climate', this._climate());
     this._set('lights', this._lights());
     this._set('cabin', this._cabin());
+    if (this._musicOpen && Date.now() - this._musicTouched > 180000) this._musicOpen = false; // wall tablet: drop back to home
+    this._set('music', this._musicOpen ? this._musicSheet() : '');
     this._cameraStatus();
     this._alerts.update(h, this._config.alerts);
+  }
+
+  /* ---------- music (Spotify) ---------- */
+  _musicEntity() {
+    const c = this._config, S = this._hass.states;
+    if (c.music) return S[c.music] ? c.music : null;
+    return Object.keys(S).find((id) => id.startsWith('media_player.spotify')) || null;
+  }
+
+  _musicPill() {
+    const id = this._musicEntity();
+    if (!id) return '';
+    const m = this._hass.states[id];
+    const playing = m.state === 'playing';
+    const label = playing && m.attributes.media_title ? m.attributes.media_title : 'Music';
+    return `<button class="pill big musicpill ${playing ? 'on' : ''}" data-act="music">${svg(ICON.music)}<span>${esc(label)}</span></button>`;
+  }
+
+  _speakers(m) {
+    const list = arr(m.attributes.source_list);
+    const pref = arr(this._config.music_speakers);
+    return [...pref.filter((p) => list.includes(p)), ...list.filter((s) => !pref.includes(s))];
+  }
+
+  _musicSheet() {
+    const id = this._musicEntity();
+    if (!id) return '';
+    const m = this._hass.states[id], a = m.attributes;
+    const playing = m.state === 'playing';
+    const active = ['playing', 'paused', 'buffering'].includes(m.state);
+    const speakers = this._speakers(m);
+    const target = this._musicTarget && speakers.includes(this._musicTarget) ? this._musicTarget : (a.source && speakers.includes(a.source) ? a.source : speakers[0]);
+    this._musicTarget = target;
+    let pos = Number(a.media_position) || 0;
+    if (playing && a.media_position_updated_at) pos += (Date.now() - new Date(a.media_position_updated_at)) / 1000;
+    const dur = Number(a.media_duration) || 0;
+    const pct = dur ? Math.min(100, (pos / dur) * 100) : 0;
+    const t = (sec) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
+    const vol = a.volume_level != null ? Math.round(a.volume_level * 100) : null;
+    const lists = this._playlists;
+    const grid = lists === undefined ? '<p class="muted pad">Loading your playlists…</p>'
+      : !lists?.length ? '<p class="muted pad">No playlists found.</p>'
+      : lists.map((p, i) => `<button class="pl" data-act="mplay" data-i="${i}">
+          ${p.thumbnail ? `<img alt="" src="${esc(p.thumbnail)}">` : `<span class="noart">${svg(ICON.music)}</span>`}<span>${esc(p.title)}</span></button>`).join('');
+    return `<div class="msheet">
+      <div class="mhd"><span class="lbl">${svg(ICON.music)}Music</span><button class="iconbtn" data-act="mclose" title="Close">${svg(ICON.close)}</button></div>
+      <div class="mbody">
+        <div class="mnow">
+          <div class="mart">${active && a.entity_picture ? `<img alt="" src="${esc(a.entity_picture)}">` : svg(ICON.music)}</div>
+          <b class="mtitle">${esc(active ? a.media_title || 'Spotify' : 'Nothing playing')}</b>
+          <span class="muted">${esc(active ? [a.media_artist, a.media_album_name].filter(Boolean).join(' · ') : 'Pick a playlist and a speaker')}</span>
+          <div class="mbar"><i style="width:${pct.toFixed(1)}%"></i></div>
+          <div class="mtimes muted"><span>${dur ? t(pos) : ''}</span><span>${dur ? t(dur) : ''}</span></div>
+          <div class="mctl">
+            <button class="iconbtn ${a.shuffle ? 'sel' : ''}" data-act="mshuffle" title="Shuffle">${svg(ICON.shuffle)}</button>
+            <button class="iconbtn" data-act="mctl" data-svc="media_previous_track" title="Previous">${svg(ICON.prev)}</button>
+            <button class="iconbtn big" data-act="mctl" data-svc="media_play_pause" title="Play / pause">${svg(playing ? ICON.pause : ICON.play)}</button>
+            <button class="iconbtn" data-act="mctl" data-svc="media_next_track" title="Next">${svg(ICON.next)}</button>
+            <span class="mvol"><button class="iconbtn" data-act="mvol" data-delta="-0.1">−</button><b>${vol == null ? '–' : vol + '%'}</b><button class="iconbtn" data-act="mvol" data-delta="0.1">+</button></span>
+          </div>
+        </div>
+        <div class="mside">
+          <span class="lbl">${svg(ICON.speaker)}Play on</span>
+          <div class="mspk">${speakers.length ? speakers.map((sp) => `<button class="chip ${sp === target ? 'sel' : ''}" data-act="msrc" data-src="${esc(sp)}">${esc(sp)}${sp === a.source && active ? ' <i class="d"></i>' : ''}</button>`).join('') : '<p class="muted">No speakers found. Say “Alexa, play Spotify” once so the Echos wake up, or open Spotify on a phone.</p>'}</div>
+          <span class="lbl">${svg(ICON.music)}Your playlists</span>
+          <div class="mlists">${grid}</div>
+          ${this._musicErr ? `<p class="merr">${esc(this._musicErr)}</p>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  async _loadPlaylists() {
+    const h = this._hass, id = this._musicEntity();
+    if (!id || (this._playlistsAt && Date.now() - this._playlistsAt < 30 * 60000)) return;
+    this._playlistsAt = Date.now();
+    try {
+      const root = await h.callWS({ type: 'media_player/browse_media', entity_id: id });
+      const cat = (root.children || []).find((c) => /playlist/i.test(c.title));
+      const r = cat ? await h.callWS({ type: 'media_player/browse_media', entity_id: id, media_content_id: cat.media_content_id, media_content_type: cat.media_content_type }) : null;
+      this._playlists = (r?.children || []).filter((x) => x.can_play).slice(0, 15);
+    } catch (e) {
+      this._playlists = null;
+      this._playlistsAt = 0;
+    }
+    this._schedule(true);
+  }
+
+  async _musicAction(act, el) {
+    const h = this._hass, id = this._musicEntity();
+    if (!id) return;
+    const m = h.states[id];
+    this._musicErr = '';
+    try {
+      if (act === 'mctl') await h.callService('media_player', el.dataset.svc, { entity_id: id });
+      if (act === 'mshuffle') await h.callService('media_player', 'shuffle_set', { entity_id: id, shuffle: !m.attributes.shuffle });
+      if (act === 'mvol') {
+        const v = Math.max(0, Math.min(1, (Number(m.attributes.volume_level) || 0) + Number(el.dataset.delta)));
+        await h.callService('media_player', 'volume_set', { entity_id: id, volume_level: Math.round(v * 100) / 100 });
+      }
+      if (act === 'msrc') {
+        this._musicTarget = el.dataset.src;
+        // move what's playing straight over; when idle just remember the choice for the next playlist
+        if (['playing', 'paused'].includes(m.state)) await h.callService('media_player', 'select_source', { entity_id: id, source: el.dataset.src });
+      }
+      if (act === 'mplay') {
+        const p = this._playlists?.[Number(el.dataset.i)];
+        if (!p) return;
+        if (this._musicTarget && m.attributes.source !== this._musicTarget) {
+          await h.callService('media_player', 'select_source', { entity_id: id, source: this._musicTarget });
+        }
+        await h.callService('media_player', 'play_media', { entity_id: id, media_content_id: p.media_content_id, media_content_type: p.media_content_type });
+      }
+    } catch (e) {
+      this._musicErr = `Spotify said: ${e?.message || e}`;
+    }
+    this._schedule(true);
   }
 
   _applyTheme() {
@@ -641,6 +770,7 @@ class HomePanelCard extends HTMLElement {
       <div class="right">
         <div class="avs">${avatars}</div>
         ${guestPill}
+        ${this._musicPill()}
         ${this._commutePill()}
         <button class="pill big ${status.cls}" data-act="${status.act}" data-entity="${status.entity || ''}">${status.html}</button>
         <button class="iconbtn" data-act="theme" title="Day / night">${svg(ICON.contrast)}</button>
@@ -942,6 +1072,21 @@ class HomePanelCard extends HTMLElement {
     const ids = (el.dataset.entity || '').split(',').filter(Boolean);
     const moreInfo = (entityId) => this.dispatchEvent(new CustomEvent('hass-more-info', { detail: { entityId }, bubbles: true, composed: true }));
     switch (act) {
+      case 'music':
+        this._musicOpen = true;
+        this._musicTouched = Date.now();
+        this._musicErr = '';
+        this._loadPlaylists();
+        this._schedule(true);
+        break;
+      case 'mclose':
+        this._musicOpen = false;
+        this._schedule(true);
+        break;
+      case 'mctl': case 'mshuffle': case 'mvol': case 'msrc': case 'mplay':
+        this._musicTouched = Date.now();
+        this._musicAction(act, el);
+        break;
       case 'more':
         if (ids[0]) moreInfo(ids[0]);
         break;
@@ -1568,6 +1713,33 @@ svg { width:16px; height:16px; fill:currentColor; flex:none; }
 .quote.word p em { margin-left:8px; font-family:Inter, system-ui, sans-serif; font-size:11px; color:var(--muted); }
 .quote.word small { display:block; margin-top:2px; font-size:12px; line-height:1.3; color:var(--muted); }
 .pill.guest { color:var(--muted); }
+.pill.musicpill span { max-width:150px; overflow:hidden; text-overflow:ellipsis; }
+.pill.musicpill.on { color:var(--onink); background:var(--on); border-color:var(--on); }
+.msheet { position:absolute; inset:0; z-index:15; background:var(--bg); padding:18px 22px; display:flex; flex-direction:column; gap:14px; animation:afade .2s ease-out; }
+.mhd { display:flex; align-items:center; justify-content:space-between; }
+.mhd .iconbtn { width:44px; height:44px; } .mhd .iconbtn svg { width:22px; height:22px; }
+.mbody { flex:1; min-height:0; display:grid; grid-template-columns:400px 1fr; gap:22px; }
+.mnow { background:var(--card); border:1px solid var(--line); border-radius:22px; padding:22px; display:flex; flex-direction:column; justify-content:center; gap:6px; }
+.mart { aspect-ratio:1; border-radius:16px; overflow:hidden; background:var(--chip); display:flex; align-items:center; justify-content:center; margin-bottom:10px; color:var(--muted); }
+.mart img { width:100%; height:100%; object-fit:cover; } .mart svg { width:64px; height:64px; }
+.mtitle { font-family:Fraunces, Georgia, serif; font-weight:400; font-size:24px; line-height:1.15; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mbar { height:4px; border-radius:2px; background:var(--chip); margin-top:10px; overflow:hidden; } .mbar i { display:block; height:100%; background:var(--label); }
+.mtimes { display:flex; justify-content:space-between; font-size:11px; font-variant-numeric:tabular-nums; }
+.mctl { display:flex; align-items:center; gap:10px; margin-top:6px; }
+.mctl .iconbtn { width:44px; height:44px; } .mctl .iconbtn svg { width:20px; height:20px; }
+.mctl .iconbtn.big { width:58px; height:58px; background:var(--on); color:var(--onink); border-color:var(--on); } .mctl .iconbtn.big svg { width:28px; height:28px; }
+.mctl .iconbtn.sel { color:var(--label); border-color:var(--label); }
+.mvol { margin-left:auto; display:flex; align-items:center; gap:6px; } .mvol .iconbtn { width:36px; height:36px; font-size:18px; } .mvol b { min-width:38px; text-align:center; font-weight:600; font-variant-numeric:tabular-nums; }
+.mside { min-height:0; display:flex; flex-direction:column; gap:10px; overflow:auto; }
+.mspk { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+.chip { padding:10px 16px; border-radius:999px; background:var(--card); border:1px solid var(--line); font-weight:600; display:inline-flex; align-items:center; gap:6px; }
+.chip.sel { background:var(--on); color:var(--onink); border-color:var(--on); }
+.chip .d { width:7px; height:7px; border-radius:50%; background:var(--ok); display:inline-block; }
+.mlists { display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; }
+.pl { display:flex; flex-direction:column; gap:6px; font-weight:600; font-size:12px; }
+.pl img, .pl .noart { width:100%; aspect-ratio:1; border-radius:12px; object-fit:cover; background:var(--chip); display:flex; align-items:center; justify-content:center; color:var(--muted); }
+.pl span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.merr { color:var(--bad); font-size:12px; }
 .pill.guest.on { color:var(--onink); background:var(--on); border-color:var(--on); }
 .right { display:flex; align-items:center; gap:14px; }
 .avs { display:flex; }
