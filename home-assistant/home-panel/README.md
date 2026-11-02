@@ -4,7 +4,7 @@ A one-screen wall-tablet home page for Home Assistant (designed for the kitchen 
 1280 × 800 CSS px in landscape). Cream "paper" cards with serif numerals in the day; switches to a
 dark palette after sunset (tap the half-moon button to override).
 
-- **Top bar** – quote of the day, who's home, an *All clear* / *x open* / *Armed* status pill, clock.
+- **Top bar** – word of the day, who's home, a **Guests** toggle (`input_boolean.guest_mode`, highlighted when on), an *All clear* / *x open* / *Armed* status pill, clock.
 - **Systems** – internet, lights on, estimated gas cost today, updates waiting, last backup.
 - **Coming up** – the next two bin collections from `calendar.bins` (colour-coded bins, *Put out
   tonight* the evening before). Tick the next one when the bins are out; it is stored in

@@ -18,6 +18,7 @@
     add('sun.sun', night ? 'below_horizon' : 'above_horizon', { next_setting: new Date(Date.now() + 4 * 3600e3).toISOString(), next_rising: new Date(Date.now() + 9 * 3600e3).toISOString() });
     add('person.killian', 'home', { friendly_name: 'Killian' });
     add('person.sinead', 'not_home', { friendly_name: 'Sinéad' });
+    add('input_boolean.guest_mode', params.get('guests') === '1' ? 'on' : 'off', { friendly_name: 'Guest mode' });
     add('alarm_control_panel.laverna_alarm', 'disarmed', { friendly_name: 'Laverna Alarm' });
     add('binary_sensor.m4r_wan_status', 'on');
     add('sensor.backup_last_successful_automatic_backup', 'unknown');
@@ -95,6 +96,7 @@
         if (!S[id]) continue;
         if (service === 'turn_on') S[id] = { ...S[id], state: 'on', attributes: { ...S[id].attributes, brightness: 255 } };
         if (service === 'turn_off') S[id] = { ...S[id], state: 'off' };
+        if (service === 'toggle' && domain === 'input_boolean') S[id] = { ...S[id], state: S[id].state === 'on' ? 'off' : 'on' };
         if (service === 'toggle' && domain === 'cover') S[id] = { ...S[id], state: S[id].state === 'open' ? 'closed' : 'open' };
       }
       push();

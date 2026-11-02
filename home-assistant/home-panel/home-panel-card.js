@@ -10,6 +10,7 @@
 
 const VERSION = '1.2.0';
 const ICON = {
+  guests: "M12,5.5A3.5,3.5 0 0,1 15.5,9A3.5,3.5 0 0,1 12,12.5A3.5,3.5 0 0,1 8.5,9A3.5,3.5 0 0,1 12,5.5M5,8C5.56,8 6.08,8.15 6.53,8.42C6.38,9.85 6.8,11.27 7.66,12.38C7.16,13.34 6.16,14 5,14A3,3 0 0,1 2,11A3,3 0 0,1 5,8M19,8A3,3 0 0,1 22,11A3,3 0 0,1 19,14C17.84,14 16.84,13.34 16.34,12.38C17.2,11.27 17.62,9.85 17.47,8.42C17.92,8.15 18.44,8 19,8M5.5,18.25C5.5,16.18 8.41,14.5 12,14.5C15.59,14.5 18.5,16.18 18.5,18.25V20H5.5V18.25M0,20V18.5C0,17.11 1.89,15.94 4.45,15.6C3.86,16.28 3.5,17.22 3.5,18.25V20H0M24,20H20.5V18.25C20.5,17.22 20.14,16.28 19.55,15.6C22.11,15.94 24,17.11 24,18.5V20Z",
   sunny: "M12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,2L14.39,5.42C13.65,5.15 12.84,5 12,5C11.16,5 10.35,5.15 9.61,5.42L12,2M3.34,7L7.5,6.65C6.9,7.16 6.36,7.78 5.94,8.5C5.5,9.24 5.25,10 5.11,10.79L3.34,7M3.36,17L5.12,13.23C5.26,14 5.53,14.78 5.95,15.5C6.37,16.24 6.91,16.86 7.5,17.37L3.36,17M20.65,7L18.88,10.79C18.74,10 18.47,9.23 18.05,8.5C17.63,7.78 17.1,7.15 16.5,6.64L20.65,7M20.64,17L16.5,17.36C17.09,16.85 17.62,16.22 18.04,15.5C18.46,14.77 18.73,14 18.87,13.21L20.64,17M12,22L9.59,18.56C10.33,18.83 11.14,19 12,19C12.82,19 13.63,18.83 14.37,18.56L12,22Z",
   night: "M17.75,4.09L15.22,6.03L16.13,9.09L13.5,7.28L10.87,9.09L11.78,6.03L9.25,4.09L12.44,4L13.5,1L14.56,4L17.75,4.09M21.25,11L19.61,12.25L20.2,14.23L18.5,13.06L16.8,14.23L17.39,12.25L15.75,11L17.81,10.95L18.5,9L19.19,10.95L21.25,11M18.97,15.95C19.8,15.87 20.69,17.05 20.16,17.8C19.84,18.25 19.5,18.67 19.08,19.07C15.17,23 8.84,23 4.94,19.07C1.03,15.17 1.03,8.83 4.94,4.93C5.34,4.53 5.76,4.17 6.21,3.85C6.96,3.32 8.14,4.21 8.06,5.04C7.79,7.9 8.75,10.87 10.95,13.06C13.14,15.26 16.1,16.22 18.97,15.95M17.33,17.97C14.5,17.81 11.7,16.64 9.53,14.5C7.36,12.31 6.2,9.5 6.04,6.68C3.23,9.82 3.34,14.64 6.35,17.66C9.37,20.67 14.19,20.78 17.33,17.97Z",
   partly: "M12.74,5.47C15.1,6.5 16.35,9.03 15.92,11.46C17.19,12.56 18,14.19 18,16V16.17C18.31,16.06 18.65,16 19,16A3,3 0 0,1 22,19A3,3 0 0,1 19,22H6A4,4 0 0,1 2,18A4,4 0 0,1 6,14H6.27C5,12.45 4.6,10.24 5.5,8.26C6.72,5.5 9.97,4.24 12.74,5.47M11.93,7.3C10.16,6.5 8.09,7.31 7.31,9.07C6.85,10.09 6.93,11.22 7.41,12.13C8.5,10.83 10.16,10 12,10C12.7,10 13.38,10.12 14,10.34C13.94,9.06 13.18,7.86 11.93,7.3M13.55,3.64C13,3.4 12.45,3.23 11.88,3.12L14.37,1.82L15.27,4.71C14.76,4.29 14.19,3.93 13.55,3.64M6.09,4.44C5.6,4.79 5.17,5.19 4.8,5.63L4.91,2.82L7.87,3.5C7.25,3.71 6.65,4.03 6.09,4.44M18,9.71C17.91,9.12 17.78,8.55 17.59,8L19.97,9.5L17.92,11.73C18.03,11.08 18.05,10.4 18,9.71M3.04,11.3C3.11,11.9 3.24,12.47 3.43,13L1.06,11.5L3.1,9.28C3,9.93 2.97,10.61 3.04,11.3M19,18H16V16A4,4 0 0,0 12,12A4,4 0 0,0 8,16H6A2,2 0 0,0 4,18A2,2 0 0,0 6,20H19A1,1 0 0,0 20,19A1,1 0 0,0 19,18Z",
@@ -76,28 +77,92 @@ const ICON = {
 };
 const svg = (d, cls = '') => `<svg viewBox="0 0 24 24" class="${cls}"><path d="${d}"/></svg>`;
 
-const QUOTES = [
-  ['Take away thy opinion, and then there is taken away the complaint, “I have been harmed.”', 'Marcus Aurelius · Meditations IV.7'],
-  ['We suffer more often in imagination than in reality.', 'Seneca · Letters to Lucilius 13'],
-  ['The happiness of your life depends upon the quality of your thoughts.', 'Marcus Aurelius · Meditations V.16'],
-  ['It is not the man who has too little, but the man who craves more, that is poor.', 'Seneca · Letters 2'],
-  ['First say to yourself what you would be; and then do what you have to do.', 'Epictetus · Discourses III.23'],
-  ['Waste no more time arguing about what a good man should be. Be one.', 'Marcus Aurelius · Meditations X.16'],
-  ['Luck is what happens when preparation meets opportunity.', 'Seneca'],
-  ['No man is free who is not master of himself.', 'Epictetus · Fragments'],
-  ['Very little is needed to make a happy life.', 'Marcus Aurelius · Meditations VII.67'],
-  ['While we are postponing, life speeds by.', 'Seneca · Letters 1'],
-  ['Wealth consists not in having great possessions, but in having few wants.', 'Epictetus'],
-  ['The best revenge is not to be like your enemy.', 'Marcus Aurelius · Meditations VI.6'],
-  ['Difficulties strengthen the mind, as labour does the body.', 'Seneca'],
-  ['Don’t explain your philosophy. Embody it.', 'Epictetus'],
-  ['You have power over your mind – not outside events. Realise this, and you will find strength.', 'Marcus Aurelius'],
-  ['Begin at once to live, and count each separate day as a separate life.', 'Seneca · Letters 101'],
-  ['Make the best use of what is in your power, and take the rest as it happens.', 'Epictetus · Enchiridion'],
-  ['Dwell on the beauty of life. Watch the stars, and see yourself running with them.', 'Marcus Aurelius · Meditations VII.47'],
-  ['Every new beginning comes from some other beginning’s end.', 'Seneca'],
-  ['He who laughs at himself never runs out of things to laugh at.', 'Epictetus'],
-  ['The impediment to action advances action. What stands in the way becomes the way.', 'Marcus Aurelius · Meditations V.20'],
+// Word of the day: [word, part of speech, meaning]. Picked by day of the year.
+const WORDS = [
+  ['petrichor', 'noun', 'the earthy smell when rain falls on dry ground'],
+  ['apricity', 'noun', 'the warmth of the sun in winter'],
+  ['craic', 'noun', 'fun, chat and good company'],
+  ['defenestration', 'noun', 'the act of throwing someone out of a window'],
+  ['serendipity', 'noun', 'finding something good without looking for it'],
+  ['mellifluous', 'adjective', 'sweet and smooth to listen to'],
+  ['crepuscular', 'adjective', 'of twilight; active at dusk'],
+  ['susurrus', 'noun', 'a soft whispering or rustling sound'],
+  ['halcyon', 'adjective', 'calm, peaceful and happy, often of a time gone by'],
+  ['ineffable', 'adjective', 'too great to be put into words'],
+  ['quixotic', 'adjective', 'idealistic but wildly impractical'],
+  ['sesquipedalian', 'adjective', 'fond of using very long words'],
+  ['ebullient', 'adjective', 'cheerful and full of energy'],
+  ['gallimaufry', 'noun', 'a confused jumble or medley of things'],
+  ['lagniappe', 'noun', 'a small extra given free with a purchase'],
+  ['snollygoster', 'noun', 'a shrewd, unprincipled person'],
+  ['bumbershoot', 'noun', 'an umbrella'],
+  ['collywobbles', 'noun', 'a nervous, fluttery feeling in the stomach'],
+  ['flibbertigibbet', 'noun', 'a flighty, frivolous and chatty person'],
+  ['hygge', 'noun', 'a cosy, contented feeling of comfort and company'],
+  ['kerfuffle', 'noun', 'a commotion or fuss'],
+  ['lollygag', 'verb', 'to dawdle or spend time aimlessly'],
+  ['mondegreen', 'noun', 'a misheard phrase, especially a song lyric'],
+  ['nudiustertian', 'adjective', 'of the day before yesterday'],
+  ['palimpsest', 'noun', 'something reused that still shows traces of what came before'],
+  ['quotidian', 'adjective', 'ordinary; of the everyday'],
+  ['ruminate', 'verb', 'to think deeply and at length'],
+  ['sanguine', 'adjective', 'optimistic, especially when things look bad'],
+  ['tintinnabulation', 'noun', 'the ringing of bells'],
+  ['vicissitude', 'noun', 'a change of fortune, usually an unwelcome one'],
+  ['wanderlust', 'noun', 'a strong desire to travel'],
+  ['zephyr', 'noun', 'a soft, gentle breeze'],
+  ['cacophony', 'noun', 'a harsh mix of clashing sounds'],
+  ['epiphany', 'noun', 'a moment of sudden insight'],
+  ['fortuitous', 'adjective', 'happening by lucky chance'],
+  ['gregarious', 'adjective', 'fond of company; sociable'],
+  ['juxtapose', 'verb', 'to place side by side for contrast'],
+  ['labyrinthine', 'adjective', 'intricate and confusing, like a maze'],
+  ['meander', 'verb', 'to follow a winding course'],
+  ['nonchalant', 'adjective', 'calm and casually unconcerned'],
+  ['obfuscate', 'verb', 'to make something unclear on purpose'],
+  ['penumbra', 'noun', 'the partly shaded outer edge of a shadow'],
+  ['quintessential', 'adjective', 'the most perfect example of its kind'],
+  ['resplendent', 'adjective', 'dazzling and richly colourful'],
+  ['solace', 'noun', 'comfort in a time of distress'],
+  ['taciturn', 'adjective', 'saying very little; reserved'],
+  ['umbrage', 'noun', 'offence or annoyance, as in “take umbrage”'],
+  ['verisimilitude', 'noun', 'the appearance of being true or real'],
+  ['whimsical', 'adjective', 'playfully quaint or fanciful'],
+  ['zenith', 'noun', 'the highest point reached'],
+  ['shenanigans', 'noun', 'mischief or underhand goings-on'],
+  ['brouhaha', 'noun', 'a noisy, overexcited reaction'],
+  ['discombobulate', 'verb', 'to confuse or disconcert'],
+  ['hullabaloo', 'noun', 'a commotion; an uproar'],
+  ['gobbledygook', 'noun', 'language that makes no sense'],
+  ['persnickety', 'adjective', 'fussy about small details'],
+  ['skedaddle', 'verb', 'to leave in a hurry'],
+  ['widdershins', 'adverb', 'anticlockwise'],
+  ['sempiternal', 'adjective', 'eternal and unchanging'],
+  ['aplomb', 'noun', 'calm self-confidence under pressure'],
+  ['bucolic', 'adjective', 'of the pleasant side of country life'],
+  ['cognoscenti', 'noun', 'people in the know about a subject'],
+  ['dulcet', 'adjective', 'sweet and soothing to hear'],
+  ['ephemeral', 'adjective', 'lasting a very short time'],
+  ['felicity', 'noun', 'great happiness; a happy turn of phrase'],
+  ['gossamer', 'noun', 'something very light, thin and delicate'],
+  ['inveigle', 'verb', 'to coax someone with flattery or trickery'],
+  ['jocund', 'adjective', 'cheerful and light-hearted'],
+  ['kismet', 'noun', 'destiny; fate'],
+  ['lackadaisical', 'adjective', 'lacking enthusiasm or effort'],
+  ['mollycoddle', 'verb', 'to pamper or overprotect'],
+  ['nefarious', 'adjective', 'wicked or villainous'],
+  ['oeuvre', 'noun', 'the complete body of an artist’s work'],
+  ['panacea', 'noun', 'a cure for every problem'],
+  ['ramshackle', 'adjective', 'badly made and falling apart'],
+  ['syzygy', 'noun', 'three celestial bodies lined up, like sun, moon and earth'],
+  ['thingamajig', 'noun', 'a thing whose name escapes you'],
+  ['luminous', 'adjective', 'giving off light; glowing'],
+  ['idyllic', 'adjective', 'blissfully peaceful and picturesque'],
+  ['incandescent', 'adjective', 'glowing with heat; brilliantly bright'],
+  ['onomatopoeia', 'noun', 'a word that sounds like what it describes'],
+  ['ubiquitous', 'adjective', 'found everywhere'],
+  ['effervescent', 'adjective', 'bubbly, lively and enthusiastic'],
+  ['yonder', 'adverb', 'over there, at some distance'],
 ];
 
 const COND = {
@@ -171,6 +236,7 @@ const DEFAULTS = {
   transport_view: 'transport', // swipe right (or tap the commute pill) to open it
   bus_stop: { entity: 'sensor.tfi_gtfs_stop_1682', walk: 4 },
   drive_time: 'sensor.drive_to_work',
+  guest_mode: 'input_boolean.guest_mode', // top-bar Guest mode toggle
 };
 
 const BIN_COLOURS = { black: '#2d2d2d', green: '#4f8a4b', brown: '#8a5a3b', blue: '#3c6fb0', grey: '#8d8d8d' };
@@ -557,7 +623,7 @@ class HomePanelCard extends HTMLElement {
     const h = this._hass, c = this._config, S = h.states;
     const now = new Date();
     const day = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
-    const [q, who] = QUOTES[day % QUOTES.length];
+    const [word, pos, meaning] = WORDS[day % WORDS.length];
     const avatars = arr(c.persons).map((p) => {
       const s = S[p];
       if (!s) return '';
@@ -569,9 +635,12 @@ class HomePanelCard extends HTMLElement {
     const status = this._securityStatus();
     const time = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     const date = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
-    return `<div class="quote"><p>“${esc(q.replace(/^“|”$/g, ''))}”</p><span>${esc(who)}</span></div>
+    const guest = S[c.guest_mode];
+    const guestPill = guest ? `<button class="pill big guest ${guest.state === 'on' ? 'on' : ''}" data-act="call" data-svc="input_boolean.toggle" data-entity="${c.guest_mode}" title="Guest mode keeps the lights up and the tablet awake">${svg(ICON.guests)}${guest.state === 'on' ? 'Guests on' : 'Guests'}</button>` : '';
+    return `<div class="quote word"><span>Word of the day</span><p><b>${esc(word)}</b><em>${esc(pos)}</em></p><small>${esc(meaning)}</small></div>
       <div class="right">
         <div class="avs">${avatars}</div>
+        ${guestPill}
         ${this._commutePill()}
         <button class="pill big ${status.cls}" data-act="${status.act}" data-entity="${status.entity || ''}">${status.html}</button>
         <button class="iconbtn" data-act="theme" title="Day / night">${svg(ICON.contrast)}</button>
@@ -1492,6 +1561,14 @@ svg { width:16px; height:16px; fill:currentColor; flex:none; }
 .quote { max-width:46%; }
 .quote p { margin:0; font-family:Fraunces, Georgia, serif; font-style:italic; font-size:15px; line-height:1.3; }
 .quote span { display:block; margin-top:4px; font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--label); font-weight:600; }
+.quote.word { max-width:38%; }
+.quote.word span { margin:0 0 2px; }
+.quote.word p { font-style:normal; font-size:20px; line-height:1.15; }
+.quote.word p b { font-weight:400; }
+.quote.word p em { margin-left:8px; font-family:Inter, system-ui, sans-serif; font-size:11px; color:var(--muted); }
+.quote.word small { display:block; margin-top:2px; font-size:12px; line-height:1.3; color:var(--muted); }
+.pill.guest { color:var(--muted); }
+.pill.guest.on { color:var(--onink); background:var(--on); border-color:var(--on); }
 .right { display:flex; align-items:center; gap:14px; }
 .avs { display:flex; }
 .av { width:34px; height:34px; border-radius:50%; margin-left:-6px; position:relative; background:#b9a78d; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px var(--bg); }
