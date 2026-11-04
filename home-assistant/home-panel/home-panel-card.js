@@ -8,7 +8,7 @@
  *   # every entity below is optional and overridable – defaults match this house
  */
 
-const VERSION = '1.4.0';
+const VERSION = '1.5.0';
 const ICON = {
   music: "M21,3V15.5A3.5,3.5 0 0,1 17.5,19A3.5,3.5 0 0,1 14,15.5A3.5,3.5 0 0,1 17.5,12C18.04,12 18.55,12.12 19,12.34V6.47L9,8.6V17.5A3.5,3.5 0 0,1 5.5,21A3.5,3.5 0 0,1 2,17.5A3.5,3.5 0 0,1 5.5,14C6.04,14 6.55,14.12 7,14.34V6L21,3Z",
   play: "M8,5.14V19.14L19,12.14L8,5.14Z",
@@ -219,7 +219,6 @@ const DEFAULTS = {
   alarm: 'alarm_control_panel.laverna_alarm',
   internet: 'binary_sensor.m4r_wan_status',
   backup: 'sensor.backup_last_successful_automatic_backup',
-  gas_cost: 'sensor.estimated_daily_gas_cost',
   bins_calendar: 'calendar.bins',
   vacuum: 'vacuum.l40s_pro_ultra',
   vacuum_map: 'camera.l40s_pro_ultra_map',
@@ -555,7 +554,6 @@ class HomePanelCard extends HTMLElement {
         <header class="top" data-part="top"></header>
         <main class="grid">
           <div class="col">
-            <section class="card" data-part="systems"></section>
             <section class="card grow" data-part="home"></section>
           </div>
           <div class="col">
@@ -640,7 +638,6 @@ class HomePanelCard extends HTMLElement {
     }
     this._applyTheme();
     this._set('top', this._top());
-    this._set('systems', this._systems());
     this._set('bins', this._binsCard());
     this._set('home', this._home());
     this._set('today', this._today());
@@ -835,26 +832,6 @@ class HomePanelCard extends HTMLElement {
     }
     if (al && al.state.startsWith('armed')) return { cls: 'ok', html: `${svg(ICON.shield)}Armed · ${esc(al.state.replace('armed_', ''))}`, act: 'more', entity: c.alarm };
     return { cls: 'ok', html: '<i class="d"></i>All clear', act: 'more', entity: c.alarm };
-  }
-
-  _systems() {
-    const S = this._hass.states, c = this._config;
-    const net = S[c.internet];
-    const up = net?.state === 'on';
-    const updates = Object.values(S).filter((s) => s.entity_id.startsWith('update.') && s.state === 'on');
-    const lightsOn = Object.values(S).filter((s) => s.entity_id.startsWith('light.') && s.state === 'on' && this._isHouseLight(s.entity_id)).length;
-    const gas = S[c.gas_cost];
-    const bk = S[c.backup];
-    const bkText = na(bk) ? 'Never' : new Date(bk.state).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-    const tile = (k, v, sub, extra = '') => `<div class="tile ${extra}"><span>${k}</span><b>${v}</b><small>${sub}</small></div>`;
-    return `<div class="hd"><span class="lbl">${svg(up ? ICON.wifi : ICON.wifiOff)}Systems</span>
-        <span class="pill ${up ? 'ok' : 'bad'}"><i class="d"></i>${up ? 'Internet up' : 'Internet down'}</span></div>
-      <div class="tiles">
-        ${tile('Lights on', lightsOn, lightsOn === 1 ? 'light' : 'lights')}
-        ${tile('Gas today', na(gas) ? '–' : `€${num(gas.state, 2)}`, 'estimated')}
-        <button class="tile ${updates.length ? 'attn' : ''}" data-act="nav" data-path="/config/updates"><span>Updates</span><b>${updates.length}</b><small>${updates.length ? 'waiting' : 'up to date'}</small></button>
-        <button class="tile ${na(bk) ? 'attn' : ''}" data-act="nav" data-path="/config/backup"><span>Last backup</span><b>${bkText}</b><small>${na(bk) ? 'set up backups' : 'automatic'}</small></button>
-      </div>`;
   }
 
   _isHouseLight(id) {
@@ -1945,6 +1922,18 @@ const CLIMATE_DEFAULTS = {
   boost_temp: 'input_number.heating_boost_temperature',
   boost_options: [30, 60, 120], // minutes
   history_hours: 24,
+  // gas estimate (template helpers; rates are input_numbers taken from the SSE Airtricity bill)
+  gas: {
+    today: 'sensor.estimated_daily_gas_cost',
+    month: 'sensor.estimated_monthly_gas_cost',
+    per_m3: 'sensor.gas_cost_per_m3',
+    boiler_today: 'sensor.gas_boiler_usage_daily',
+    rate: 'input_number.gas_rate_per_kwh',
+    carbon: 'input_number.gas_carbon_tax_per_kwh',
+    vat: 'input_number.gas_vat_rate',
+    standing: 'input_number.gas_standing_charge_daily',
+    baseline: 'input_number.gas_hot_water_baseline',
+  },
 };
 
 const polar = (cx, cy, r, deg) => [cx + r * Math.cos((deg * Math.PI) / 180), cy + r * Math.sin((deg * Math.PI) / 180)];
@@ -2005,7 +1994,10 @@ class ClimatePanelCard extends HTMLElement {
             <section class="card dialcard grow" data-part="dial"></section>
             <section class="card" data-part="boost"></section>
           </div>
-          <div class="col" data-part="rooms"></div>
+          <div class="col">
+            <section class="card" data-part="gas"></section>
+            <div class="rooms" data-part="rooms"></div>
+          </div>
         </main>
       </div>`;
     this._wrap = this._root.querySelector('.wrap');
@@ -2035,6 +2027,7 @@ class ClimatePanelCard extends HTMLElement {
     this._set('top', this._top());
     this._set('dial', this._dial());
     this._set('boost', this._boost());
+    this._set('gas', this._gas());
     this._set('rooms', this._rooms());
     this._alerts.update(h, this._config.alerts || DEFAULT_ALERTS);
   }
@@ -2207,9 +2200,42 @@ class ClimatePanelCard extends HTMLElement {
     return t ? `${num(t, 1)}°` : 'your setting';
   }
 
-  /* ---------- rooms ---------- */
+  /* ---------- gas ---------- */
+  _gas() {
+    const g = this._config.gas;
+    if (!g) return '';
+    const S = this._hass.states;
+    const v = (id) => Number(S[id]?.state);
+    const today = v(g.today), month = v(g.month);
+    if (isNaN(today) && isNaN(month)) return '<p class="muted pad">Gas estimate isn’t set up.</p>';
+    const now = new Date();
+    const dim = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const daysSoFar = now.getDate() - 1 + (now.getHours() * 60 + now.getMinutes()) / 1440;
+    const proj = !isNaN(month) && daysSoFar > 0.25 ? (month / daysSoFar) * dim : null;
+    const vatF = 1 + (v(g.vat) || 0) / 100;
+    const kwh = (v(g.rate) + (v(g.carbon) || 0)) * vatF;
+    const standing = v(g.standing) * vatF;
+    const boilerM3 = v(g.boiler_today);
+    const heatMins = this._heatingMinutes();
+    const eur = (x, d = 2) => (x == null || isNaN(x) ? '–' : `€${x.toFixed(d)}`);
+    return `<div class="hd"><span class="lbl">${svg(ICON.gas)}Gas <span class="lbln">estimated</span></span>
+        <button class="pill" data-act="more" data-entity="${g.today}">Details</button></div>
+      <div class="gtop">
+        <button class="gbig" data-act="more" data-entity="${g.today}"><span>Today so far</span><b class="serif">${eur(today)}</b></button>
+        <div class="gfacts">
+          <button data-act="more" data-entity="${g.month}"><span>This month</span><b>${eur(month)}</b></button>
+          <div><span>Month at this rate</span><b>${eur(proj, 0)}</b></div>
+          <div><span>Boiler today</span><b>${isNaN(boilerM3) ? '–' : `${boilerM3.toFixed(2)} m³`}</b>${heatMins != null ? `<small>${heatMins >= 60 ? `${Math.floor(heatMins / 60)}h ${heatMins % 60}m` : `${heatMins}m`} on, 24 h</small>` : ''}</div>
+        </div>
+      </div>
+      <p class="gnote">${isNaN(kwh) ? '' : `${(kwh * 100).toFixed(2)}c/kWh incl. carbon tax and VAT`}${isNaN(standing) ? '' : ` · ${eur(standing)}/day standing`}${isNaN(v(g.per_m3)) ? '' : ` · ${eur(v(g.per_m3))}/m³`} · SSE Airtricity</p>`;
+  }
+
+  /* ---------- rooms (one open at a time) ---------- */
   _rooms() {
-    return arr(this._config.rooms).map((r) => this._room(r)).join('');
+    const rooms = arr(this._config.rooms).filter((r) => this._hass.states[r.temp]);
+    if (this._openRoom === undefined) this._openRoom = rooms[0]?.name ?? null;
+    return rooms.map((r) => this._room(r)).join('');
   }
 
   _room(r) {
@@ -2228,10 +2254,15 @@ class ClimatePanelCard extends HTMLElement {
     const h = Number(hu?.state);
     const comfort = isNaN(h) ? '' : h < 40 ? ['Dry', 'warn'] : h <= 60 ? ['Comfortable', 'ok'] : h <= 70 ? ['A bit humid', 'warn'] : ['Humid', 'bad'];
     const heatMins = r.thermostat ? this._heatingMinutes() : null;
-    return `<section class="card grow room">
-      <div class="hd"><span class="lbl">${svg(ICON.thermo)}${esc(r.name)}</span>
-        ${comfort ? `<span class="pill ${comfort[1]}"><i class="d"></i>${comfort[0]}</span>` : ''}</div>
-      <div class="rtop">
+    const open = this._openRoom === r.name;
+    return `<section class="card room ${open ? 'open grow' : ''}">
+      <button class="acc" data-act="room" data-room="${esc(r.name)}">
+        <span class="lbl">${svg(ICON.thermo)}${esc(r.name)}</span>
+        <span class="accsum"><b class="serif">${num(t.state, 1)}°</b>${hu ? `<span class="muted">${num(hu.state)}%</span>` : ''}
+          ${comfort ? `<span class="pill ${comfort[1]}"><i class="d"></i>${comfort[0]}</span>` : ''}
+          <span class="chev">${svg(ICON.chevron)}</span></span>
+      </button>
+      ${open ? `<div class="accbody"><div class="rtop">
         <button class="rbig" data-act="more" data-entity="${r.temp}"><b class="serif">${num(t.state, 1)}°</b><small class="muted">${esc(trend)}</small></button>
         <div class="rfacts">
           ${hu ? `<button data-act="more" data-entity="${r.humidity}"><span>Humidity</span><b>${num(hu.state)}%</b></button>` : ''}
@@ -2239,7 +2270,7 @@ class ClimatePanelCard extends HTMLElement {
           ${heatMins != null ? `<div><span>Heating on</span><b>${heatMins >= 60 ? `${Math.floor(heatMins / 60)}h ${heatMins % 60}m` : `${heatMins}m`}</b></div>` : ''}
         </div>
       </div>
-      ${this._graph(r, temps, hums)}
+      ${this._graph(r, temps, hums)}</div>` : ''}
     </section>`;
   }
 
@@ -2329,6 +2360,10 @@ class ClimatePanelCard extends HTMLElement {
       case 'more':
         this.dispatchEvent(new CustomEvent('hass-more-info', { detail: { entityId: el.dataset.entity }, bubbles: true, composed: true }));
         break;
+      case 'room':
+        this._openRoom = this._openRoom === el.dataset.room ? null : el.dataset.room;
+        this._schedule(true);
+        break;
       case 'ctemp': {
         const base = this._target();
         if (isNaN(base)) break;
@@ -2413,7 +2448,27 @@ const CLIMATE_STYLE = `
 .bactive b { font-size:38px; color:var(--heat); }
 .bprog { flex:1; display:flex; flex-direction:column; gap:6px; }
 .mbar { height:6px; border-radius:3px; background:var(--chip); overflow:hidden; } .mbar i { display:block; height:100%; background:var(--heat); }
-.room { display:flex; flex-direction:column; }
+.rooms { flex:1; min-height:0; display:flex; flex-direction:column; gap:12px; }
+.room { display:flex; flex-direction:column; flex:none; }
+.room.open { flex:1; min-height:0; }
+.acc { display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; }
+.accsum { display:flex; align-items:center; gap:10px; }
+.accsum b { font-size:24px; line-height:1; }
+.chev { width:30px; height:30px; border-radius:50%; background:var(--chip); display:flex; align-items:center; justify-content:center; transition:transform .2s; }
+.chev svg { transform:rotate(90deg); }
+.room.open .chev { transform:rotate(180deg); }
+.room.open .accsum b, .room.open .accsum > .muted { display:none; }
+.accbody { flex:1; min-height:0; display:flex; flex-direction:column; margin-top:10px; animation:afade .2s ease-out; }
+.gtop { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+.gbig { display:flex; flex-direction:column; }
+.gbig span { font-size:10px; color:var(--muted); font-weight:600; letter-spacing:.04em; }
+.gbig b { font-size:44px; line-height:1; letter-spacing:-1px; }
+.gfacts { display:flex; gap:8px; }
+.gfacts > * { background:var(--chip); border-radius:12px; padding:6px 10px; display:flex; flex-direction:column; min-width:84px; }
+.gfacts span { font-size:10px; color:var(--muted); font-weight:600; letter-spacing:.04em; }
+.gfacts b { font-size:14px; font-weight:600; }
+.gfacts small { font-size:10px; color:var(--muted); }
+.gnote { margin:10px 0 0; font-size:11px; color:var(--muted); }
 .rtop { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
 .rbig { display:flex; flex-direction:column; }
 .rbig b { font-size:44px; line-height:1; letter-spacing:-1px; }

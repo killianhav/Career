@@ -37,7 +37,6 @@
     add('alarm_control_panel.laverna_alarm', 'disarmed', { friendly_name: 'Laverna Alarm' });
     add('binary_sensor.m4r_wan_status', 'on');
     add('sensor.backup_last_successful_automatic_backup', 'unknown');
-    add('sensor.estimated_daily_gas_cost', '0.38');
     ['alexa_media_player_update', 'bubble_card_update', 'home_assistant_core_update'].forEach((u) => add(`update.${u}`, 'on'));
     add('weather.forecast_home', params.get('weather') || 'partlycloudy', { temperature: 12, humidity: 59, wind_speed: 22.3, wind_speed_unit: 'km/h', uv_index: 0.6 });
     add('climate.kitchen_kitchen_thermostat', 'heat', { current_temperature: 19.6, temperature: 20.5, hvac_action: 'heating' });

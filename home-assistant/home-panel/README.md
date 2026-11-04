@@ -5,7 +5,6 @@ A one-screen wall-tablet home page for Home Assistant (designed for the kitchen 
 dark palette after sunset (tap the half-moon button to override).
 
 - **Top bar** – word of the day, who's home, a **Guests** toggle (`input_boolean.guest_mode`, highlighted when on), an *All clear* / *x open* / *Armed* status pill, clock.
-- **Systems** – internet, lights on, estimated gas cost today, updates waiting, last backup.
 - **Coming up** – the next two bin collections from `calendar.bins` (colour-coded bins, *Put out
   tonight* the evening before). Tick the next one when the bins are out; it is stored in
   `input_datetime.bins_put_out` so every screen and phone sees it, and tapping again undoes it.
@@ -83,7 +82,11 @@ type: custom:climate-panel-card
 - **Boost** – pick a temperature and 30 min / 1 hr / 2 hrs. Runs `script.heating_boost`, which
   remembers the current set point / mode and starts `timer.heating_boost`; the *Heating boost – End*
   automation puts it back when the timer finishes or the boost is cancelled.
-- **Rooms** – Kitchen (the thermostat) and Bedroom: temperature, trend over the last hour,
+- **Gas** – the estimate from the gas template helpers: today so far, this month, the month projected at
+  the current rate, boiler gas today and heating time, and the rates in use (from the SSE Airtricity bill:
+  unit rate + carbon tax + VAT, daily standing charge, €/m³). Tap for the sensor's history. Set with `gas:`.
+- **Rooms** – collapsible: each room is a row with its temperature, humidity and comfort label; tap to open
+  it (one at a time). Kitchen (the thermostat) and Bedroom: temperature, trend over the last hour,
   humidity with a comfort label, 24 h low / high, and a 24 h graph with time and value axes,
   humidity on its own scale, and for the thermostat room the set point and when the heating ran.
   `climate-demo.html` renders it with simulated history.
